@@ -1,0 +1,54 @@
+{
+    "global_env":
+    {
+        "db_api_server":
+        {
+            "default_server_ip" : "nginx",
+            "default_server_port" : 4000,
+            "default_schema" : "http",
+
+            "db_poll_cycle_second" : 60
+        }
+    },
+
+    "log_write_module":
+    {
+        "string_buffer_config_list": 
+        [
+            {
+                "queue_id" : "input_filter",
+
+                "collection_prefix" : "input_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            },
+            
+            {
+                "queue_id" : "output_filter",
+
+                "collection_prefix" : "output_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            },
+            
+            {
+                "queue_id" : "regex_filter",
+
+                "collection_prefix" : "regex_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            }
+                
+        ]
+    }
+    
+}

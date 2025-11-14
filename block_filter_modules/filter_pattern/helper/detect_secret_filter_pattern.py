@@ -1,0 +1,623 @@
+
+import copy
+import re
+import math
+
+#외부 라이브러리
+from lib_include import *
+
+from type_hint import *
+
+from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
+
+'''
+정책 패턴 탐지, detect secret 패턴
+기존 개발 코드 리펙토링, 이후 정책 관리 DB 업데이트
+TODO: 내부 정책이 존재할수 있으며, 1차 하드코딩, 모듈 분리
+2차 DB로 분리
+3차 polling 구조로 가공.
+
+탐지 기능, masking 기능을 각각 제공
+'''
+
+class DetectSecretFilterPattern (FilterPatternBase):
+    
+    def __init__(self):
+        
+        super().__init__() 
+        
+        # 패턴, 우선 그대로 옮기고, 다시 리펙토링
+        #TODO: 하드코딩 데이터 => DB로 치환
+        
+        #기본 하드코딩된 정규 표현식, 주석 처리
+        # self.__regexPEMBlock:re.Pattern = None
+        # self.__regexJWTPattern:re.Pattern = None
+        
+        # self.__listKnownRegexPatterns:List[Tuple[str, re.Pattern, Optional[str]]] = None
+        
+        #TODO: 이 패턴은 남긴다.
+        self.__regexCandidate:re.Pattern = None
+        
+        #DB에서 조회한 regex 패턴
+        self.__listDBRegexPattern:List[Tuple[str, str, re.Pattern]] = []
+        
+        #TODO: 이건 어떤 기능인지 확인후 이름 변경 우선 이기능은 유지
+        self.re_b64_shape = None 
+        self.re_hex_shape = None
+        
+        pass
+    
+    #초기화 로직, 상태, 정책이 존재하며, 정책은 향후 detect_secret policy로 이동한다.
+    def Initialize(self, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        일단 하드코딩
+        '''
+        
+        # 기본 변수 초기화
+        
+        self.__initializeRegexPattern()
+        
+        return ERR_OK
+    
+    
+    #기본 모듈, 그대로 이동 (기존 detect_spans)
+    def DetectPattern(self, strContents:str, valves:Any): #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+        
+        '''
+        기존 코드, 그대로 이관
+        '''
+        
+        #TODO: span, count를 반환하는데, 호출측에서 count를 사용하지 않는다.. 추가 분석 필요..
+        # return self.__detectDefaultBaseFilter(strContents, valves)        
+        # return ERR_OK
+        
+        #TODO: 반환값이 변경되었다. typing 구문 제외
+        return self.__detectFilterFromDB(strContents, valves)
+    
+    #정책 테스트, 한개의 정책만 테스트 한다. TODO: 우선 개발후 2차 리펙토링
+    def TestRulePattern(self, strPrompt:str, strRegexRule:str, strAction:str):
+        
+        '''
+        '''
+        
+        counts:dict = {"block": 0, "masking": 0, "accept": 0}
+        
+        spans: List[Tuple[int, int]] = []
+        
+        #TODO: 탐지된 id, name은 버린다.
+        
+        #없으면 실행을 제외한다.
+        if None == strRegexRule or 0 == len(strRegexRule):            
+            raise Exception(f"invalid flag, no rule")
+                
+        regexPattern:re.Pattern = re.compile(strRegexRule, 0)
+        
+        dictRegexPattern:dict = {
+            "id" : "dummy",
+            "name" : "dummy",
+            "rule" : strRegexRule,
+            "action" : strAction,
+            "regex_pattern" : regexPattern,
+            "regex_flag" : 0,
+            "regex_group" : 0,
+            "regex_group_val" : None,
+        }
+        
+        #최초 탐지된 룰 ID, Name을 반환하도록 개선
+        # dictDetectRule: dict = {"id": "", "name": ""}
+        dictDetectRule: dict = {}
+        
+        self.__detectFilterPatternAt(strPrompt, spans, counts, dictDetectRule, dictRegexPattern)
+        
+        return (spans, counts, dictDetectRule)
+        
+    #상속, DB의 패턴 정책을 수신받는다. 
+    def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
+        '''
+        전체 정책을 받고, 각 정책에서 필요한 부분을 추출해서 사용한다.
+        TODO: 인수인계 시점에는 정책의 구분자가 없어, 받은 데이터의 rule에 대해서 로그로 확인까지만 구현한다.
+        '''
+        
+        #정상적인 수신이라는 가정 => 정상이 아니라도, None일수 있다.
+        data:list = dictFilterPolicy.get("data")
+        
+        if None == data:
+            LOG().error("invalid db data, no data, skip")
+            return ERR_FAIL
+        
+        LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
+        
+        #TEST 디버깅, 필요할경우 정책 업데이트 (향후 제거)
+        # for dictPolicy in data:
+            
+        #     rule:str = dictPolicy.get("rule")
+        #     name:str = dictPolicy.get("name")
+        #     action:str = dictPolicy.get("action")
+            
+        #     #TODO: 2개의 옵션이 필요 => dictionary쪽이 나을수 있겠다. tuple X
+        #     regex_flag:int = dictPolicy.get("regex_flag")
+        #     regex_group:str = dictPolicy.get("regex_group")
+        
+        #     LOG().debug(f"rule received, rule = {rule}, name = {name}, action = {action}")
+        
+        #TODO: 정책에 대한 비교, 이전 정책과 현재 정책이 같으면, skip한다.
+        bFilterChanged:bool = self.IsFilterPolicyChanged(dictFilterPolicy)
+        
+        #TODO: 분기문 안에서 처리하는게 직관적으로 보인다.        
+        # if False == bFilterChanged:
+        if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
+            
+            #정책 카운트, data 항목 이하. TOOD: 모든 항목을 지우는 케이스도 고려할것.
+            data:dict = dictFilterPolicy.get("data", {})
+
+            LOG().info(f"filter pattern policy is changed, rule count = {len(data)}")  
+            
+            #원본 정책, 저장한다.
+            self.UpdateBaseDBFilterPolicy(dictFilterPolicy)
+            
+            #TODO: 패턴에 대한 반영 기능은 필요하다. 실제 사용 변수에 대한 업데이트, 개별 패턴으로 반영이 필요하다.
+            self.__updateRegexPatternFromDB(data)                                  
+            # return ERR_OK 
+            #TODO: 실패시의 예외, 반환에 대한 주의
+        
+        
+        return ERR_OK
+    
+    ################################################# private
+
+    #DB에서 정책을 받아서 업데이트 한다.
+    def __updateRegexPatternFromDB(self, lstFilterData:list):
+        
+        '''
+        
+        다음 패턴, rule만 받아서, 지정된 패턴에 추가한다.
+        data": [
+        {
+        "id": "78c85826-78f5-4e93-8aaf-833acb34d43c",
+        "name": "Masking rule",
+        "targets": [
+            "api"
+        ],
+        "typeMask": 2,
+        "operator": "AND",
+        "rule": "",
+        "prompt": "프롬프트",
+        "scope": "api",
+        "action": "masking",
+        "status": "deployed",
+        "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
+        },
+        
+        TODO: 우선 rule을 받고, 이후 하나씩 확장한다.
+        
+        추가적인 정규식 flag 패턴이 필요하다. MULTILINE으로 되어 있다.
+        
+        SRE_FLAG_IGNORECASE = 2 # case insensitive
+        SRE_FLAG_LOCALE = 4 # honour system locale
+        SRE_FLAG_MULTILINE = 8 # treat target as multiline string
+        SRE_FLAG_DOTALL = 16 # treat target as a single string
+        SRE_FLAG_UNICODE = 32 # use unicode "locale"
+        SRE_FLAG_VERBOSE = 64 # ignore whitespace and comments
+        SRE_FLAG_DEBUG = 128 # debugging
+        SRE_FLAG_ASCII = 256 # use ascii "locale"
+        '''
+        
+        #TODO: 마찬가지로, 기존 데이터 삭제, 다만 데이터가 동일한지 체크하는 로직 필요
+        self.__listDBRegexPattern.clear()
+        
+        for dictPolicy in lstFilterData:
+            
+            #정책ID, 이름을 추가, 최초에 걸린 ID와 Name을 추가하여, 반환하도록 개선.
+            id:str = dictPolicy.get("id")
+            name:str = dictPolicy.get("name")
+            
+            rule:str = dictPolicy.get("rule")
+            
+            action:str = dictPolicy.get("action")
+            
+            #수신받은 rule을, 신규의 db filter 패턴에 추가한다.
+            #기존과 동일한 패턴으로 관리를 위해서 tuple로 관리, 이름과 rule
+            #성능의 약간의 개선을 위해서 컴파일된 객체로 관리 (TODO: DB 갱신 시점에 반복 갱신은 개선 필요)
+            
+            #TODO: 추가적인 컴파일 옵션이 필요하다. 우선 
+            # regex_flag:int = re.DOTALL
+            
+            #TODO: 2개의 옵션이 필요 => dictionary쪽이 나을수 있겠다. tuple X
+            regexFlag:int = dictPolicy.get("regexFlag", 0)
+            regexGroup:str = dictPolicy.get("regexGroup", 0)
+            regexGroupVal:str = dictPolicy.get("regexGroupVal", None)
+            
+            #TODO: 없는 경우에 대한 처리
+            
+            #없으면 실행을 제외한다.
+            if None == rule or 0 == len(rule):
+                LOG().error(f"invalid flag, no rule")
+                continue
+	          
+            #regexFlag, 예외처리
+            if None == regexFlag:
+                regexFlag = re.DOTALL
+       
+            regexPattern:re.Pattern = re.compile(rule, regexFlag)
+            
+            #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
+            # tupleRulePattern = (name, rule, regexPattern)
+            
+            dictRegexPattern:dict = {
+                "id" : id,
+                "name" : name,
+                "rule" : rule,
+                "action" : action,
+                "regex_pattern" : regexPattern,
+                "regex_flag" : regexFlag,
+                "regex_group" : regexGroup,
+                "regex_group_val" : regexGroupVal,
+            }
+            
+            LOG().debug(f"update regex pattern, policy = {dictPolicy}")
+            
+            self.__listDBRegexPattern.append(dictRegexPattern)
+            
+        LOG().debug(f"regex db count = {len(self.__listDBRegexPattern)}")
+        
+        return ERR_OK
+    
+    #기 구현된 detect secret pattern의 정규식, 이관
+    def __initializeRegexPattern(self, ):
+        
+        '''
+        '''
+        
+        # ---------- 엔트로피 후보/도우미 ----------
+        self.__regexCandidate:re.Pattern = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
+        
+        #TODO: 이 기능은 파악이 안되어 유지
+        self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
+        self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
+        
+        return ERR_OK
+        
+        #정책 테스트, 별도의 정책을 만든다. DB 패턴, List로 관리
+        #기존 정책, 한개를 제외
+        #해당 정책에서 rule을 조회
+        
+        # self.__regexPEMBlock:re.Pattern = re.compile(
+        #     r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
+        #     re.MULTILINE,
+        # )
+        
+        # # JwtTokenDetector: JWT 토큰
+        # self.__regexJWTPattern:re.Pattern = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
+        
+        # # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
+        # key_kv:str = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
+        # sep:str = r"\s*[:=]\s*"
+        
+        # #TODO: DB 테스트를 위해서, 정책을 주석 처리한다.        
+        # # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
+        # self.__listKnownRegexPatterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
+            
+        #     # AWSKeyDetector
+            
+        #     ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
+        #     ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
+
+        #     # AzureStorageKeyDetector (connection string)
+        #     ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+        #     ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+
+        #     # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
+
+        #     # BasicAuthDetector: scheme://user:pass@host
+        #     ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
+
+        #     # CloudantDetector: https://user:pass@<account>.cloudant.com
+        #     ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
+
+        #     # DiscordBotTokenDetector
+        #     ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
+
+        #     # GitHubTokenDetector (classic/pat 등)
+        #     ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
+
+        #     # MailchimpDetector (키 형태: 32 hex + -usN)
+        #     ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
+
+        #     # SlackDetector
+        #     ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
+        #     ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
+
+        #     # StripeDetector
+        #     ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+        #     ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+
+        #     # TwilioKeyDetector
+        #     ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
+        #     ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
+
+        #     # KeywordDetector (일반 할당형)
+        #     ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
+        #     ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
+        #     ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
+
+        #     # OpenAI/Custom-like
+        #     ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
+        #     # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
+        #     ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
+            
+        # ]
+        
+        
+        #TODO: 테스트
+        '''
+        self.__listKnownRegexPatterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
+            
+            # AWSKeyDetector            
+            ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
+        ]
+        '''
+
+        
+    
+    # filter 처리 리펙토링, 탐지 기능 재구현
+    def __detectFilterFromDB(self, text:str, valves:Any):
+        
+        '''
+        db의 필터 정책을 순회하여, action 값이 maskinig, block여부에 따라, 먼저 걸린 순서로 반환한다.
+        우선 전체를 순회하며, block이 하나라도 걸리면 blocking 이고, blocking 이 없을때 masking 여부를 체크한다.
+        전체 순회는 수행하며, 기존의 count 필드를 action을 기준으로 카운트하여 반환한다. 
+        탐지후 결과는 detect_secret 필터에서 처리한다.
+        
+        TODO: 일부 하드코딩은 존재하며, 나중에 추가 리펙토링을 진행한다.
+        '''
+ 
+        # counts:dict = {"pem": 0, "jwt": 0, "known": 0, "entropy": 0}        
+        counts:dict = {"block": 0, "masking": 0, "accept": 0}
+        
+        spans: List[Tuple[int, int]] = []
+        
+        #최초 탐지된 룰 ID, Name을 반환하도록 개선
+        # dictDetectRule: dict = {"id": "", "name": ""}
+        dictDetectRule: dict = {}
+        
+        #TODO: dbRegexPattern, DB 동기화 기능 추가, deepcopy 추가
+        listDBRegexPattern:list = copy.deepcopy(self.__listDBRegexPattern)
+        
+        # for dictDBPattern in self.__listDBRegexPattern:
+        for dictDBPattern in listDBRegexPattern:
+            self.__detectFilterPatternAt(text, spans, counts, dictDetectRule, dictDBPattern)
+            
+        # (D) 엔트로피 => 이건 어떤 기능인지 몰라서, 우선 추가
+        for s, e in self.__high_entropy_hits(text, valves):
+            self.__add_span(spans, s, e)
+            counts["entropy"] = counts.get("entropy", 0) +1
+            
+        return (spans, counts, dictDetectRule)
+    
+    #개별 dictionary 별 정책 조회
+    def __detectFilterPatternAt(self, text:str, spans:list, dictCount:dict, dictDetectRule:dict, dictDBPattern:dict):
+        
+        '''
+        '''
+        
+        id:str = dictDBPattern.get("id")
+        name:str = dictDBPattern.get("name")
+        
+        # rule:str = dictDBPattern.get("rule")
+        action:str = dictDBPattern.get("action")
+        # regex_flag:int = int(dictDBPattern.get("regex_flag"))
+        regex_group:int = (dictDBPattern.get("regex_group"))
+        regex_group_val:str = dictDBPattern.get("regex_group_val")
+        
+        regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
+        
+        #group 여부인지, 아닌지에 따른 분기, 여기는, 우선 나누지 않는다.
+        
+        if CONFIG_OPT_ENABLE == regex_group:
+            for m in regex_pattern.finditer(text):
+                if regex_group_val and regex_group_val in m.groupdict():
+                    s, e = m.span(regex_group_val)
+                else:
+                    s, e = m.span(0)
+
+                self.__add_span(spans, s, e)
+                # counts[action] += 1
+                dictCount[action] = dictCount.get(action,0) + 1
+                
+                self.__assignFirstDetectedRule(dictDetectRule, id, name)
+        else:
+            for m in regex_pattern.finditer(text):
+                self.__add_span(spans, m.start(), m.end())
+                # counts[action] += 1
+                dictCount[action] = dictCount.get(action,0) + 1
+                
+                self.__assignFirstDetectedRule(dictDetectRule, id, name)
+                
+        return ERR_OK
+    
+    #최초 탐지된 룰 정보 할당.
+    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str):
+        
+        '''
+        '''
+        
+        #최초 탐지되면, 추가 (TODO: 리펙토링)
+        if 0 == len(dictDetectRule):
+            #test
+            LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
+            dictDetectRule["id"] = strRuleID
+            dictDetectRule["name"] = strRuleName
+        
+        return ERR_OK
+        
+    
+    # ---------- 마스킹 유틸 ----------    
+    def __add_span(self, spans: List[Tuple[int, int]], start: int, end: int):
+        
+        '''
+        '''
+        
+        if start < end:
+            spans.append((start, end))
+            
+        #pass
+        
+        
+    def overlaps_url(self, url_spans:list, s: int, e: int) -> bool:
+        
+        '''
+        '''
+        for us, ue in url_spans:
+            if not (e <= us or s >= ue):
+                return True
+        return False
+            
+            
+    # ---------- 엔트로피 매치 ----------
+    def __high_entropy_hits(self, text: str, valves:Any) -> List[Tuple[int, int]]:
+        
+        '''
+        '''
+        
+        # v = self.valves
+        hits: List[Tuple[int, int]] = []
+
+        # URL 범위는 엔트로피 검사에서 제외(오탐 방지)
+        url_spans = [m.span() for m in re.finditer(r"https?://\S+", text)]
+
+        for m in self.__regexCandidate.finditer(text):
+            
+            s0, e0 = m.start(), m.end()
+            
+            if self.overlaps_url(url_spans, s0, e0):
+                continue
+
+            raw = m.group(0)
+            norm:str = self.__normalize_for_entropy(raw)
+            
+            nLen:int = len(norm)
+            if nLen < 12:  # 정규화 후 너무 짧으면 스킵(완화)
+                continue
+
+            fHighVal:float = self.__entropy(norm)
+                        
+            looks_b64:bool = self.__looks_b64(re.sub(r"[^A-Za-z0-9+/=]", "", raw))
+            looks_hex:bool = self.__looks_hex(norm)
+
+            keep = False
+            if looks_b64:
+                keep = (nLen >= valves.min_len_b64 and fHighVal >= valves.thr_b64)
+            elif looks_hex:
+                keep = (nLen >= valves.min_len_hex and fHighVal >= valves.thr_hex)
+            else:
+                keep = (nLen >= valves.min_len_mixed and fHighVal >= valves.thr_mixed)
+
+            # 프리픽스 완화(옵션)
+            if valves.prefix_relax and not keep:
+                
+                low = raw.lower()
+                if low.startswith(("ak-", "tk-", "ghp-", "ghp_", "gho-", "gho_", "ghu-", "ghu_", "ghs-", "ghs_", "ghr-", "ghr_")):
+                    has_digit = any(c.isdigit() for c in norm)
+                    has_alpha = any(c.isalpha() for c in norm)
+                    if nLen >= 16 and has_digit and has_alpha and fHighVal >= 3.4:  # 더 완화
+                        keep = True
+
+            if keep:
+                hits.append((s0, e0))
+
+        return hits
+    
+    
+    def __normalize_for_entropy(self, strData: str) -> str:
+        
+        '''
+        '''
+        
+        # 접미사 -dev\d+, -test\d+ 제거 후 비영숫자 제거
+        strData = re.sub(r"[-_](?:dev|test)[0-9]*$", "", strData, flags=re.IGNORECASE)
+        return re.sub(r"[^A-Za-z0-9]", "", strData)
+    
+    # ---------- 엔트로피 계산/정규화 ----------    
+    def __entropy(self, s: str) -> float:
+        '''
+        '''
+        if not s:
+            return 0.0
+        
+        counts = {}
+        
+        for ch in s:
+            counts[ch] = counts.get(ch, 0) + 1
+            
+        n = len(s)
+        
+        return -sum((c / n) * math.log2(c / n) for c in counts.values())
+    
+    
+    def __looks_b64(self, s: str) -> bool:
+        return bool(self.re_b64_shape.match(s))
+
+    def __looks_hex(self, s: str) -> bool:
+        return bool(self.re_hex_shape.match(s))
+    
+    
+    
+    # ---------- 탐지 스팬 산출(정규식 + 엔트로피) ----------
+    # def __detectSpans(self, text:str, valves:Any) -> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+    # def __detectDefaultBaseFilter(self, text:str, valves:Any) -> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+        
+    #     '''
+    #     TODO: 반환값의 정리가 필요하며, 우선 기존과 호환되도록 개발한다.
+    #     '''
+        
+    #     spans: List[Tuple[int, int]] = []
+        
+    #     #TODO: 이 패턴 구조를 활용. 먼저 걸리는 정책, 차단이 되면, 해당 정책을 반환한다.
+    #     #지금 정책은 버리고, 별도의 DB 정책을 제공해야 할 가능성.
+    #     counts:dict = {"pem": 0, "jwt": 0, "known": 0, "entropy": 0}
+
+    #     # (A) PEM 블록(멀티라인 전체)
+    #     for m in self.__regexPEMBlock.finditer(text):
+    #         self.__add_span(spans, m.start(), m.end())
+    #         counts["pem"] += 1
+
+    #     # (B) JWT
+    #     for m in self.__regexJWTPattern.finditer(text):
+    #         self.__add_span(spans, m.start(), m.end())
+    #         counts["jwt"] += 1
+
+    #     # (C) 알려진 패턴(값 그룹만 마스킹)
+    #     for _, pat, grp in self.__listKnownRegexPatterns:
+            
+    #         for m in pat.finditer(text):
+    #             if grp and grp in m.groupdict():
+    #                 s, e = m.span(grp)
+    #             else:
+    #                 s, e = m.span(0)
+    #             self.__add_span(spans, s, e)
+    #             counts["known"] += 1
+
+    #     # (D) 엔트로피(완화 임계치)
+    #     for s, e in self.__high_entropy_hits(text, valves):
+    #         self.__add_span(spans, s, e)
+    #         counts["entropy"] += 1
+            
+            
+    #     # #DB 패턴 추가, TODO: counts 데이터는 현재 사용하지 않는다.
+    #     # #하지만, 해당 형상은 유지하고, 향후 개선해 본다.
+    #     # # for name, rule, regexPattern in self.__listDBRegexPattern:
+    #     # for _, _, regexPattern in self.__listDBRegexPattern:
+            
+    #     #     #나머지 항목은 우선 하드코딩, 향후 개선
+    #     #     for m in regexPattern.finditer(text):
+    #     #         if grp and grp in m.groupdict():
+    #     #             s, e = m.span(grp)
+    #     #         else:
+    #     #             s, e = m.span(0)
+    #     #         self.__add_span(spans, s, e)
+    #     #         counts["known"] += 1
+
+    #     return spans, counts
+    
+    

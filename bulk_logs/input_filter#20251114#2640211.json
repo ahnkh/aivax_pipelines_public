@@ -1,0 +1,1 @@
+{"@timestamp":"2025-11-14T02:23:17.007640Z","event":{"id":"","type":"query"},"request":{"id":""},"session":{"id":""},"user":{"id":"","role":null,"email":""},"src":{"ip":"192.168.10.18"},"channel":"web","query":{"text":"내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"}}

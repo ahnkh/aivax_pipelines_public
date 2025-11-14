@@ -1,0 +1,1 @@
+{"pipelines": ["*"], "priority": 2, "enabled": true, "PII_API_URL": "http://vax-pipelines:9292/mask", "TIMEOUT_SECONDS": 10, "ENABLE_LOG": false, "FALLBACK_ON_ERROR": true, "os_enabled": true, "os_url": "https://vax-opensearch:9200", "os_index": "regex_filter", "os_user": "admin", "os_pass": "Sniper123!@#", "os_insecure": true, "os_timeout": 3}

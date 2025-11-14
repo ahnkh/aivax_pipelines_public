@@ -1,0 +1,1 @@
+{"pipelines": ["*"], "priority": 5, "enabled": true, "log_to_console": true, "mask_char": "[MASKING]", "min_len_b64": 18, "min_len_hex": 32, "min_len_mixed": 24, "thr_b64": 4.3, "thr_hex": 3.2, "thr_mixed": 4.0}

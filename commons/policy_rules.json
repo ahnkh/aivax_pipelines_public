@@ -1,0 +1,49 @@
+{
+  "statusCode": 201,
+  "message": "모든 정책 조회에 성공했습니다",
+  "data": [
+    {
+      "id": "ce01bfd6-b337-43a3-a686-7a3341fabc8e",
+      "name": "KR_RRN",
+      "targets": [
+        "pii"
+      ],
+      "typeMask": 1,
+      "operator": "AND",
+      "rule": "\\b(\\d{2})(\\d{2})(\\d{2})-?([1-4])(\\d{6})\\b",
+      "scope": "user",
+      "action": "masking",
+      "status": "deployed",
+      "adminId": "1"
+    },
+    {
+      "id": "8b7bb33e-7470-46eb-87da-c969a6ee23c4",
+      "name": "KR_PHONE",
+      "targets": [
+        "pii"
+      ],
+      "typeMask": 1,
+      "operator": "AND",
+      "rule": "\\b0\\d{1,2}-\\d{3,4}-\\d{4}\\b",
+      "scope": "user",
+      "action": "block",
+      "status": "deployed",
+      "adminId": "1"
+    },
+    {
+      "id": "91179d23-002c-4a9c-b1a7-ea966f1bcfaa",
+      "name": "EMAIL",
+      "targets": [
+        "pii"
+      ],
+      "typeMask": 1,
+      "operator": "AND",
+      "rule": "[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}(?=$|\\s|[<>,;:)\\]]|[^\\x00-\\x7F])",
+      "scope": "user",
+      "action": "accept",
+      "status": "deployed",
+      "adminId": "1"
+    }
+  ],
+  "total": 3
+}

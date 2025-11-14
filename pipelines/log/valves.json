@@ -1,0 +1,1 @@
+{"pipelines": ["*"], "priority": 6, "enabled": true, "inlet_log_enabled": true, "inlet_log_pretty": true, "inlet_log_truncate": null, "inlet_log_level": "INFO", "include_user_in_log": true}
