@@ -344,5 +344,5 @@ class Pipeline(PipelineBase):
             #if not ok:
             #    logger.warning("[response_opensearch] OpenSearch index failed")
         except Exception as e:
-            logger.exception("[response_opensearch] outlet error: %s", e)
+            LOG().error(traceback.format_exc())
         return body

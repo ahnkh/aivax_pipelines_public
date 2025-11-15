@@ -11,6 +11,10 @@ import os
 #import requests
 # from typing import Optional, Dict, Any, List
 
+import uuid
+from datetime import datetime, timezone
+# import requests
+
 from lib_include import *
 
 from type_hint import *
@@ -75,20 +79,13 @@ class Pipeline(PipelineBase):
         # print(f"test ##1")
         
         # disabled 시 그대로 통과
-        try:
-            if not getattr(self.valves, "enabled", True):
-                LOG().info("action disabled")
-                return body
-        except Exception:
-            pass
-    
-        # print(f"test ##2")
-        import uuid
-        from datetime import datetime, timezone
-        import requests
+        
+        if not getattr(self.valves, "enabled", True):
+            LOG().info("action disabled")
+            return body
     
         def ts_isoz() -> str:
-            return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     
         api_url   = self.valves.PII_API_URL
         timeout   = self.valves.TIMEOUT_SECONDS
@@ -121,7 +118,7 @@ class Pipeline(PipelineBase):
             user_email = None
             
             if isinstance(__user__, dict):
-                user_id = __user__.get("id") or user.get("name")
+                user_id = __user__.get("id") or __user__.get("name")
                 user_email = __user__.get("email")
                 
             if user_id is None or user_email is None:
@@ -144,7 +141,7 @@ class Pipeline(PipelineBase):
                 except Exception:
                     pass
             if not client_ip and isinstance(__user__, dict):
-                client_ip = user.get("ip")
+                client_ip = __user__.get("ip")
             client_ip = client_ip or ""
     
             # ===== 마지막 user 메시지 찾아 마스킹 =====
@@ -158,9 +155,12 @@ class Pipeline(PipelineBase):
                     original_text = messages[i].get("content", "")
                     # print(api_url)
                     # print(original_text)
+                    
+                    #TODO: pii 요청, ssl proxy의 성능 저하 가능성 (개선 필요)
                     resp = requests.post(api_url, json={"text": original_text}, timeout=timeout)
                     resp.raise_for_status()
-                    data = resp.json()
+                    
+                    data:dict = resp.json()
                     # print(f"test ##6-3")
                     # print(data)
     
@@ -242,6 +242,9 @@ class Pipeline(PipelineBase):
             # print(f"test ##8")
             body["messages"] = messages
 
+
+            #TODO: ssl inspection 에서 호출이 필요할경우, 메시지 구조 개선 필요
+            #우선은 현재 구조를 유지한다.
             if std_action == "block":
                 block_message = f"🚫 보안 정책에 의해 차단되었습니다. 메시지에 민감정보가 포함되어 있으니 해당 정보를 제거한 후 다시 시도해 주세요." 
                 raise Exception(block_message)
@@ -252,6 +255,7 @@ class Pipeline(PipelineBase):
             
             LOG().error(traceback.format_exc())
             
+            #TODO: fallback, 무슨 기능인지 확인
             if fallback:
                 # print(f"[PII-MASK][WARN] masking failed: {e}")
                 return body

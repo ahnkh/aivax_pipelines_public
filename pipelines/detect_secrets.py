@@ -373,9 +373,12 @@ class Pipeline(PipelineBase):
             # self._index_opensearch(os_doc_final)
             self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, os_doc_final)
 
+            '''
+            #2025.11.15 2단계 모델에 반영되었으나, 3단계 모델에서는 ssl proxy로 전달되지 않아 주석 처리
             if std_action == "block":
                 block_message = f"🚫 보안 정책에 의해 차단되었습니다. 메시지에 민감정보가 포함되어 있으니 해당 정보를 제거한 후 다시 시도해 주세요." 
                 raise Exception(block_message)
+            '''
 
         return body
     
@@ -498,7 +501,6 @@ AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐�
 민감 정보를 전송할 경우, 기밀 정보 또는 개인 정보 유출등의 피해가 발생할 수 있으니 각별한 주의를 부탁드려요
 요청하신 프롬프트는 AIVAX에 의해서 요청이 차단되었습니다.
 세부 지침 사항은 관리자에게 문의해주세요
-(김상표,김윤정,김인호,서유진,안규현,이주용 드림)
         '''
         
         return strBlockMessage
