@@ -80,7 +80,7 @@
 	        "action" : "query_for_list",
             "query" : "SELECT 
                         USER_ID, REG_DATE, EMAIL, AI_SERVICE, ETC_COMMENT, USE_FLAG
-                    FROM APP.AI_USER_ACCOUNT {where} order by REG_DATE DESC limit {limit}"
+                    FROM app.AI_USER_ACCOUNT {where} order by REG_DATE DESC limit {limit}"
         }
     ]
 }

@@ -919,3 +919,34 @@ socket.gaierror: [Errno -2] Name or service not known
     nError = sock.connect_ex((strDBServer,nDBPort))
 socket.gaierror: [Errno -2] Name or service not known
 
+[2025-11-24 14:35:02,972][2603760][main.py][INFO] (main:171) start process pid = 2603760, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:35:05,722][2603760][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 14:35:05,733][2603760][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 14:35:05,734][2603760][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 14:35:05,735][2603760][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 14:35:05,740][2603760][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 14:35:05,745][2603760][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 14:35:05,749][2603760][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 127.0.0.1, port = 3306, keep alive = 1
+[2025-11-24 14:35:05,757][2603760][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': '192.168.10.22', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 14:35:05,759][2603760][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 14:35:13,055][2603760][pipeline_test_module.py][DEBUG] (testSqlprintf:30) test sqlprint
+[2025-11-24 14:35:17,842][2603760][mariadb_connector.py][INFO] (_connectToDataBase:287) create mariadb connector, host = 127.0.0.1, port = 3306
+[2025-11-24 14:35:17,852][2603760][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_insert_update_ai_user_account, action = execute, error code = 0
+[2025-11-24 14:35:25,013][2603760][pipeline_test_module.py][DEBUG] (testSqlprintf:46) insert user account, result = {'error_code': 0, 'query_data': {'success': True, 'rowcount': 1, 'lastrowid': 0}}
+[2025-11-24 14:35:26,100][2603760][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_select_ai_user_account, action = query_for_list, error code = 0
+[2025-11-24 14:35:26,729][2603760][pipeline_test_module.py][DEBUG] (testSqlprintf:52) select user account = {'error_code': 0, 'query_data': [{'USER_ID': 'ghahn', 'REG_DATE': '2025-11-24 14:35:13', 'EMAIL': 'ghahn@wins21.co.kr', 'AI_SERVICE': 0, 'ETC_COMMENT': '', 'USE_FLAG': 1}]}
+[2025-11-24 14:35:27,988][2603760][main.py][INFO] (main:204) end process pid = 2603760, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:35:28,189][2603760][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 136, in RequestToDBPolicy
+    raise Exception(f"fail request to db server, error = {response.status_code}({strResponseData})")
+Exception: fail request to db server, error = 502(<html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+)
+

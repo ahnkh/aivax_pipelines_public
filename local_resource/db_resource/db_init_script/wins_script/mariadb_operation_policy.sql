@@ -1,8 +1,9 @@
 
 USE LLM_POLICY;
 
-/* 사용자 계정 AI에서 수집된 계정, 가안으로 생성 */
-CREATE TABLE IF NOT EXISTS APP.AI_USER_ACCOUNT
+/* 사용자 계정 AI에서 수집된 계정, 가안으로 생성 app: 소문자로 되어 있다.*/
+
+CREATE TABLE IF NOT EXISTS app.AI_USER_ACCOUNT
 (
     USER_ID VARCHAR(128)  PRIMARY KEY,
     REG_DATE VARCHAR(64)  DEFAULT '',

@@ -101,7 +101,7 @@
             "desc" : "AI 서비스, 계정 추가",
             "key": "rdb_insert_update_ai_user_account",
 	        "action" : "execute",
-            "query" : "INSERT INTO APP.AI_USER_ACCOUNT(USER_ID, REG_DATE, EMAIL, AI_SERVICE, ETC_COMMENT, USE_FLAG) VALUES 
+            "query" : "INSERT INTO app.AI_USER_ACCOUNT(USER_ID, REG_DATE, EMAIL, AI_SERVICE, ETC_COMMENT, USE_FLAG) VALUES 
             ('{user_id}', '{reg_date}', '{email}', {ai_service}, '{etc_comment}', {use_flag})
             ON DUPLICATE KEY UPDATE                
                 REG_DATE = VALUES(REG_DATE),
