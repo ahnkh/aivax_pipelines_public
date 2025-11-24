@@ -49,6 +49,45 @@
             }
                 
         ]
+    },
+
+    "db_connector":
+    {
+        "db_connection_list" : [
+            "local_resource/db_resource/db_custom_wins.json"
+        ]
+    },
+
+    "sql_query_map":
+    {
+
+        "querymap_list":
+        [
+            {
+                
+                "category" : "rdb",
+
+                "json_query": [                    
+                    "local_resource/db_resource/sql_query_map/rdb_query/json/rdb_wins_select_query.json",
+                    "local_resource/db_resource/sql_query_map/rdb_query/json/rdb_wins_insert_query.json"
+                ],
+                "xml_query": []                
+            },
+
+            {
+                "category": "sqlite",
+
+                "json_query": [],
+                "xml_query": []
+            }
+        ]
+    },
+
+    "user_account_data_module":
+    {
+
     }
+
+
     
 }

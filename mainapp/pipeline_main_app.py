@@ -6,9 +6,6 @@ from lib_include import *
 
 from type_hint import *
 
-#TODO: type_hint 개념 적용.
-from utils.log_write_modules.log_write_handler import LogWriteHandler
-
 #helper 추가
 from mainapp.helper.pipeline_app_helper import PipelineAppHelper
 
@@ -21,9 +18,18 @@ from block_filter_modules.filter_policy.filter_policy_manager import FilterPolic
 #Filter 별 패턴 탐지 기능 관리
 from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
 
+#TODO: type_hint 개념 적용.
+from utils.log_write_modules.log_write_handler import LogWriteHandler
+
+# 계정 데이터 관리 모듈 추가
+from utils.user_account_modules.user_account_data_handler import UserAccountDataHandler
+
+from common_modules.global_common_module import GlobalCommonModule
+
 '''
 관리 모듈, MainApp 실행
 입력 인터페이스, FastApi와는 State로 연결한다.
+MainApp가 GlobalResourceManager 기능도 내장한다. (중간정도의 확장성)
 '''
 
 class PipeLineMainApp:
@@ -50,6 +56,9 @@ class PipeLineMainApp:
         
         #filter, 패턴 탐지 관리
         self.__filterPatternManager:FilterPatternManager = None
+        
+        #사용자 계정 데이터 관리
+        self.__userAccountDataHandler:UserAccountDataHandler = None
         pass
     
     
@@ -68,12 +77,19 @@ class PipeLineMainApp:
         #local 설정 config, 기본으로 관리, 우선 하나로 관리
         self.__dictJsonLocalConfigRoot:dict = {}
         
+        #이름 변경.
+        dictJsonLocalConfigRoot:dict = self.__dictJsonLocalConfigRoot
+        
         #환경설정, 가장 먼저 로딩한다., TODO: config 위치는 고정하자.
         self.__mainAppEnvLoader = MainAppEnvLoader()
-        self.__mainAppEnvLoader.Initalize(dictOpt, self.__dictJsonLocalConfigRoot)
+        self.__mainAppEnvLoader.Initalize(dictOpt, dictJsonLocalConfigRoot)
         
         self.__logWriteHandler:LogWriteHandler = LogWriteHandler()        
-        self.__initializeLogWriter(self.__logWriteHandler, self.__dictJsonLocalConfigRoot)
+        self.__initializeLogWriter(self.__logWriteHandler, dictJsonLocalConfigRoot)
+        
+        self.__initializeFactoryInstance(dictJsonLocalConfigRoot)
+        
+        self.__initializeDBModule(dictOpt, dictJsonLocalConfigRoot)
         
         #TODO: 초기화, 환경 설정 관리는 env loader 로 관리
         #TODO: 설정 정보의 관리, 사양 관리 필요.
@@ -83,12 +99,16 @@ class PipeLineMainApp:
         
         #filter, 패턴 탐지 관리, TODO: policy manager와 연결되어 있다.
         self.__filterPatternManager:FilterPatternManager = FilterPatternManager()
-        self.__filterPatternManager.Initialize(self.__dictJsonLocalConfigRoot)
+        self.__filterPatternManager.Initialize(dictJsonLocalConfigRoot)
         
         # 정책 업데이트, TODO: pipeline의 filter 접근은 mainapp를 통해서 접근
         # 정책이 업데이트 되면, filterPatternManager로 정책을 전달한다. (브로드 캐스팅)
         self.__filterPolicyManager:FilterPolicyManager = FilterPolicyManager()
-        self.__filterPolicyManager.Initialize(self.__dictJsonLocalConfigRoot, self.__filterPatternManager)
+        self.__filterPolicyManager.Initialize(dictJsonLocalConfigRoot, self.__filterPatternManager)
+        
+        #사용자 계정 데이터 관리
+        self.__userAccountDataHandler:UserAccountDataHandler = UserAccountDataHandler()
+        self.__initializeUserAccountDataHandler(self.__userAccountDataHandler, dictJsonLocalConfigRoot)
         
         return ERR_OK
     
@@ -123,7 +143,7 @@ class PipeLineMainApp:
         self.__appHelper.LinkPipelineModules(mainApp, self.__dictPipelineModulesRef)
         return self.__dictPipelineModulesRef
         
-    #LogHandler, 로그를 추가한다.
+    #LogHandler, OpenSearch Log 로그 데이터를 추가한다.
     def AddLogData(self, strDataType:str, dictOuptut:dict):
         
         '''
@@ -132,6 +152,15 @@ class PipeLineMainApp:
         '''
         
         self.__appHelper.AddLogData(self.__logWriteHandler, strDataType, dictOuptut)        
+        return ERR_OK
+    
+    #사용자 계정의 추가, TODO: 사이즈가 커지면, 한단계 더 모듈 관리자를 추가한다. (항상 동작해야 하는 기능으로, 직접 호출 구조를 선택한다)
+    def AddUserAccount(self, ):
+        
+        '''
+        TODO: 구조상 스레드, 백그라운드 I/O
+        '''
+        
         return ERR_OK
     
     #패턴 모듈, 중계 기능만 제공하고, 실제 구현은 하지 않는다.
@@ -143,6 +172,12 @@ class PipeLineMainApp:
         '''
         
         return self.__filterPatternManager.GetFilterPattern(strFilterPatternKey)
+    
+    
+    #테스트 함수, 추가
+    def Test(self, dictTestOpt:dict):
+        
+        pass
         
         
     ########################################## private
@@ -158,6 +193,48 @@ class PipeLineMainApp:
         log_write_module:dict = dictJsonLocalConfigRoot.get("log_write_module")
         
         logWriteHandler.Initialize(log_write_module)        
+        return ERR_OK
+        
+    #Factory 모듈, Db 모듈 추가
+    def __initializeFactoryInstance(self, dictJsonLocalConfigRoot:dict):
+        
+        '''        
+        '''
+        
+        LOG().debug("initialize factory instance")
+        
+        # nErrInitializeInstanceFactory = GlobalInstanceFactory.createFactoryInstance(self.__dictJsonLocalConfigRoot)
+        GlobalInstanceFactory.createFactoryInstance(dictJsonLocalConfigRoot)
+        
+        return ERR_OK
+    
+    # RDB 모듈 초기화    
+    def __initializeDBModule(self, dictOpt:dict, dictJsonLocalConfigRoot:dict) -> int:
+
+        '''
+        DB 생성 모듈의 초기화, SQLMap, DBHelper, SQLInterface를 관리하는 모듈의 생성
+        TODO: SQLMap 모듈도, 해당 Instance에서 생성하도록 이관.
+        '''
+        
+        sqlClientInterface:SQLClientInterface = GlobalCommonModule.SingletonFactoryInstance(FactoryInstanceDefine.CLASS_SQL_CLIENT_INTERFACE)
+        
+        #모듈 초기화, 실패시 exception
+        sqlClientInterface.Initialize(dictOpt, dictJsonLocalConfigRoot)
+
+        return ERR_OK
+    
+    # 사용자 계정 정보 저장 관리 모듈 추가
+    def __initializeUserAccountDataHandler(self, userAccountDataHandler:UserAccountDataHandler, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        '''
+        
+        #TODO: 초기 설정값, config 필요
+        
+        user_account_data_module:dict = dictJsonLocalConfigRoot.get("user_account_data_module")
+        
+        userAccountDataHandler.Initialize(user_account_data_module)
+        
         return ERR_OK
        
     

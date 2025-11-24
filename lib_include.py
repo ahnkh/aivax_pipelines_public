@@ -31,13 +31,45 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from libglobal.global_const import *
 
-from libutil.logger import  InitLogger, LOG, AddStreamLogger
+from libutil.logger import *
 
 from libconv.py_conv import *
+
+from libjson.json_helper import JsonHelper
+from libutil.file_io_helper import FileIOHelper
+from libutil.string_buffer_bulk_writer import StringBufferBulkWriter
 
 from libhttp.restapi.api_response_handler import ApiResponseHandler
 
 from libjson.json_helper import JsonHelper
+
+from libsql.connector.db_connector import DBConnector
+from libsql.connector.mariadb_connector import MariaDBConnector
+from libsql.connector.sqlite_connector import SQLiteConnector
+from libsql.query_helper.query_helper import QueryHelper
+
+from libhttprequest.local_define.http_request_define import HttpRequestDefine
+from libhttprequest.http_request_interface import HttpRequestInterface
+
+from libnetwork.network_util import NetworkUtil
+
+from common_modules.const_define.kshell_global_define import KShellGlobalDefine
+from common_modules.const_define.kshell_parameter_define import KShellParameterDefine
+from common_modules.const_define.factory_instance_define import FactoryInstanceDefine, InstanceModulePathDefine
+from common_modules.const_define.db_sql_define import DBSQLDefine, DBQueryObject
+
+from common_modules.const_define.json_local_config_define import JsonLocalConfigDefine
+from common_modules.const_define.web_api_define import WebApiDefine
+from common_modules.const_define.error_define import ErrorDefine
+
+from common_modules.const_define.factory_instance_define import FactoryInstanceDefine, InstanceModulePathDefine
+from common_modules.const_define.db_sql_define import DBSQLDefine, DBQueryObject
+
+from common_modules.instance_factory.global_instance_factory import GlobalInstanceFactory
+
+from common_modules.db_modules.sql_client_interface import SQLClientInterface
+from common_modules.db_modules.sql_map_modules.sql_map_interface import SQLMapInterface
+
 
 # define, const
 
@@ -49,6 +81,7 @@ class APP_PARMETER_DEFINE:
     WEB_HOST = "host"
     WEB_PORT = "port"
     CONFIG = "config"
+    TEST = "test"
     pass
 
 #log index define => index와 log writer id를 동일하게 관리
@@ -93,3 +126,5 @@ CONFIG_FILE_PATH = "./local_resource/config.json"
 CONFIG_OPT_ENABLE = 1 #설정config json True/False 대응, 1: True, 기타 : False
 CONFIG_OPT_DISABLE = 0
 
+
+from mainapp.module_function import sqlprintf

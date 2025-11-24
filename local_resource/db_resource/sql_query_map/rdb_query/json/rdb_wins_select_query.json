@@ -1,0 +1,87 @@
+{
+    "category" : "rdb",
+    "connection_id" : "mariadb_connector",
+
+    "desc" : [        
+        
+    ],
+
+    "query_map":
+    [
+
+        {
+            "desc" : "prompt 쿼리, 전체 조회",
+            "key": "rdb_select_browser_prompt",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        NO,AGENT_ID,REG_DATE,PROMPT,SESSION_ID,USER_ROLE,ALLOWED,MODIFIED_PROMPT,REASON 
+                    FROM LLM_DATA.LOG_PROMPT_REQUEST {where} LIMIT {limit}"
+        },
+
+        {
+            "desc" : "사용자 계정 정보 조회, 로그인 용도",
+            "key": "rdb_select_user_account_login",
+	        "action" : "query_for_object",
+            "query" : "SELECT 
+                        USER_ID, USER_PASSWD, PASSWD_SALT, REG_DATE, EMAIL, DEPT, TEL, ETC_COMMENT, SESSION_ID, LOGIN_STATUS, MODIFY_DATE, LIMIT_DATE,
+                        GROUP_ID, ROLE_ID, USE_FLAG
+                    FROM LLM_POLICY.USER_ACCOUNT where user_id = '{user_id}' limit 1"
+        },
+
+        {
+            "desc" : "사용자 계정 정보 조회, where절로 검색",
+            "key": "rdb_select_user_account",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        USER_ID, USER_PASSWD, PASSWD_SALT, REG_DATE, EMAIL, DEPT, TEL, ETC_COMMENT, SESSION_ID, LOGIN_STATUS, MODIFY_DATE, LIMIT_DATE,
+                        GROUP_ID, ROLE_ID, USE_FLAG
+                    FROM LLM_POLICY.USER_ACCOUNT {where} order by USER_ID DESC limit {limit}"
+        },
+
+        {
+            "desc" : "그룹 정보 조회",
+            "key": "rdb_select_user_group",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        GROUP_ID, GROUP_NAME, REG_DATE, ETC_COMMENT, USE_FLAG                        
+                    FROM LLM_POLICY.USER_GROUP {where} order by GROUP_ID DESC limit {limit}"
+        },
+
+        {
+            "desc" : "필터뷰 정보 조회",
+            "key": "rdb_select_filter_view_info",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        VIEW_ID, TYPE_ID, FILTER_NAME, REG_DATE, FILTER_CONDITION, ETC_COMMENT, USE_FLAG
+                    FROM LLM_POLICY.FILTER_VIEW_INFO {where} order by VIEW_ID DESC limit {limit}"
+        },
+
+        {
+            "desc" : "로그 - MCP 서버 차단 로그 조회",
+            "key": "rdb_select_mcp_server_block",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        NO, SERVER_NAME, TOOL_NAME, REG_DATE, REG_TYPE, ETC_COMMENT, ALLOWED, REASON
+                    FROM LLM_DATA.LOG_MCP_SERVER_BLOCK {where} order by REG_DATE DESC limit {limit}"
+        },
+
+        {
+            "desc" : "로그 - 사용자 행위 로그 조회",
+            "key": "rdb_select_user_monitor",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        NO, USER_ID, SESSION_ID, REG_DATE, ETC, ALLOWED, REASON
+                    FROM LLM_DATA.LOG_USER_MONITOR {where} order by REG_DATE DESC limit {limit}"
+        },
+
+        {
+            "desc" : "AI 서비스 - 사용자 계정 조회",
+            "key": "rdb_select_ai_user_account",
+	        "action" : "query_for_list",
+            "query" : "SELECT 
+                        USER_ID, REG_DATE, EMAIL, AI_SERVICE, ETC_COMMENT, USE_FLAG
+                    FROM APP.AI_USER_ACCOUNT {where} order by REG_DATE DESC limit {limit}"
+        }
+    ]
+}
+

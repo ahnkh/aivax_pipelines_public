@@ -1,0 +1,921 @@
+[2025-11-24 12:08:50,374][37441][main.py][INFO] (main:173) start process pid = 37441, argc = 1, argv = ['main.py']
+[2025-11-24 12:08:50,374][37441][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 12:08:50,375][37441][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 12:08:50,375][37441][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 12:08:50,376][37441][main.py][ERROR] (main:196) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/main.py", line 176, in main
+    pipeLineMainApp.Initialize(dictOpt)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/mainapp/pipeline_main_app.py", line 90, in Initialize
+    self.__initializeDBModule(dictOpt, dictJsonLocalConfigRoot)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/mainapp/pipeline_main_app.py", line 217, in __initializeDBModule
+    sqlClientInterface:SQLClientInterface = GlobalCommonModule.SingletonFactoryInstance(FactoryInstanceDefine.CLASS_SQL_CLIENT_INTERFACE)
+NameError: name 'GlobalCommonModule' is not defined
+
+[2025-11-24 12:08:50,376][37441][main.py][INFO] (main:199) end process pid = 37441, argc = 1, argv = ['main.py']
+[2025-11-24 12:09:48,040][37476][main.py][INFO] (main:173) start process pid = 37476, argc = 1, argv = ['main.py']
+[2025-11-24 12:09:48,040][37476][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 12:09:48,041][37476][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 12:09:48,041][37476][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 12:09:48,042][37476][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 127.0.0.1, port = 3306, keep alive = 1
+[2025-11-24 12:09:48,042][37476][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 12:09:48,042][37476][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 12:09:48,085][37476][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:09:49,584][37476][main.py][INFO] (main:199) end process pid = 37476, argc = 1, argv = ['main.py']
+[2025-11-24 12:11:22,893][38272][main.py][INFO] (main:173) start process pid = 38272, argc = 5, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--port', '7000']
+[2025-11-24 12:11:31,289][38272][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 12:11:35,655][38272][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 12:11:35,656][38272][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 12:11:35,657][38272][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 12:11:41,166][38272][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 12:11:41,168][38272][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 12:11:41,169][38272][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 127.0.0.1, port = 3306, keep alive = 1
+[2025-11-24 12:12:00,565][38272][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 12:12:01,108][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:12:08,964][38272][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 12:13:01,177][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:14:01,225][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:15:01,295][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:16:01,339][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:17:01,396][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:18:01,457][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:19:01,503][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:20:01,557][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:21:01,613][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:22:01,654][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:23:01,718][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:24:01,767][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:25:01,835][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:26:01,878][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:27:01,942][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:28:02,005][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:29:02,071][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:30:02,135][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:31:02,202][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:32:02,267][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:33:02,316][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:34:02,376][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:35:02,430][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:36:02,494][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:37:02,561][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:38:02,619][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:39:02,645][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:40:02,702][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:41:02,767][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:42:02,833][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:43:02,883][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:44:02,940][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:45:02,996][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:46:03,056][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:47:03,114][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:48:03,179][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:49:03,215][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:50:03,252][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:51:03,311][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:52:03,360][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:53:03,416][38272][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:56:52,689][38566][main.py][INFO] (main:173) start process pid = 38566, argc = 5, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--port', '7000']
+[2025-11-24 12:56:52,691][38566][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 12:56:52,694][38566][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 12:56:52,694][38566][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 12:56:52,694][38566][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 12:56:52,695][38566][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 12:56:52,696][38566][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 12:56:52,696][38566][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 12:56:52,698][38566][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 12:56:52,699][38566][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 12:56:52,724][38566][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:57:52,789][38566][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 12:58:52,857][38566][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:00:00,244][38656][main.py][INFO] (main:173) start process pid = 38656, argc = 5, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--port', '9099']
+[2025-11-24 13:00:00,245][38656][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 13:00:00,247][38656][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 13:00:00,247][38656][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 13:00:00,248][38656][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 13:00:00,248][38656][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 13:00:00,248][38656][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 13:00:00,249][38656][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 13:00:00,250][38656][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 13:00:00,251][38656][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 13:00:00,277][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:01:00,342][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:02:00,410][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:03:00,477][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:04:00,545][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:05:00,606][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:06:00,656][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:07:00,722][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:08:00,784][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:09:00,842][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:10:00,906][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:11:00,968][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:12:01,019][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:13:01,082][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:14:01,130][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:15:01,196][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:16:01,256][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:17:01,318][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:18:01,374][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:19:01,435][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:20:01,487][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:21:01,541][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:22:01,558][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:23:01,596][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:24:01,652][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:25:01,693][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:26:01,742][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:27:01,803][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:28:01,870][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:29:01,920][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:30:01,978][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:31:02,029][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:32:02,095][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:33:02,160][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:34:02,228][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:35:02,292][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:36:02,337][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:37:02,405][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:38:02,471][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:39:02,515][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:40:02,559][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:41:02,625][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:42:02,683][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:43:02,741][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:44:02,768][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:45:02,834][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:46:02,898][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:47:02,957][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:48:03,002][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:49:03,036][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:50:03,054][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:51:03,116][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:52:03,136][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:53:03,184][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:54:11,859][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:55:26,576][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:56:26,643][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:57:26,711][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:58:26,774][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 13:58:47,605][39387][main.py][ERROR] (main:199) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/main.py", line 164, in main
+    test()
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/main.py", line 128, in test
+    testModule.test()
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/mainapp/helper/pipeline_test_module.py", line 19, in test
+    self.testSqlprintf()
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/mainapp/helper/pipeline_test_module.py", line 34, in testSqlprintf
+    sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : "", "limit":1}, dictDBResult)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/mainapp/module_function.py", line 12, in sqlprintf
+    GlobalCommonModule.SQLPrintf(strQueryMapCategory, strQueryMapID, dictParameter, dictDBResult)
+  File "/usr/local/lib/python3.9/site-packages/common_modules/global_common_module.py", line 128, in SQLPrintf
+    sqlClientInterface:SQLClientInterface = GlobalCommonModule.getFactoryInstance(FactoryInstanceDefine.CLASS_SQL_CLIENT_INTERFACE)
+  File "/usr/local/lib/python3.9/site-packages/common_modules/global_common_module.py", line 140, in getFactoryInstance
+    globalInstanceFactory:GlobalInstanceFactory = GlobalInstanceFactory.singletonInstance()
+  File "/usr/local/lib/python3.9/site-packages/common_modules/instance_factory/global_instance_factory.py", line 49, in singletonInstance
+    raise Exception("invalid instance")
+Exception: invalid instance
+
+[2025-11-24 13:58:47,605][39387][main.py][INFO] (main:202) end process pid = 39387, argc = 4, argv = ['main.py', '--test', '--debug', '--printlog']
+[2025-11-24 13:59:26,830][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:00:26,910][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:01:26,984][38656][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:02:49,305][39508][main.py][INFO] (main:171) start process pid = 39508, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:02:49,307][39508][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 14:02:49,309][39508][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 14:02:49,310][39508][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 14:02:49,310][39508][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 14:02:49,310][39508][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 14:02:49,311][39508][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 14:02:49,311][39508][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 14:02:49,312][39508][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 14:02:49,313][39508][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 14:03:00,309][39508][pipeline_test_module.py][DEBUG] (testSqlprintf:30) test sqlprint
+[2025-11-24 14:03:02,965][39508][mariadb_connector.py][INFO] (_connectToDataBase:287) create mariadb connector, host = 192.168.0.40, port = 3400
+[2025-11-24 14:03:02,997][39508][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_select_ai_user_account, action = query_for_list, error code = 0
+[2025-11-24 14:03:21,247][39508][pipeline_test_module.py][DEBUG] (testSqlprintf:36) user account = {'error_code': 0, 'query_data': []}
+[2025-11-24 14:03:45,905][39508][main.py][INFO] (main:204) end process pid = 39508, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:03:48,636][39508][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:10:17,382][39785][main.py][INFO] (main:171) start process pid = 39785, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:10:17,384][39785][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 14:10:17,387][39785][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 14:10:17,388][39785][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 14:10:17,388][39785][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 14:10:17,388][39785][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 14:10:17,389][39785][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 14:10:17,390][39785][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 14:10:17,391][39785][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 14:10:17,391][39785][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 14:14:32,593][39785][pipeline_test_module.py][DEBUG] (testSqlprintf:30) test sqlprint
+[2025-11-24 14:14:39,625][39785][mariadb_connector.py][INFO] (_connectToDataBase:287) create mariadb connector, host = 192.168.0.40, port = 3400
+[2025-11-24 14:14:39,660][39785][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_insert_update_ai_user_account, action = execute, error code = 0
+[2025-11-24 14:14:47,220][39785][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_select_ai_user_account, action = query_for_list, error code = 0
+[2025-11-24 14:14:47,932][39785][pipeline_test_module.py][DEBUG] (testSqlprintf:50) user account = {'error_code': 0, 'query_data': [{'USER_ID': 'ghahn', 'REG_DATE': '2025-11-24 14:14:33', 'EMAIL': 'ghahn@wins21.co.kr', 'AI_SERVICE': 0, 'ETC_COMMENT': '', 'USE_FLAG': 1}]}
+[2025-11-24 14:14:48,933][39785][main.py][INFO] (main:204) end process pid = 39785, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:15:01,356][39785][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:16:00,556][39904][main.py][INFO] (main:171) start process pid = 39904, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:16:00,559][39904][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 14:16:00,564][39904][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 14:16:00,564][39904][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 14:16:00,565][39904][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 14:16:00,565][39904][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 14:16:00,566][39904][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 14:16:00,567][39904][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 14:16:00,568][39904][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 14:16:00,569][39904][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 14:16:06,958][39904][pipeline_test_module.py][DEBUG] (testSqlprintf:30) test sqlprint
+[2025-11-24 14:16:06,964][39904][mariadb_connector.py][INFO] (_connectToDataBase:287) create mariadb connector, host = 192.168.0.40, port = 3400
+[2025-11-24 14:16:06,997][39904][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_insert_update_ai_user_account, action = execute, error code = 0
+[2025-11-24 14:16:06,998][39904][pipeline_test_module.py][DEBUG] (testSqlprintf:46) insert user account, result = {'error_code': 0, 'query_data': {'success': True, 'rowcount': 2, 'lastrowid': 0}}
+[2025-11-24 14:16:06,999][39904][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+
+[2025-11-24 14:16:07,002][39904][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_select_ai_user_account, action = query_for_list, error code = 0
+[2025-11-24 14:16:07,002][39904][pipeline_test_module.py][DEBUG] (testSqlprintf:52) select user account = {'error_code': 0, 'query_data': [{'USER_ID': 'ghahn', 'REG_DATE': '2025-11-24 14:16:06', 'EMAIL': 'ghahn@wins21.co.kr', 'AI_SERVICE': 0, 'ETC_COMMENT': '', 'USE_FLAG': 1}]}
+[2025-11-24 14:16:13,920][39904][main.py][INFO] (main:204) end process pid = 39904, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:17:18,283][40024][main.py][INFO] (main:171) start process pid = 40024, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:17:18,286][40024][main_app_env_loader.py][INFO] (__localLocalConfigFile:38) load local config, path = ./local_resource/config.json
+[2025-11-24 14:17:18,289][40024][pipeline_main_app.py][DEBUG] (__initializeFactoryInstance:204) initialize factory instance
+[2025-11-24 14:17:18,289][40024][global_instance_factory.py][INFO] (__init__:119) create global instance factory
+[2025-11-24 14:17:18,289][40024][global_instance_factory.py][INFO] (_InitializeFactory:137) initialize global instance factory
+[2025-11-24 14:17:18,290][40024][sql_client_interface.py][DEBUG] (__initializeSQLMapInterface:120) initialize sql map interface
+[2025-11-24 14:17:18,291][40024][sql_client_interface.py][DEBUG] (__initializeDBInstance:149) initialize db instance
+[2025-11-24 14:17:18,291][40024][mariadb_connector.py][INFO] (CreateConnector:124) create mariadb connector host = 192.168.0.40, port = 3400, keep alive = 1
+[2025-11-24 14:17:18,292][40024][filter_policy_manager.py][INFO] (Initialize:54) initialize thread, initial value = {'default_server_ip': 'nginx', 'default_server_port': 4000, 'default_schema': 'http', 'db_poll_cycle_second': 60}
+[2025-11-24 14:17:18,293][40024][user_account_data_handler.py][INFO] (Initialize:22) initialize user account handler
+[2025-11-24 14:17:21,219][40024][pipeline_test_module.py][DEBUG] (testSqlprintf:30) test sqlprint
+[2025-11-24 14:17:21,224][40024][mariadb_connector.py][INFO] (_connectToDataBase:287) create mariadb connector, host = 192.168.0.40, port = 3400
+[2025-11-24 14:17:21,257][40024][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_insert_update_ai_user_account, action = execute, error code = 0
+[2025-11-24 14:17:21,259][40024][pipeline_test_module.py][DEBUG] (testSqlprintf:46) insert user account, result = {'error_code': 0, 'query_data': {'success': True, 'rowcount': 2, 'lastrowid': 0}}
+[2025-11-24 14:17:21,260][40024][sql_map_interface.py][INFO] (RunSQLQuery:62) run query, id = rdb_select_ai_user_account, action = query_for_list, error code = 0
+[2025-11-24 14:17:21,260][40024][pipeline_test_module.py][DEBUG] (testSqlprintf:52) select user account = {'error_code': 0, 'query_data': [{'USER_ID': 'ghahn', 'REG_DATE': '2025-11-24 14:17:21', 'EMAIL': 'ghahn@wins21.co.kr', 'AI_SERVICE': 0, 'ETC_COMMENT': '', 'USE_FLAG': 1}]}
+[2025-11-24 14:17:21,261][40024][main.py][INFO] (main:204) end process pid = 40024, argc = 4, argv = ['/home1/test-root/pipeline-test/aivax_pipelines_public/main.py', '--debug', '--printlog', '--test']
+[2025-11-24 14:17:21,312][40024][filter_policy_manager.py][ERROR] (ThreadHandlerProc:91) Traceback (most recent call last):
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/filter_policy_manager.py", line 80, in ThreadHandlerProc
+    filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+  File "/home1/test-root/pipeline-test/aivax_pipelines_public/block_filter_modules/filter_policy/helper/filter_dbpolicy_request_helper.py", line 99, in RequestToDBPolicy
+    nError = sock.connect_ex((strDBServer,nDBPort))
+socket.gaierror: [Errno -2] Name or service not known
+

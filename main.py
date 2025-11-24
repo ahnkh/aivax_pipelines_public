@@ -118,6 +118,16 @@ def run_uvicorn(fastApi:FastAPI, strFastApiHost:str, nFastApiPort:int):
     
     return ERR_OK
 
+# 임의 테스트, mainapp에 추가한다. 운영시에는 제거.
+def test():
+    
+    #sqlprint test
+    from mainapp.helper.pipeline_test_module import PipelineTestModule
+    
+    testModule = PipelineTestModule()    
+    testModule.test()    
+    pass
+
 def main():
     
     try:
@@ -132,12 +142,13 @@ def main():
             APP_PARMETER_DEFINE.CONFIG : CONFIG_FILE_PATH            
         }
         
-        opts, args = getopt.getopt(sys.argv[1:], "dhm:pw:f:s:",
+        opts, args = getopt.getopt(sys.argv[1:], "dp",
             [
                 "debug", "printlog",
                 
-                "host=",                
-                "port=",                
+                "host=",
+                "port=",
+                "test",
             ])
         
         for o, args in opts:
@@ -161,6 +172,13 @@ def main():
         
         pipeLineMainApp = PipeLineMainApp()
         pipeLineMainApp.Initialize(dictOpt)
+        
+        #테스트 기능 추가, 가장 먼저 실행 TODO: 개선 필요
+        TEST = dictOpt.get(APP_PARMETER_DEFINE.TEST)
+        
+        if None != TEST:            
+            test()
+            sys.exit()
         
         #TODO: api 부분은 비동기로 호출되어야 하는 문제가 있다.
         
