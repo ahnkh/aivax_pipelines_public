@@ -89,6 +89,12 @@
         {
             "sleep" : 15
         }
+    },
+
+    "ipc_pipeline_server":
+    {
+        "socket_path" : "/tmp/pipeline.sock"
+
     }
 
 

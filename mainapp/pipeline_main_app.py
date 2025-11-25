@@ -24,6 +24,11 @@ from utils.log_write_modules.log_write_handler import LogWriteHandler
 # 계정 데이터 관리 모듈 추가
 from utils.user_account_modules.user_account_data_handler import UserAccountDataHandler
 
+#ipc 통신, 서버 추가, main에서 실행하는 것으로 하자. 
+#ipc 통신으로 mainapp를 전달한다. (통신과 실행체 분리)
+from ipc_modules.ipc_pipeline_server import IPCPipelineServer
+
+
 from common_modules.global_common_module import GlobalCommonModule
 
 '''
@@ -59,6 +64,9 @@ class PipeLineMainApp:
         
         #사용자 계정 데이터 관리
         self.__userAccountDataHandler:UserAccountDataHandler = None
+        
+        # ipc 통신 서버
+        self.__ipcPipelineServer:IPCPipelineServer = None
         pass
     
     
@@ -109,6 +117,12 @@ class PipeLineMainApp:
         #사용자 계정 데이터 관리
         self.__userAccountDataHandler:UserAccountDataHandler = UserAccountDataHandler()
         self.__initializeUserAccountDataHandler(self.__userAccountDataHandler, dictJsonLocalConfigRoot)
+        
+        # ipc 통신 서버, mainapp를 전달하는 구조.
+        self.__ipcPipelineServer:IPCPipelineServer = IPCPipelineServer()
+        mainApp:PipeLineMainApp = self
+        
+        self.__initializeIPCServer(self.__ipcPipelineServer, mainApp, dictJsonLocalConfigRoot)
         
         return ERR_OK
     
@@ -234,6 +248,17 @@ class PipeLineMainApp:
         user_account_data_module:dict = dictJsonLocalConfigRoot.get("user_account_data_module")
         
         userAccountDataHandler.Initialize(user_account_data_module)
+        
+        return ERR_OK
+    
+    # ipc 통신 서버 실행, 초기화
+    def __initializeIPCServer(self, ipcPipelineServer:IPCPipelineServer, mainApp:Any, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        별도의 IPC 서버와, 통신후 mainapp를 통해서 Filter, 계정관리 모듈등으로 데이터를 전달한다.
+        '''
+        
+        ipcPipelineServer.Initialize(mainApp, dictJsonLocalConfigRoot)
         
         return ERR_OK
        

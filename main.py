@@ -17,7 +17,6 @@ from mainapp.pipeline_global_load_functions import *
 from api_modules.router.router_daemon_api import app as daemon_api_router
 from api_modules.router.router_pipeline import app as pipeline_router
 
-
 # #config.py
 # from config import *
 
@@ -180,8 +179,7 @@ def main():
             test()
             sys.exit()
         
-        #TODO: api 부분은 비동기로 호출되어야 하는 문제가 있다.
-        
+        #TODO: api 부분은 비동기로 호출되어야 하는 문제가 있다.        
         setup_fast_api(app, pipeLineMainApp, daemon_api_router, pipeline_router)
 
         #TODO: 이후 데몬 처리는 uvicorn 또는 FastApi에 일임한다.

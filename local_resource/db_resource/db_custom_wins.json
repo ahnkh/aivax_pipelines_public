@@ -4,7 +4,7 @@
 
 		{
 			"use" : 1,
-			"connection_id" : "mariadb_connector",
+			"connection_id" : "mariadb_connector_wins",
 
 			"connector_type" : "mariadb",
 
@@ -14,6 +14,23 @@
 				"port" : 3306,
 				"user" : "app",
 				"password" : "app",
+				"charset" : "utf8",
+				"keep_alive" : 1
+			}
+		},
+
+		{
+			"use" : 1,
+			"connection_id" : "mariadb_connector",
+
+			"connector_type" : "mariadb",
+
+			"connector_info" :
+			{
+				"host" : "192.168.0.40",
+				"port" : 3400,
+				"user" : "root",
+				"password" : "sniper123",
 				"charset" : "utf8",
 				"keep_alive" : 1
 			}

@@ -15,7 +15,7 @@ class FilterDBPolicyRequestHelper:
         pass
     
     #DB 정책 조회, TODO: 하드코딩 => 잠시 제거
-    def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+    def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
         
         '''
         다음 요청, python request 로 수신후, json 데이터를 반환한다.
@@ -139,7 +139,7 @@ class FilterDBPolicyRequestHelper:
         return ERR_OK
       
     #가상의 테스트 코드, 다음의 데이터가 반환되도록 처리
-    def testRequestToDBPolicy(self, dictFilterPolicy:dict):
+    def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
       
         '''
         '''

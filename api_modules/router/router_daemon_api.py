@@ -350,7 +350,7 @@ async def doFilterApiRouter(modelItem: VariantFilterForm, request: Request) -> d
             
         else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생
             
-            strErrorMessage:str = f"invalid filter, not exist filter, fileter = {strFilterMethodName}"    
+            strErrorMessage:str = f"invalid filter, not exist filter, fileter = {strFilterMethodName}"
             # RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
             LOG().error(strErrorMessage)
             continue

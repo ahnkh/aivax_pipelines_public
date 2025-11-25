@@ -1,5 +1,9 @@
+import copy
+import threading
 
 from lib_include import *
+
+# from type_hint import *
 
 '''
 AI 서비스등 사용자 계정 데이터 관리
@@ -14,6 +18,8 @@ class UserAccountDataHandler:
         
         #최초에 가지고 있고, 저장할 데이터
         self.__dictCurrentUserInfo:dict = {}
+        
+        self.__lock = threading.Lock()
         
         #받아올 데이터, insert 시점에 저장된 계정정보와 다른것만 추가
         self.__dictNewUserInfo:dict = {}
@@ -74,23 +80,18 @@ class UserAccountDataHandler:
             #에러 발생시 무한 loop, try로 예외 처리
             try:
                 
-                self.__doInsertUserAccount()
+                # 처음부터 queue를 dictionary로 고려.
+                with self.__lock:
+                    self.__doInsertUserAccount()
                 
-                # 정상적인 케이스의 sleep
-                time.sleep(sleep)
+                # 정상적인 케이스의 sleep, lock 구문의 밖에서 sleep, lock이 오래 잡히는 것을 방지한다.
+                time.sleep(sleep) 
                 
             except Exception as err:         
                 LOG().error(traceback.format_exc())
                 
                 # 오류 발생시의 대기 (잡아야 하는 오류이나, 운영시 문제가 되기에 sleep으로 대기)
                 time.sleep(sleep)
-                
-            
-            # 처음부터 queue를 dictionary로 고려.
-
-            #Queue에 쌓인 데이터, 1번에 처리한다. 많이 쌓이면 곤란하므로 10초정도를 고려 (앞단에서 체크가 필요할수도.)
-            #데이터 구조는 다시 고려
-            time.sleep(sleep) #시작후 대기한다. (바로 저장이 되지는 않을 것으로 예상)
 
         #TOOD: 호출될 수 없는 구문.
         return ERR_OK
@@ -102,7 +103,28 @@ class UserAccountDataHandler:
     def __doInsertUserAccount(self, ):
         
         '''
+        신규로 등록된 계정, 과거 계정과 비교하여
+        존재하지 않는 신규 계정이면 db에 업데이트
+        db가 많지 않을듯 하여, 단건으로 insert 한다.
         '''
+        
+        #수집 시간 공통으로 사용, 모두 같은 시간에 등록한다.
+        strRegDate:str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        for strUserID in self.__dictNewUserInfo.keys():
+            
+            dictExistUserAccount:dict = self.__dictCurrentUserInfo.get(strUserID)
+            
+            # 없는 계정 정보이면, Db에 추가 (bulk는 고려하지 않는다.)
+            if None == dictExistUserAccount:
+                
+                LOG().info(f"new user account exist, insert {strUserID}")
+                
+                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserID)      
+                          
+                self.__insertNewUserAccount(dictNewUserAccount, strRegDate)
+                
+            # pass
         
         return ERR_OK
     
@@ -115,6 +137,43 @@ class UserAccountDataHandler:
         dictDBResult = {}
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : "", "limit":1}, dictDBResult)
         
-        self.__dictCurrentUserInfo
+        dictQueryData:dict = dictDBResult.get(DBSQLDefine.QUERY_DATA)
+        
+        #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)        
+        self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
         
         return ERR_OK
+    
+    #DB로 신규 계정을 추가한다.
+    def __insertNewUserAccount(self, dictNewUserAccount:dict, strRegDate:str):
+        
+        '''
+        이름은  아래 항목으로 통일, 등록시간은 맞춘다. => 15초 단위인데.. 일단 불필요한 부분에 자원 낭비를 없애는 차원.
+        dictNewUserAccount = {            
+        }
+        
+        '''        
+        
+        user_id:str = dictNewUserAccount.get("user_id")
+        email:str = dictNewUserAccount.get("email")
+        ai_service:int = dictNewUserAccount.get("ai_service")
+        # TIODO: comment는 우선 공백, 수집 하지 않는다.
+        # etc_comment:str = dictNewUserAccount.get("etc_comment")\
+        # etc_comment:str = ""
+        use_flag:int = CONFIG_OPT_ENABLE #사용여부, 수집되지 않는다. 기본 활성
+        
+        dictDBInfo = {
+            "user_id" : user_id,
+            # "reg_date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "reg_date" : strRegDate,
+            "email" : email,
+            "ai_service" : ai_service, #순차적으로 GPT, claude, gemini, copilot, ..
+            "etc_comment" : "", #comment
+            "use_flag" : use_flag, #1:활성, 0:비활성
+        }
+        
+        dictDBResult:dict = {}
+        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_insert_update_ai_user_account", dictDBInfo, dictDBResult)
+        
+        # pass
+    
