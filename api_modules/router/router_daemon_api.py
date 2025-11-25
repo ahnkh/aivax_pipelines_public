@@ -10,12 +10,16 @@ from lib_include import *
 from type_hint import *
 
 #TODO: 매번 호출해야 하는 문제. 이건 static으로 하자...
-from api_modules.helper.router_custom_helper import RouterCustomHelper
+# from api_modules.helper.router_custom_helper import RouterCustomHelper
+
+from api_modules.router.api_router_impl_command import ApiRouterImplCommand
 
 app = ApiRouterEx(
     # prefix="/",
     # tags=["pipline"],
 )
+
+command = ApiRouterImplCommand()
 
 #신규 추가, 다중 필터 TODO: 기본 구성은 inlet을 참고한다.
 @app.post("/v1/filter/multiple_filter")
@@ -261,134 +265,137 @@ async def doFilterApiRouter(modelItem: VariantFilterForm, request: Request) -> d
     # dictPipelineMap:dict = app.GetState(ApiRouterEx.STATE_KEY_PIPELINE_MAP)
     
     #순환참조 주의 => 향후 리펙토링시 구조 변경
-    from mainapp.pipeline_main_app import PipeLineMainApp
+    # from mainapp.pipeline_main_app import PipeLineMainApp
 
-    mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
+    # mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
     
-    dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
+    return await command.doFilterApiRouter(mainApp, modelItem, request)
     
-    #테스트, 디버그
-    LOG().debug(f"call pipeline map info = {dictPipelineMap}")
+    # dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
     
-    #시나리오, pipeline 리스트를 여러개 가져온다.
-    #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과
-    #호출후 결과를 모아서 전달하는 응답이 중요하다.
+    # #테스트, 디버그
+    # LOG().debug(f"call pipeline map info = {dictPipelineMap}")
     
-    #가상의 pipelineid를 가져온다고 가정 => pipeline은 유지하고, 안의 로직을 모듈화 하는 방향으로 접근 + 코드 리펙토링
+    # #시나리오, pipeline 리스트를 여러개 가져온다.
+    # #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과
+    # #호출후 결과를 모아서 전달하는 응답이 중요하다.
     
-    #TODO: 기본 Output : ApiResponseHandler를 사용하는 방안.
-    #TODO: api 응답시, 차단 메시지, masked메시지, 이런 값을 전달하는 방안의 검토
-    #차단 메시지와, API 포맷의 메시지를 전달하는 방안으로 고려한다.
-    #http 헤더도 필요하며, 데이터의 크기문제로 allow 시점에는 전달하지 않는다.
-    #helper 모듈의 개발을 검토한다.
+    # #가상의 pipelineid를 가져온다고 가정 => pipeline은 유지하고, 안의 로직을 모듈화 하는 방향으로 접근 + 코드 리펙토링
+    
+    # #TODO: 기본 Output : ApiResponseHandler를 사용하는 방안.
+    # #TODO: api 응답시, 차단 메시지, masked메시지, 이런 값을 전달하는 방안의 검토
+    # #차단 메시지와, API 포맷의 메시지를 전달하는 방안으로 고려한다.
+    # #http 헤더도 필요하며, 데이터의 크기문제로 allow 시점에는 전달하지 않는다.
+    # #helper 모듈의 개발을 검토한다.
         
-    apiResponseHandler:ApiResponseHandlerEX = ApiResponseHandlerEX()
+    # apiResponseHandler:ApiResponseHandlerEX = ApiResponseHandlerEX()
     
-    # 기본상태코드, 성공으로 할당.
-    apiResponseHandler.attachSuccessCode()
-    apiResponseHandler.attachApiCommandCode("pipeline multiple filter")
+    # # 기본상태코드, 성공으로 할당.
+    # apiResponseHandler.attachSuccessCode()
+    # apiResponseHandler.attachApiCommandCode("pipeline multiple filter")
     
-    #사용자 프롬프트, 프롬프트는 필수로 잡고, 나머지는 부가정보로 전달한다.
-    # strPromptMessage:str = modelItem.prompt    
-    # strPromptMessage:str = RouterCustomHelper.ConvertPromptMessage(modelItem)
+    # #사용자 프롬프트, 프롬프트는 필수로 잡고, 나머지는 부가정보로 전달한다.
+    # # strPromptMessage:str = modelItem.prompt    
+    # # strPromptMessage:str = RouterCustomHelper.ConvertPromptMessage(modelItem)
     
-    dictBodyParameter:dict = RouterCustomHelper.GenerateInletBodyParameter(modelItem)
+    # dictBodyParameter:dict = RouterCustomHelper.GenerateInletBodyParameter(modelItem)
     
-    user:dict = {
-        ApiParameterDefine.NAME : modelItem.user_role.id,
-        ApiParameterDefine.EMAIL : modelItem.user_role.email
-    }
-    
-    dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
-    
-    # #부가정보에 대해서는 향후 formdata를 model_dict로 변환하거나, dictionary로 직접 변환한다.
-    # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
-    # dictExtParameter = {
-    #     #부가정보, 추가적인 파라미터는 우선 여기에 추가 
-    #     #만일 modelItem의 항목이 늘어나면, 여기에 추가해서 전달
-    #     # ApiParameterDefine.PARAM_MAIN_APP : mainApp
+    # user:dict = {
+    #     ApiParameterDefine.NAME : modelItem.user_role.id,
+    #     ApiParameterDefine.EMAIL : modelItem.user_role.email
     # }
     
-    #inlet을 호출하는 것은 유지해보자.
+    # dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
     
-    #TODO: 메소드 이름, 향후 config로 관리, 지금은 하드코딩
-    strFilterMethodName = "inlet"
+    # # #부가정보에 대해서는 향후 formdata를 model_dict로 변환하거나, dictionary로 직접 변환한다.
+    # # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
+    # # dictExtParameter = {
+    # #     #부가정보, 추가적인 파라미터는 우선 여기에 추가 
+    # #     #만일 modelItem의 항목이 늘어나면, 여기에 추가해서 전달
+    # #     # ApiParameterDefine.PARAM_MAIN_APP : mainApp
+    # # }
     
-    #TODO: 가공을 위해서, 전체를 모아서 저장하자.
-    dictFilterResult = {}
+    # #inlet을 호출하는 것은 유지해보자.
     
-    #일단 작성후 refactoring
-    lstPipeFilterName:list = modelItem.filter_list
-    for strPipelineFilterName in lstPipeFilterName:
+    # #TODO: 메소드 이름, 향후 config로 관리, 지금은 하드코딩
+    # strFilterMethodName = "inlet"
+    
+    # #TODO: 가공을 위해서, 전체를 모아서 저장하자.
+    # dictFilterResult = {}
+    
+    # #일단 작성후 refactoring
+    # lstPipeFilterName:list = modelItem.filter_list
+    # for strPipelineFilterName in lstPipeFilterName:
         
-        pipeline = dictPipelineMap.get(strPipelineFilterName, None)
+    #     pipeline = dictPipelineMap.get(strPipelineFilterName, None)
         
-        if None == pipeline:
-            #TODO: 에외처리로 가는 방향, raise 처리 공통화는 2차 리펙토링때 개선            
-            strErrorMessage:str = f"invalid pipeline, not exist pipeline, id = {strPipelineFilterName}"            
-            RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
-            continue #TODO: 호출될수 없는 구문
+    #     if None == pipeline:
+    #         #TODO: 에외처리로 가는 방향, raise 처리 공통화는 2차 리펙토링때 개선            
+    #         strErrorMessage:str = f"invalid pipeline, not exist pipeline, id = {strPipelineFilterName}"            
+    #         RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
+    #         continue #TODO: 호출될수 없는 구문
                 
-        #예외처리, 다시 작성 필요 => 더 적절항 방법 존재.
-        #TODO: async 처리에 대한 대응, await의 적절한 시점 또는 concurrent.future 처리도 고려        
-        #TODO: 신규 함수로 추가하는 방안으로 검토, 우선 regex_filter, async도 제외, 대신 병렬처리 (향후)
+    #     #예외처리, 다시 작성 필요 => 더 적절항 방법 존재.
+    #     #TODO: async 처리에 대한 대응, await의 적절한 시점 또는 concurrent.future 처리도 고려        
+    #     #TODO: 신규 함수로 추가하는 방안으로 검토, 우선 regex_filter, async도 제외, 대신 병렬처리 (향후)
         
-        dictEachFilterOutput = {}
+    #     dictEachFilterOutput = {}
         
-        if hasattr(pipeline, strFilterMethodName):
+    #     if hasattr(pipeline, strFilterMethodName):
             
-            #TODO: 메소드 동적 호출 처리, no async
+    #         #TODO: 메소드 동적 호출 처리, no async
             
-            methodFunction = getattr(pipeline, strFilterMethodName)
+    #         methodFunction = getattr(pipeline, strFilterMethodName)
             
-            #TODO: 내부 메소드에서 async 처리 되어 있어서, async, await 구조는 유지.
-            #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
-            await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)
+    #         #TODO: 내부 메소드에서 async 처리 되어 있어서, async, await 구조는 유지.
+    #         #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
+    #         await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)
             
-            #테스트, 응답 메시지 처리의 예를 위한 임의 추가
-            # dictEachFilterOutput["description"] = f"{strPipelineFilterName} 차단의 결과입니다."
+    #         #테스트, 응답 메시지 처리의 예를 위한 임의 추가
+    #         # dictEachFilterOutput["description"] = f"{strPipelineFilterName} 차단의 결과입니다."
             
-        else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생
+    #     else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생
             
-            strErrorMessage:str = f"invalid filter, not exist filter, fileter = {strFilterMethodName}"
-            # RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
-            LOG().error(strErrorMessage)
-            continue
+    #         strErrorMessage:str = f"invalid filter, not exist filter, fileter = {strFilterMethodName}"
+    #         # RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
+    #         LOG().error(strErrorMessage)
+    #         continue
             
-        #TODO: 응답 처리, TODO: 메시지를 만드는 부분은 재고려 필요, 우선 각 함수의 응답 결과를 저장한다.
-        #함수의 존재 여부와 상관없이, 응답은 만든다. error 또는 응답
-        # apiResponseHandler.attachResponse(f"filter_result/{strPipelineFilterName}", dictEachFilterOutput)
-        # dictApiOutResponse["filter_result"][strPipelineFilterName] = dictEachFilterOutput
+    #     #TODO: 응답 처리, TODO: 메시지를 만드는 부분은 재고려 필요, 우선 각 함수의 응답 결과를 저장한다.
+    #     #함수의 존재 여부와 상관없이, 응답은 만든다. error 또는 응답
+    #     # apiResponseHandler.attachResponse(f"filter_result/{strPipelineFilterName}", dictEachFilterOutput)
+    #     # dictApiOutResponse["filter_result"][strPipelineFilterName] = dictEachFilterOutput
         
-        dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
+    #     dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
         
         
-    #최종 메시지.
-    #응답 데이터 가공 좀더 개선 필요     
-    #message 형태 데이터, 데몬과 협의 대상, 아직 정리가 되지는 않았다.
-    #TODO: 우선 생성한다.
-    dictOutMessage = {            
-        # "action" : 0, #allow = 0, block = 1, masking = 2
-        # "masked_contents" : "",
-        # "block_message" : "",    
+    # #최종 메시지.
+    # #응답 데이터 가공 좀더 개선 필요     
+    # #message 형태 데이터, 데몬과 협의 대상, 아직 정리가 되지는 않았다.
+    # #TODO: 우선 생성한다.
+    # dictOutMessage = {            
+    #     # "action" : 0, #allow = 0, block = 1, masking = 2
+    #     # "masked_contents" : "",
+    #     # "block_message" : "",    
         
-        #기본값을 먼저 채운다.
-        ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ALLOW,
-        ApiParameterDefine.OUT_MASKED_CONTENTS : "",
-        ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
-    }
-    apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)    
+    #     #기본값을 먼저 채운다.
+    #     ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ALLOW,
+    #     ApiParameterDefine.OUT_MASKED_CONTENTS : "",
+    #     ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
+    # }
+    # apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)    
         
-    #Filer별 요청후, 마지막에 취합
-    RouterCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
+    # #Filer별 요청후, 마지막에 취합
+    # RouterCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
     
-    #개별 pipeline 결과
-    apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
+    # #개별 pipeline 결과
+    # apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
     
-    #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
+    # #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
 
-    return apiResponseHandler.outResponse()
-    # return dictApiOutResponse
+    # return apiResponseHandler.outResponse()
+    # # return dictApiOutResponse
     
 
 #로그 저장 기능, 여기까지만 별도로 작성하고, 신규 API가 필요하면 정규화 + 리펙토링

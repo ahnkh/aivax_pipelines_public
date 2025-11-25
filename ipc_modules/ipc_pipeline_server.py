@@ -300,6 +300,7 @@ class IPCPipelineServer:
             if len(buf) <= 0:
                 return
             
+            # TODO: 협의에 따라, ipc의 앞단에 사이즈를 던지고, 데이터를 받는 구조도 고려한다.
             # # 메시지 길이 읽기 (4 bytes, big-endian)
             # msg_len = struct.unpack('>I', buf[:HEADER_SIZE])[0]
             
@@ -354,11 +355,15 @@ class IPCPipelineServer:
                 #     LOG().error(f"invalid request, empty, skip")
                 #     continue
                 
+                
+                #TODO: json 문자열 생성까지는 여기서 보장하자.
+                
                 #json 변환, 매우 심플하게, 향후 좀더 개선
                 strMessageData:str = buf.decode('utf-8')
                 dictRequest = json.loads(strMessageData, strict=False)
                 
                 dictResponse = ipcRequestRouter.RouteRequest(dictRequest)
+                
                 self.__sendMessage(conn, dictResponse)
                 
                 #처리가 다 되었으면,buf 제거
@@ -366,6 +371,8 @@ class IPCPipelineServer:
             
             except json.JSONDecodeError as e:
                 LOG().error(f"JSON decode error: {e}")
+                
+                #TODO: 잘못된 에러에 대한 고민, 이것도 ipcRequestRouter에서 처리.
                 error_response = {"error": "Invalid JSON"}
                 self.__sendMessage(conn, error_response)
                 

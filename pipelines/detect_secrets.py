@@ -332,7 +332,10 @@ class Pipeline(PipelineBase):
             user_email = (__user__ or {}).get("email") if isinstance(__user__, dict) else None
             msg_id = meta.get("message_id")
             sess_id = meta.get("session_id")
-            client_ip = __request__.client.host
+            
+            #위험한 코드, 다른 형태로 향후 개발.
+            # client_ip = __request__.client.host
+            client_ip = ""
 
             os_doc_final = {
                 "@timestamp": ts_isoz(),

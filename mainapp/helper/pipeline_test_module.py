@@ -21,8 +21,7 @@ class PipelineTestModule:
         
         # self.testSqlprintf()
         
-        self.testIPCClient()
-        
+        # self.testIPCClient()        
         pass
     
     
@@ -71,6 +70,9 @@ class PipelineTestModule:
         BUFFER_SIZE = 4096
         TIMEOUT = 1  # 초 단위
         
+        #서버가 성능이 느린경우, 테스트가 안되어, 5초간 대기
+        time.sleep(5)
+        
         #AF_UNIX, linux만 제공.
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.connect(SOCKET_PATH)
@@ -105,7 +107,8 @@ class PipelineTestModule:
                 ready_to_read, _, _ = select.select([sock], [], [], TIMEOUT)
                 
                 if not ready_to_read:
-                    print("No data received (timeout)")
+                    # 이 메시지는 처리하지 않음 (읽을 데이터가 없는 경우)
+                    # print("No data received (timeout)")
                     break  # 데이터가 없으면 루프 탈출
                                 
                 chunk = sock.recv(BUFFER_SIZE)

@@ -108,6 +108,13 @@ class LOCAL_CONFIG_DEFINE:
     VAL_DB_POLL_CYCLE_SECOND = 60
     pass
 
+# ipc 통신 define
+class IPC_ROUTER_DEFINE:
+    
+    REQUEST_ROUTER_POINT = "router.point"
+    
+    ROUTER_PIPELINE_FILTER = "multiple_filter" #기존 multiple_filter, 그대로.
+
 
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
 TRACE_LOG_PATH = "./trace-log"

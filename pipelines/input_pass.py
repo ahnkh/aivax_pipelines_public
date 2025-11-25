@@ -173,7 +173,11 @@ class Pipeline(PipelineBase):
         user_id = (__user__ or {}).get("name") if isinstance(__user__, dict) else None
         user_role = (__user__ or {}).get("role") if isinstance(__user__, dict) else getattr(self.valves, "default_user_role", None)
         user_email = (__user__ or {}).get("email") if isinstance(__user__, dict) else None
-        client_ip = __request__.client.host
+        
+        # 위험한 코드, 향후 다른 형태로 개발
+        # client_ip = __request__.client.host
+        client_ip = ""
+        
 
         # 저장 문서
         os_doc = {
