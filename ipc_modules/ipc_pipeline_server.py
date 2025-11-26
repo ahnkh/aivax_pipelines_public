@@ -298,7 +298,7 @@ class IPCPipelineServer:
         while True:
             
             if len(buf) <= 0:
-                return
+                return ERR_OK
             
             # TODO: 협의에 따라, ipc의 앞단에 사이즈를 던지고, 데이터를 받는 구조도 고려한다.
             # # 메시지 길이 읽기 (4 bytes, big-endian)
@@ -368,17 +368,28 @@ class IPCPipelineServer:
                 
                 #처리가 다 되었으면,buf 제거
                 del buf[:]
+                
+            #TODO: 오류 상관없이, 잘못되었으면, 에러를 발생하고, 종료
+            # 호출측에서 재전송이 되도록 구조화.
             
-            except json.JSONDecodeError as e:
-                LOG().error(f"JSON decode error: {e}")
-                
-                #TODO: 잘못된 에러에 대한 고민, 이것도 ipcRequestRouter에서 처리.
-                error_response = {"error": "Invalid JSON"}
-                self.__sendMessage(conn, error_response)
-                
             except Exception as e:
                 # logger.error(f"Message processing error: {e}")
                 LOG().error(traceback.format_exc())
+                
+                #TODO: 잘못된 에러에 대한 고민, 이것도 ipcRequestRouter에서 처리.
+                error_response = {"error": f"{e}"}
+                self.__sendMessage(conn, error_response)
+                
+                #버퍼는 비운다.
+                del buf[:]
+                
+                #오류가 발생했으면 종료하는 방향으로 고려
+                return ERR_FAIL #TODO: 예외처리
+            
+        #pass  
+        return ERR_OK              
+                
+            
     
     # 메시지 전송 큐에 추가
     def __sendMessage(self, conn: ClientConnection, dictResponse: dict):
