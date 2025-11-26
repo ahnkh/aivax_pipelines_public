@@ -41,7 +41,7 @@ def test_ipc_client():
 
             data = json.dumps(dictRequest).encode("utf-8") + b"\n"
             sock.sendall(data)
-            print(f"Sent: {dictRequest}")
+            print(f"request - {dictRequest}")
 
             buffer = bytearray()
             while True:
@@ -49,7 +49,7 @@ def test_ipc_client():
                 ready_to_read, _, _ = select.select([sock], [], [], TIMEOUT)
                 
                 if not ready_to_read:
-                    print("No data received (timeout)")
+                    # print("No data received (timeout)")
                     break  # 데이터가 없으면 루프 탈출
                                 
                 chunk = sock.recv(BUFFER_SIZE)
@@ -62,7 +62,7 @@ def test_ipc_client():
                 jsonResult = json.loads(buffer.decode("utf-8"))
                     
                 # LOG().debug(f"received buffer = {jsonResult}")
-                print(f"received buffer = {jsonResult}")
+                print(f"received - {jsonResult}")
                 
                 del buffer[:]
                 
