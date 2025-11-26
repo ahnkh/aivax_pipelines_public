@@ -81,7 +81,7 @@ class RouterCustomHelper:
             ],
             
             "metadata" : {
-                ApiParameterDefine.SESSION_ID : modelItem.user_role.session_id,
+                ApiParameterDefine.SESSION_ID : modelItem.session_id,
                 "message_id" : "" #TODO: 현재는 사용하지 않는 필드
             }
         }

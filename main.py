@@ -1,11 +1,19 @@
 
 import getopt
 import uvicorn
+import uvloop
+
+import orjson
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
 
 from lib_include import *
 
 from type_hint import *
+
+
 
 from mainapp.pipeline_main_app import PipeLineMainApp
 
@@ -27,7 +35,10 @@ async def lifespan(app: FastAPI):
     await on_shutdown()
 
 #이것만 전역에 추가.
-app = FastAPI(docs_url="/docs", redoc_url=None, lifespan=lifespan)
+app = FastAPI(docs_url="/docs", redoc_url=None, lifespan=lifespan, default_response_class=ORJSONResponse)
+
+# uvloop 설치 (기본 asyncio 루프 대신 uvloop 사용)
+uvloop.install()
 
 #TODO: 리펙토링 대상, 우선 유지
 #Loggin, TODO: 리펙토링. => 기존에 사용하던 logger는 우선 유지.
@@ -112,7 +123,9 @@ def run_uvicorn(fastApi:FastAPI, strFastApiHost:str, nFastApiPort:int):
             # reload=bReload,
             ssl_keyfile=strSSLKeyFilePath,
             ssl_certfile=strSSLCertFilePath,
-            log_level=logLevel,                        
+            log_level=logLevel,
+            loop="uvloop",
+            http="httptools",
         )
     
     return ERR_OK
@@ -136,7 +149,8 @@ def main():
         
         dictOpt = {
             # WEB_HOST : "127.0.0.1",
-            APP_PARMETER_DEFINE.WEB_HOST : "0.0.0.0",
+            # APP_PARMETER_DEFINE.WEB_HOST : "0.0.0.0",
+            APP_PARMETER_DEFINE.WEB_HOST : "127.0.0.1", #기본 loopback, 로컬 통신
             APP_PARMETER_DEFINE.WEB_PORT : 9099,
             APP_PARMETER_DEFINE.CONFIG : CONFIG_FILE_PATH            
         }

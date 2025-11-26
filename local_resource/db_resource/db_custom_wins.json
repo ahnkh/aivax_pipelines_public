@@ -4,7 +4,7 @@
 
 		{
 			"use" : 1,
-			"connection_id" : "mariadb_connector_wins",
+			"connection_id" : "mariadb_connector",
 
 			"connector_type" : "mariadb",
 
@@ -21,7 +21,7 @@
 
 		{
 			"use" : 1,
-			"connection_id" : "mariadb_connector",
+			"connection_id" : "mariadb_connector_test",
 
 			"connector_type" : "mariadb",
 

@@ -5,15 +5,12 @@
 #   2) 엔트로피 높은 토큰(완화 임계치)
 # 를 탐지하여 해당 "토큰/값"만 [MASKING]으로 치환
 
-# import re
-# import math
-# import logging
-# from typing import Any, Dict, List, Optional, Tuple
-# from pydantic import BaseModel, Field
-
 from lib_include import *
 
 from type_hint import *
+
+from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
+from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern import DetectSecretFilterPattern
 
 '''
 2025.10.21 pipeline과 pipeliemainapp간 공유
@@ -39,81 +36,7 @@ class Pipeline(PipelineBase):
         self.valves = self.Valves()
         
         #TODO: 사용하지 않는 필드, 향후 제거
-        self.toggle = True
-        # self.logger = self._setup_logger()
-        
-        #TODO: 하단의 정규 표현식은, 정책으로 분리한다.
-
-        ''' #위치 이동 -> detect_secret_filter_pattern
-        # ---------- 멀티라인/블록 패턴 ----------
-        # PrivateKeyDetector: PEM 블록
-        self.re_pem_block = re.compile(
-            r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
-            re.MULTILINE,
-        )
-        # JwtTokenDetector: JWT 토큰
-        self.re_jwt = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
-
-        # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
-        key_kv = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
-        sep = r"\s*[:=]\s*"
-
-        # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
-        self.known_patterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
-            # AWSKeyDetector
-            ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
-            ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
-
-            # AzureStorageKeyDetector (connection string)
-            ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-            ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-
-            # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
-
-            # BasicAuthDetector: scheme://user:pass@host
-            ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
-
-            # CloudantDetector: https://user:pass@<account>.cloudant.com
-            ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
-
-            # DiscordBotTokenDetector
-            ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
-
-            # GitHubTokenDetector (classic/pat 등)
-            ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
-
-            # MailchimpDetector (키 형태: 32 hex + -usN)
-            ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
-
-            # SlackDetector
-            ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
-            ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
-
-            # StripeDetector
-            ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-            ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-
-            # TwilioKeyDetector
-            ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
-            ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
-
-            # KeywordDetector (일반 할당형)
-            ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
-            ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
-            ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
-
-            # OpenAI/Custom-like
-            ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
-            # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
-            ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
-        ]
-
-        # ---------- 엔트로피 후보/도우미 ----------
-        self.re_candidate = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
-        self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
-        self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
-        '''
-        
+        self.toggle = True        
         pass
     
     class Valves(BaseModel):
@@ -132,16 +55,15 @@ class Pipeline(PipelineBase):
         # 프리픽스 완화(사내 토큰 접두 등)
         prefix_relax: bool = Field(default=True, description="특정 접두 토큰(ak-, tk-, ghp-/_) 완화 룰 적용")
         
-        
         ############ 2차 모델 시연을 위한 임시 소스 추가
         # OpenSearch 설정
-        os_enabled: bool = True
-        os_url: str = "https://vax-opensearch:9200"
-        os_index: str = "regex_filter"
-        os_user: Optional[str] = "admin"
-        os_pass: Optional[str] = "Sniper123!@#"
-        os_insecure: bool = True
-        os_timeout: int = 3
+        # os_enabled: bool = True
+        # os_url: str = "https://vax-opensearch:9200"
+        # os_index: str = "regex_filter"
+        # os_user: Optional[str] = "admin"
+        # os_pass: Optional[str] = "Sniper123!@#"
+        # os_insecure: bool = True
+        # os_timeout: int = 3
         
         # 저장 옵션 => TODO: 미사용 옵션으로 보이며, 사용 출처 불분명
         store_response_text: bool = True          # 응답 전문 저장 여부
@@ -155,7 +77,7 @@ class Pipeline(PipelineBase):
     ########################################### public
     
     # ---------- 파이프라인 엔트리 ----------
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) -> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
         '''
         TODO: 기존 형상은 가급적 유지
@@ -179,7 +101,8 @@ class Pipeline(PipelineBase):
         }
         
         TODO: 예외처리는 raise 로 대체.
-            
+        
+        TODO: 2단계 모델이 보류되어, body전달은 불필요한 자원 낭비, 제거
         '''
         
         #chat completion을 통해 호출시, 예외처리
@@ -190,18 +113,19 @@ class Pipeline(PipelineBase):
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
         
         #설명 문자열, 각 filter마다 추가. 크게 의미는 없다.
-        dictOuputResponse[ApiParameterDefine.OUT_DESRIPTION] = f"{self.name} filter 차단을 수행합니다."
+        # dictOuputResponse[ApiParameterDefine.OUT_DESRIPTION] = f"{self.name} filter 차단을 수행합니다."
         
-        if not self.valves.enabled:
-            LOG().info("action disabled")
+        # 2단계 기능, 제거.
+        # if not self.valves.enabled:
+        #     LOG().info("action disabled")
             
-            # raise Exception(f"action disabled, id = {self.id}")
-            # raise HTTPException(
-            #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            #     detail=f"action disabled, id = {self.id}")
+        #     # raise Exception(f"action disabled, id = {self.id}")
+        #     # raise HTTPException(
+        #     #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        #     #     detail=f"action disabled, id = {self.id}")
             
-            #body의 전달은, 사이드 이펙트가 우려되어 유지.
-            return body
+        #     #body의 전달은, 사이드 이펙트가 우려되어 유지.
+        #     return body
 
         messages = body.get("messages") or []
         
@@ -209,7 +133,7 @@ class Pipeline(PipelineBase):
         content = last.get("content")
         
         #테스트용 로그 추가
-        LOG().debug(f"run detect secret inlet, prompt = {content}")
+        # LOG().debug(f"run detect secret inlet, prompt = {content}")
         
         #detect_secret, 다수 실행되는 현상, 마지막만 읽어들인다.
         # last:dict = messages[-1]
@@ -223,12 +147,8 @@ class Pipeline(PipelineBase):
             #     detail=f"invalid messages format, id = {self.id}, message = {messages}")
             
             # return body
-            
-        #TODO: 순환참조 우려로, 함수내 import (import 구문의 singleton 패턴 방식에 의지)
-        from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
-        from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern import DetectSecretFilterPattern
+        
         detectSecretFilterPattern:DetectSecretFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_DETECT_SECRET)
-
 
         #우선 아래와 같이 수정한다. 기존 구조 유지
         messages = messages[-1:]
@@ -258,7 +178,7 @@ class Pipeline(PipelineBase):
             valves = self.valves
             (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves)
             
-            LOG().info(f"Masked: {counts}, len = {len(spans)}")
+            # LOG().info(f"Masked: {counts}, len = {len(spans)}")
             
             if spans:
                 
@@ -311,7 +231,7 @@ class Pipeline(PipelineBase):
                 
                 
             else:
-                LOG().info("No secrets detected (regex+entropy).")
+                # LOG().info("No secrets detected (regex+entropy).")
                 # self.logger.info("No secrets detected (regex+entropy).")
                 
                 # dictOuputResponse["action"] = "allow"
@@ -383,7 +303,9 @@ class Pipeline(PipelineBase):
                 raise Exception(block_message)
             '''
 
-        return body
+        # 2단계 모델에서만 필요, 불필요, 제거
+        # return body
+        return ERR_OK
     
     #룰 테스트 메소드 추가
     async def testRule(self, strPrompt:str, strRule:str, strAction:str, dictOuputResponse:dict, request:Request):
@@ -455,7 +377,6 @@ class Pipeline(PipelineBase):
     async def outlet(self, body: Dict[str, Any], __event_emitter__=None, __user__: Optional[dict] = None) -> Dict[str, Any]:
         return body
     
-    
     ############################################################ private
     
     #TODO: 이 함수는 detect secret으로 유지한다. 이름만 변경
@@ -508,6 +429,98 @@ AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐�
         
         return strBlockMessage
     
+    
+    ####################################################### 지울 코드
+    
+    # def __init__(self):        
+    #     '''
+    #     '''
+        
+    #     super().__init__()
+        
+    #     self.type = "filter"
+    #     self.id = "secret_filter"
+    #     self.name = "secret_filter"
+        
+    #     self.valves = self.Valves()
+        
+    #     #TODO: 사용하지 않는 필드, 향후 제거
+    #     self.toggle = True
+    #     # self.logger = self._setup_logger()
+        
+    #     #TODO: 하단의 정규 표현식은, 정책으로 분리한다.
+
+    #     ''' #위치 이동 -> detect_secret_filter_pattern
+    #     # ---------- 멀티라인/블록 패턴 ----------
+    #     # PrivateKeyDetector: PEM 블록
+    #     self.re_pem_block = re.compile(
+    #         r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
+    #         re.MULTILINE,
+    #     )
+    #     # JwtTokenDetector: JWT 토큰
+    #     self.re_jwt = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
+
+    #     # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
+    #     key_kv = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
+    #     sep = r"\s*[:=]\s*"
+
+    #     # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
+    #     self.known_patterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
+    #         # AWSKeyDetector
+    #         ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
+    #         ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
+
+    #         # AzureStorageKeyDetector (connection string)
+    #         ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+    #         ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+
+    #         # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
+
+    #         # BasicAuthDetector: scheme://user:pass@host
+    #         ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
+
+    #         # CloudantDetector: https://user:pass@<account>.cloudant.com
+    #         ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
+
+    #         # DiscordBotTokenDetector
+    #         ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
+
+    #         # GitHubTokenDetector (classic/pat 등)
+    #         ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
+
+    #         # MailchimpDetector (키 형태: 32 hex + -usN)
+    #         ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
+
+    #         # SlackDetector
+    #         ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
+    #         ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
+
+    #         # StripeDetector
+    #         ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+    #         ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+
+    #         # TwilioKeyDetector
+    #         ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
+    #         ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
+
+    #         # KeywordDetector (일반 할당형)
+    #         ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
+    #         ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
+    #         ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
+
+    #         # OpenAI/Custom-like
+    #         ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
+    #         # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
+    #         ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
+    #     ]
+
+    #     # ---------- 엔트로피 후보/도우미 ----------
+    #     self.re_candidate = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
+    #     self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
+    #     self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
+    #     '''
+        
+    #     pass
     
     # #opensearch 저장, 과거 소스도 유지, 옵션으로 저장 방식을 선택하는 방향으로 개선한다.
     # def _index_opensearch(self, doc: Dict[str, Any]) -> bool:

@@ -64,8 +64,8 @@ class ApiRouterImplCommand:
         dictBodyParameter:dict = RouterCustomHelper.GenerateInletBodyParameter(modelItem)
         
         user:dict = {
-            ApiParameterDefine.NAME : modelItem.user_role.id,
-            ApiParameterDefine.EMAIL : modelItem.user_role.email
+            ApiParameterDefine.NAME : modelItem.user_id,
+            ApiParameterDefine.EMAIL : modelItem.email
         }
         
         dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시

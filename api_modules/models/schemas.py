@@ -135,7 +135,13 @@ class VariantFilterForm(BaseModel):
     # user: Optional[dict] = None
     # model_config = ConfigDict(extra="allow") 
     
-    user_role: Optional[VariantFilterUserItem] = Field(default=None, description="사용자 관리 정보")
+    #요청측의 편의성, 하나로 통일
+    # user_role: Optional[VariantFilterUserItem] = Field(default=None, description="사용자 관리 정보")
+    
+    user_id : Optional[str] = Field(default="", description="사용자ID")
+    email : Optional[str] = Field(default="", description="email")
+    client_host : Optional[str] = Field(default="", description="사용자 host, ip")
+    session_id : Optional[str] = Field(default="", description="session id")
     pass   
     
 class AddPipelineForm(BaseModel):

@@ -374,6 +374,8 @@ class IPCPipelineServer:
             
             except Exception as e:
                 # logger.error(f"Message processing error: {e}")
+                
+                LOG().error(f"ipc process error, buf = {buf}")
                 LOG().error(traceback.format_exc())
                 
                 #TODO: 잘못된 에러에 대한 고민, 이것도 ipcRequestRouter에서 처리.

@@ -90,22 +90,27 @@ class IPCRequestRouter:
         기능 최소화, 필요 기능만 전달
         '''
         
-        filter_list:list = dictRequest.get("filter_list")
+        # filter_list:list = dictRequest.get("filter_list")
         
         #이정도 자원은 무시.
-        dictPipelineMap:dict = self.__mainAppRef.GetMainAppLinkedPipelineModules()
+        # dictPipelineMap:dict = self.__mainAppRef.GetMainAppLinkedPipelineModules()
                 
-        userItem:VariantFilterUserItem = VariantFilterUserItem(
-            id = dictRequest.get("id"),
-            email = dictRequest.get("email"),
-            client_host = dictRequest.get("client_host"),
-            session_id = dictRequest.get("session_id"),
-        )
+        # userItem:VariantFilterUserItem = VariantFilterUserItem(
+        #     id = dictRequest.get("id"),
+        #     email = dictRequest.get("email"),
+        #     client_host = dictRequest.get("client_host"),
+        #     session_id = dictRequest.get("session_id"),
+        # )
         
         modelItem = VariantFilterForm(
             filter_list = dictRequest.get("filter_list"),
             prompt = dictRequest.get("prompt"),
-            user_role = userItem            
+            # user_role = userItem       
+            
+            user_id = dictRequest.get("id"),
+            email = dictRequest.get("email"),
+            client_host = dictRequest.get("client_host"),
+            session_id = dictRequest.get("session_id"),     
         )
         
         #TODO: 계정 정보는 mainApp를 통해서 User관리 객체로 전달, MariaDB로 저장한다.
