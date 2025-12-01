@@ -107,10 +107,11 @@ class IPCRequestRouter:
             prompt = dictRequest.get("prompt"),
             # user_role = userItem       
             
-            user_id = dictRequest.get("id"),
-            email = dictRequest.get("email"),
-            client_host = dictRequest.get("client_host"),
-            session_id = dictRequest.get("session_id"),     
+            user_id = dictRequest.get("id", ""),
+            email = dictRequest.get("email", ""),
+            client_host = dictRequest.get("client_host", "127.0.0.1"),
+            session_id = dictRequest.get("session_id", ""),
+            ai_service = dictRequest.get("ai_service", 0),
         )
         
         #TODO: 계정 정보는 mainApp를 통해서 User관리 객체로 전달, MariaDB로 저장한다.

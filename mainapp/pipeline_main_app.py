@@ -28,7 +28,6 @@ from utils.user_account_modules.user_account_data_handler import UserAccountData
 #ipc 통신으로 mainapp를 전달한다. (통신과 실행체 분리)
 from ipc_modules.ipc_pipeline_server import IPCPipelineServer
 
-
 from common_modules.global_common_module import GlobalCommonModule
 
 '''
@@ -169,11 +168,14 @@ class PipeLineMainApp:
         return ERR_OK
     
     #사용자 계정의 추가, TODO: 사이즈가 커지면, 한단계 더 모듈 관리자를 추가한다. (항상 동작해야 하는 기능으로, 직접 호출 구조를 선택한다)
-    def AddUserAccount(self, ):
+    def AddUserAccount(self, strInfoKey:str, dictUserInfo:dict):
         
         '''
         TODO: 구조상 스레드, 백그라운드 I/O
+        TODO: 키 생성 로직 주의 (ID를 키로 하면 중복될수 있다.)
         '''
+        
+        self.__userAccountDataHandler.AddData(strInfoKey, dictUserInfo)
         
         return ERR_OK
     

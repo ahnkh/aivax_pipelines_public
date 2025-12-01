@@ -65,7 +65,8 @@ class ApiRouterImplCommand:
         
         user:dict = {
             ApiParameterDefine.NAME : modelItem.user_id,
-            ApiParameterDefine.EMAIL : modelItem.email
+            ApiParameterDefine.EMAIL : modelItem.email,
+            ApiParameterDefine.AI_SERVICE : modelItem.ai_service
         }
         
         dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
@@ -152,6 +153,8 @@ class ApiRouterImplCommand:
         apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
         
         #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
+        
+        # 사용자 정보의 저장, user 정보를 전달한다.
 
         return apiResponseHandler.outResponse()
         # return dictApiOutResponse

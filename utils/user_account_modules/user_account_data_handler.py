@@ -26,7 +26,7 @@ class UserAccountDataHandler:
         pass
     
     #계정 정보의 추가
-    def AddData(self, strUserID:str, dictUserInfo:dict):
+    def AddData(self, strInfoKey:str, dictUserInfo:dict):
         
         '''
         계정정보, id, email, ai 서비스 유형등 계속 확장 가능
@@ -34,7 +34,7 @@ class UserAccountDataHandler:
         이건 생산자/소비가 Queue를 고려한다. => insert 성능은 조금 떨어뜨리고, dictionary, 중복 제거
         '''
         
-        self.__dictNewUserInfo[strUserID] = dictUserInfo
+        self.__dictNewUserInfo[strInfoKey] = dictUserInfo
         
         return ERR_OK
     
@@ -111,16 +111,16 @@ class UserAccountDataHandler:
         #수집 시간 공통으로 사용, 모두 같은 시간에 등록한다.
         strRegDate:str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        for strUserID in self.__dictNewUserInfo.keys():
+        for strInfoKey in self.__dictNewUserInfo.keys():
             
-            dictExistUserAccount:dict = self.__dictCurrentUserInfo.get(strUserID)
+            dictExistUserAccount:dict = self.__dictCurrentUserInfo.get(strInfoKey)
             
             # 없는 계정 정보이면, Db에 추가 (bulk는 고려하지 않는다.)
             if None == dictExistUserAccount:
                 
-                LOG().info(f"new user account exist, insert {strUserID}")
+                LOG().info(f"new user account exist, insert {strInfoKey}")
                 
-                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserID)      
+                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strInfoKey)      
                           
                 self.__insertNewUserAccount(dictNewUserAccount, strRegDate)
                 
@@ -139,7 +139,8 @@ class UserAccountDataHandler:
         
         dictQueryData:dict = dictDBResult.get(DBSQLDefine.QUERY_DATA)
         
-        #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)        
+        #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)  
+        #TODO: 키구조 주의, 그대로 넣으면 안된다. 사양 파악후 정리.      
         self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
         
         return ERR_OK

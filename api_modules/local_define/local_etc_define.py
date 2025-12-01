@@ -39,4 +39,5 @@ class ApiParameterDefine:
     NAME = "name"
     EMAIL = "email"
     SESSION_ID = "session_id"
+    AI_SERVICE = "ai_service"
     pass

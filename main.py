@@ -13,8 +13,6 @@ from lib_include import *
 
 from type_hint import *
 
-
-
 from mainapp.pipeline_main_app import PipeLineMainApp
 
 # TODO: 리펙토링 필요

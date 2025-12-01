@@ -140,6 +140,7 @@ class VariantFilterForm(BaseModel):
     
     user_id : Optional[str] = Field(default="", description="사용자ID")
     email : Optional[str] = Field(default="", description="email")
+    ai_service : Optional[int] = Field(default=0, description="ai 서비스 타입 (GPT=0, CLAUDE=1, GEMINI=2,)")
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")
     pass   
