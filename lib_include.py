@@ -130,8 +130,12 @@ class AI_SERVICE_DEFINE:
     CODE_ASSIST_CLAUDE = 12
     
     # NAME_SERVICE_UNDEFINE = "undefined" #미지정이면, 일단 GPT로.
-    NAME_SERVICE_UNDEFINE = "openapi.chatgpt" #미지정이면, 일단 GPT로.
-    NAME_SERVICE_CHAT_GPT = "openapi.chatgpt"
+    # NAME_SERVICE_UNDEFINE = "openapi.chatgpt" #미지정이면, 일단 GPT로.
+    # NAME_SERVICE_CHAT_GPT = "openapi.chatgpt"
+    
+    #TODO: 이름은 mariadb에 join되어 있으며 ai_services 테이블을 참조
+    NAME_SERVICE_UNDEFINE = "gpt" #미지정이면, 일단 GPT로, 이름은 최종 확정된 버전으로 변경.
+    NAME_SERVICE_CHAT_GPT = "gpt"
     NAME_SERVICE_GEMINI = "goole.gemini"
     NAME_SERVICE_CLAUDE = "claude.ai"
     NAME_SERVICE_GROK = "x.grok"

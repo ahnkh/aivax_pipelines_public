@@ -106,7 +106,10 @@ class UserAccountDataHandler:
                 
                 # 처음부터 queue를 dictionary로 고려.
                 with self.__lock:
-                    self.__doInsertUserAccount()
+                    
+                    #if 문, 불필요한 insert 자제.
+                    if 0 < len(self.__dictNewUserInfo):
+                        self.__doInsertUserAccount()
                 
                 # 정상적인 케이스의 sleep, lock 구문의 밖에서 sleep, lock이 오래 잡히는 것을 방지한다.
                 time.sleep(sleep) 
@@ -154,6 +157,9 @@ class UserAccountDataHandler:
             #활동시간, 다시 업데이트를 해야 하며, 별도 모듈에서 관리, 이건 update 구문.
             #별도의 스레드로 관리해야 할 수도 있다. (대기 시간이 길어서, 스레드 쪽이 유리)
             #우선 최대 제한 시간을 신규 계정과 등록과 맞춰서 하나의 스레드와 동일하게 유지
+            
+        #저장후, 신규 수집한 map을 초기화 한다. (lock 필요, 호출시점에 lock이 걸린 상태이다.)
+        self.__dictNewUserInfo.clear()
         
         return ERR_OK
     
@@ -208,8 +214,8 @@ class UserAccountDataHandler:
         
         ai_service:int = dictNewUserAccount.get(ApiParameterDefine.AI_SERVICE)
         
-        #ai server 명, 문자로 변환하여 저장
-        strAIServerName:str = AI_SERVICE_NAME_MAP.get(ai_service, "")
+        #ai server 명, 문자로 변환하여 저장 => 숫자를 직접 추가한다.
+        # strAIServerName:str = AI_SERVICE_NAME_MAP.get(ai_service, "")
         
         # TIODO: comment는 우선 공백, 수집 하지 않는다.
         # etc_comment:str = dictNewUserAccount.get("etc_comment")\
@@ -221,7 +227,7 @@ class UserAccountDataHandler:
             # "reg_date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             # "reg_date" : strRegDate, #TODO: 최초 등록 시점에는, DB를 활용하자.
             "email" : email,
-            "ai_service" : strAIServerName, #순차적으로 GPT, claude, gemini, copilot, ..
+            "ai_service" : ai_service, #순차적으로 GPT, claude, gemini, copilot, ..
             # "etc_comment" : "", #comment
             # "use_flag" : use_flag, #1:활성, 0:비활성
         }

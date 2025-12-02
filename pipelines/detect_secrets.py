@@ -256,13 +256,15 @@ class Pipeline(PipelineBase):
             ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
             uuid:str = ""
             
-            if None != __user__:
+            dictUserInfo:dict = __user__
+            
+            if None != dictUserInfo:
                 
-                user_id = __user__.get(ApiParameterDefine.NAME, "")
-                user_email = __user__.get(ApiParameterDefine.EMAIL, "")
-                ai_service_type = __user__.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+                user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
+                user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
+                ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
                 
-                uuid = __user__.get(ApiParameterDefine.UUID, "")
+                uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
                 
             #ai service 명 추가
             strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")                

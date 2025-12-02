@@ -51,7 +51,7 @@
             "desc" : "AI 서비스, 계정 추가 (신규)",
             "key": "rdb_insert_update_ai_user_account",
 	        "action" : "execute",
-            "query" : "INSERT INTO app.users(id, email, ai_service_id) VALUES  ('{uuid}', '{email}', '{email}', '{ai_service_id}')"
+            "query" : "INSERT INTO app.users(id, email, ai_service_id) VALUES  ('{uuid}', '{email}', '{ai_service}')"
         }
 
     ]

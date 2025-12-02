@@ -87,7 +87,7 @@
     {
         "thread_handler":
         {
-            "sleep" : 15
+            "sleep" : 10
         }
     },
 
