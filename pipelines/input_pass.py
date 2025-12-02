@@ -93,6 +93,7 @@ class Pipeline(PipelineBase):
         message_id = meta.get("message_id")
         session_id = meta.get("session_id")
         
+        #TODO: 불합리한 로직, 개선 필요.
         src_ip = (
             meta.get("client_ip")
             or meta.get("src_ip")
