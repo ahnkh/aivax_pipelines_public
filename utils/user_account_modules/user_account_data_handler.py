@@ -1,15 +1,19 @@
-import copy
+# import copy
 import threading
 
 from lib_include import *
 
-# from type_hint import *
+from type_hint import *
+
+from utils.user_account_modules.uuid_manage_map import UUIDManageMap
 
 '''
 AI 서비스등 사용자 계정 데이터 관리
 구조상 스레드 와 Queue가 존재할수 있다.
 TODO: Db에 저장하는 기능을 백그라운드로 수행하며, DB I/O를 최소화 해야 한다.
 global 데이터 관리는 pipelineMainApp에서 수행한다. (중간 규모의 관리)
+
+TODO: RDB에 추가시 uuid를 추가해야 한다.
 '''
 
 class UserAccountDataHandler:
@@ -23,20 +27,38 @@ class UserAccountDataHandler:
         
         #받아올 데이터, insert 시점에 저장된 계정정보와 다른것만 추가
         self.__dictNewUserInfo:dict = {}
+        
+        #uuid 관리 map
+        self.__uuidMap:UUIDManageMap = None
         pass
     
     #계정 정보의 추가
-    def AddData(self, strInfoKey:str, dictUserInfo:dict):
+    def AddData(self, strUserKey:str, dictUserInfo:dict):
         
         '''
         계정정보, id, email, ai 서비스 유형등 계속 확장 가능
         dictionary로 감싸서 전달 받는다.
         이건 생산자/소비가 Queue를 고려한다. => insert 성능은 조금 떨어뜨리고, dictionary, 중복 제거
+        
+        InfoKey = user_email + "_" + service id 조합 (향후 변경 가능)
+        user:dict = {
+            ApiParameterDefine.NAME : modelItem.user_id,
+            ApiParameterDefine.EMAIL : modelItem.email,
+            ApiParameterDefine.AI_SERVICE : modelItem.ai_service
+        }
         '''
         
-        self.__dictNewUserInfo[strInfoKey] = dictUserInfo
+        self.__dictNewUserInfo[strUserKey] = dictUserInfo
         
         return ERR_OK
+    
+    #UUID를 발급한다.
+    def GenerateUUID(self, strUserKey:str)-> str:
+        
+        '''
+        '''
+        
+        return self.__uuidMap.GenerateNewUUID(strUserKey)
     
     # 사용자 계정관리, 초기화
     def Initialize(self, dictUserAccountDataLocalConfig:dict):
@@ -46,12 +68,14 @@ class UserAccountDataHandler:
         
         LOG().info("initialize user account handler")
         
+        self.__uuidMap:UUIDManageMap = UUIDManageMap()
+        self.__uuidMap.Initialize()
+        
         #별도의 스레드를 호출한다. 계정 정보는, mainapp 외 백그라운드로 수집된다.
         
         #스레드 호출, 가급적 인스턴스를 전역으로 관리
         thread = threading.Thread(name="user account data thread", target=self.ThreadHandlerProc, daemon=True, args=(dictUserAccountDataLocalConfig,))
-        thread.start()
-        
+        thread.start()        
         return ERR_OK
     
     
@@ -94,8 +118,7 @@ class UserAccountDataHandler:
                 time.sleep(sleep)
 
         #TOOD: 호출될 수 없는 구문.
-        return ERR_OK
-    
+        # return ERR_OK
     
     ########################################### private
     
@@ -108,23 +131,29 @@ class UserAccountDataHandler:
         db가 많지 않을듯 하여, 단건으로 insert 한다.
         '''
         
-        #수집 시간 공통으로 사용, 모두 같은 시간에 등록한다.
-        strRegDate:str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        #수집 시간 공통으로 사용, 모두 같은 시간에 등록한다. => MariaDB의 Trigger를 활용한다.
+        # strRegDate:str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        for strInfoKey in self.__dictNewUserInfo.keys():
+        for strUserKey in self.__dictNewUserInfo.keys():
             
-            dictExistUserAccount:dict = self.__dictCurrentUserInfo.get(strInfoKey)
+            dictExistUserAccount:dict = self.__dictCurrentUserInfo.get(strUserKey)
             
             # 없는 계정 정보이면, Db에 추가 (bulk는 고려하지 않는다.)
             if None == dictExistUserAccount:
                 
-                LOG().info(f"new user account exist, insert {strInfoKey}")
+                LOG().info(f"new user account exist, insert {strUserKey}")
                 
-                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strInfoKey)      
+                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserKey)      
                           
-                self.__insertNewUserAccount(dictNewUserAccount, strRegDate)
+                self.__insertNewUserAccount(dictNewUserAccount)
+                #pass
                 
             # pass
+            
+            #TODO: 계정 정보는 I/O가 크지 않다. 그냥 insert
+            #활동시간, 다시 업데이트를 해야 하며, 별도 모듈에서 관리, 이건 update 구문.
+            #별도의 스레드로 관리해야 할 수도 있다. (대기 시간이 길어서, 스레드 쪽이 유리)
+            #우선 최대 제한 시간을 신규 계정과 등록과 맞춰서 하나의 스레드와 동일하게 유지
         
         return ERR_OK
     
@@ -134,19 +163,36 @@ class UserAccountDataHandler:
         '''
         '''
         
+        '''
+        SELECT 
+            CONCAT(email, '_', ai_service_id) AS user_key, id, email, user_group_id, ai_service_id, created_at, updated_at
+        FROM app.users {where} limit {limit}
+        '''
         dictDBResult = {}
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : "", "limit":1}, dictDBResult)
         
-        dictQueryData:dict = dictDBResult.get(DBSQLDefine.QUERY_DATA)
+        lstQueryData:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
         
         #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)  
         #TODO: 키구조 주의, 그대로 넣으면 안된다. 사양 파악후 정리.      
-        self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
+        # 키를 생성해서, 다시 만든다. => DB에서 만든다. 그래도, 바로 복사는 안된다.
+        # self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
+        
+        #일단 하나로 처리하자.
+        for dictUserInfo in lstQueryData:
+            
+            user_key:str = dictUserInfo.get("user_key")
+            
+            #나머지는 그대로 저장            
+            self.__dictCurrentUserInfo[user_key] = dictUserInfo
+            
+        #수집데이터, 다시 넘겨서 uuid를 업데이트 한다.
+        self.__uuidMap.UpdateUUIDFromDB(lstQueryData)
         
         return ERR_OK
     
     #DB로 신규 계정을 추가한다.
-    def __insertNewUserAccount(self, dictNewUserAccount:dict, strRegDate:str):
+    def __insertNewUserAccount(self, dictNewUserAccount:dict):
         
         '''
         이름은  아래 항목으로 통일, 등록시간은 맞춘다. => 15초 단위인데.. 일단 불필요한 부분에 자원 낭비를 없애는 차원.
@@ -155,22 +201,29 @@ class UserAccountDataHandler:
         
         '''        
         
-        user_id:str = dictNewUserAccount.get("user_id")
-        email:str = dictNewUserAccount.get("email")
-        ai_service:int = dictNewUserAccount.get("ai_service")
+        #TODO: id는 uuid로 생성한다. 좀더 고려 필요.
+        uuid:str = dictNewUserAccount.get(ApiParameterDefine.UUID)
+        # user_id:str = dictNewUserAccount.get("user_id")
+        email:str = dictNewUserAccount.get(ApiParameterDefine.EMAIL)
+        
+        ai_service:int = dictNewUserAccount.get(ApiParameterDefine.AI_SERVICE)
+        
+        #ai server 명, 문자로 변환하여 저장
+        strAIServerName:str = AI_SERVICE_NAME_MAP.get(ai_service, "")
+        
         # TIODO: comment는 우선 공백, 수집 하지 않는다.
         # etc_comment:str = dictNewUserAccount.get("etc_comment")\
         # etc_comment:str = ""
-        use_flag:int = CONFIG_OPT_ENABLE #사용여부, 수집되지 않는다. 기본 활성
+        # use_flag:int = CONFIG_OPT_ENABLE #사용여부, 수집되지 않는다. 기본 활성
         
         dictDBInfo = {
-            "user_id" : user_id,
+            "uuid" : uuid,
             # "reg_date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "reg_date" : strRegDate,
+            # "reg_date" : strRegDate, #TODO: 최초 등록 시점에는, DB를 활용하자.
             "email" : email,
-            "ai_service" : ai_service, #순차적으로 GPT, claude, gemini, copilot, ..
-            "etc_comment" : "", #comment
-            "use_flag" : use_flag, #1:활성, 0:비활성
+            "ai_service" : strAIServerName, #순차적으로 GPT, claude, gemini, copilot, ..
+            # "etc_comment" : "", #comment
+            # "use_flag" : use_flag, #1:활성, 0:비활성
         }
         
         dictDBResult:dict = {}

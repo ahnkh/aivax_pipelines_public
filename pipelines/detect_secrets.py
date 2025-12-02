@@ -248,8 +248,29 @@ class Pipeline(PipelineBase):
             std_action = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
             
             meta = body.get("metadata") or {}
-            user_id = (__user__ or {}).get("name") if isinstance(__user__, dict) else None
-            user_email = (__user__ or {}).get("email") if isinstance(__user__, dict) else None
+            
+            #TODO: user_id는 유지하고, uuid 필드를 새로 추가하자.
+            #TODO: 불필요한 연산, 나중에 개선하자.
+            user_id:str = ""
+            user_email:str = ""
+            ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
+            uuid:str = ""
+            
+            if None != __user__:
+                
+                user_id = __user__.get(ApiParameterDefine.NAME, "")
+                user_email = __user__.get(ApiParameterDefine.EMAIL, "")
+                ai_service_type = __user__.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+                
+                uuid = __user__.get(ApiParameterDefine.UUID, "")
+                
+            #ai service 명 추가
+            strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type)                
+                            
+            # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
+            # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            
+            # ai_service_type = (__user__ or {}).get(ApiParameterDefine.AI_SERVICE) if isinstance(__user__, dict) else None
+            
             msg_id = meta.get("message_id")
             sess_id = meta.get("session_id")
             
@@ -257,7 +278,8 @@ class Pipeline(PipelineBase):
             # client_ip = __request__.client.host
             client_ip = ""
 
-            os_doc_final = {
+            #opensearch 저장 변수, TODO: 리펙토링 필요            
+            dictOpensearchDoc:dict = {
                 "@timestamp": ts_isoz(),
                 "filter" : self.id,
                 "filter_name": self.name,
@@ -266,7 +288,8 @@ class Pipeline(PipelineBase):
                 
                 "request": {"id": msg_id},
                 "session": {"id": sess_id},
-                "user": {"id": user_id, "email": user_email},
+                
+                "user": {"id": user_id, "email": user_email, "uuid" : uuid},
 
                 # "event":   {"id": msg_id, "type": "detect"},
                 # "request": {"id": msg_id},
@@ -277,6 +300,7 @@ class Pipeline(PipelineBase):
                 "should_block": (std_action == "block"),
                 "mode": std_action,
                 
+                #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
                 "policy_id" : dictDetectedRule.get("id", ""),
                 "policy_name" : dictDetectedRule.get("name", ""),
                 "src":     {"ip": client_ip},
@@ -287,14 +311,18 @@ class Pipeline(PipelineBase):
                     "confidence": 1.0
                 },
                 
+                #25.12.02 ai 서비스 유형 추가
+                "ai_service" : strAIServiceName,
+                
                 #masked contents 추가
                 "masked_contents" : dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS)
+                
                 
                 # "final_action": fa_internal,
             }
 
             # self._index_opensearch(os_doc_final)
-            self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, os_doc_final)
+            self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDoc)
 
             '''
             #2025.11.15 2단계 모델에 반영되었으나, 3단계 모델에서는 ssl proxy로 전달되지 않아 주석 처리

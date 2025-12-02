@@ -168,16 +168,24 @@ class PipeLineMainApp:
         return ERR_OK
     
     #사용자 계정의 추가, TODO: 사이즈가 커지면, 한단계 더 모듈 관리자를 추가한다. (항상 동작해야 하는 기능으로, 직접 호출 구조를 선택한다)
-    def AddUserAccount(self, strInfoKey:str, dictUserInfo:dict):
+    def AddUserAccount(self, strUserKey:str, dictUserInfo:dict):
         
         '''
         TODO: 구조상 스레드, 백그라운드 I/O
         TODO: 키 생성 로직 주의 (ID를 키로 하면 중복될수 있다.)
         '''
         
-        self.__userAccountDataHandler.AddData(strInfoKey, dictUserInfo)
+        self.__userAccountDataHandler.AddData(strUserKey, dictUserInfo)
         
         return ERR_OK
+    
+    #사용자 계정 - uuid 생성
+    def GenerateUUID(self, strUserKey:str) -> str:
+        
+        '''
+        '''
+        
+        return self.__userAccountDataHandler.GenerateUUID(strUserKey)
     
     #패턴 모듈, 중계 기능만 제공하고, 실제 구현은 하지 않는다.
     def GetFilterPatternModule(self, strFilterPatternKey:str) -> Any:

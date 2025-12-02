@@ -15,9 +15,8 @@ class ApiErrorDefine:
     HTTP_500_INTERNAL_SERVER_ERROR_MSG = "Internal Server Error"    
     
     API_UNKNOWN_ERROR = 9999
-    API_UNKNOWN_ERROR_MSG = "Unkown Application Error"
-    
-    pass
+    API_UNKNOWN_ERROR_MSG = "Unkown Application Error"    
+    # pass
 
 
 #요청 및 응답 파라미터 정의
@@ -35,9 +34,14 @@ class ApiParameterDefine:
     OUT_MASKED_CONTENTS = "masked_contents"
     OUT_BLOCK_MESSAGE = "block_message"
     
-    #사용자 관련, 추가
+    #사용자 관련, 추가    
+    USER_ID = "user_id"
     NAME = "name"
     EMAIL = "email"
     SESSION_ID = "session_id"
     AI_SERVICE = "ai_service"
-    pass
+    
+    #TODO: 여기서 부터는 API와 상관없는 항목이다. => API에서 생성되는 항목으로, 여기까지는 같이 관리..
+    USER_KEY = "user_key" #사용자 키, 추가
+    UUID = "uuid" #uuid, 새로 추가 (프롬프트 수집시점에, uuid가 저장되어야 한다.)
+    # pass

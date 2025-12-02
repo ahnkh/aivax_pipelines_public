@@ -63,7 +63,14 @@ class ApiRouterImplCommand:
         
         dictBodyParameter:dict = RouterCustomHelper.GenerateInletBodyParameter(modelItem)
         
+        #이건 어쩔수 없다. 매 요청마다 사용자 키를 생성, 이메일과 서비스 조합
+        strUserKey:str = f"{modelItem.email}_{modelItem.ai_service}"
+        
+        #TODO: uuid는 생성해야 한다. userKey로 관리된다. 자료 구조 필요, 계정관리자에서 관리해서, mainApp를 통해서 공유 받자.
+        strUUID:str = mainApp.GenerateUUID(strUserKey)
+        
         user:dict = {
+            ApiParameterDefine.UUID : strUUID,
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service
@@ -155,6 +162,7 @@ class ApiRouterImplCommand:
         #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
         
         # 사용자 정보의 저장, user 정보를 전달한다.
+        mainApp.AddUserAccount(strUserKey, user)
 
         return apiResponseHandler.outResponse()
         # return dictApiOutResponse

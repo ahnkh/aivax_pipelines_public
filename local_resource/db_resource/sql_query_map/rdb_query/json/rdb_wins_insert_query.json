@@ -34,72 +34,8 @@
         },
 
         {
-            "desc" : "계정 추가",
-            "key": "rdb_insert_to_user_account",
-	        "action" : "execute",
-            "query" : "INSERT INTO LLM_POLICY.USER_ACCOUNT(
-                USER_ID, USER_PASSWD, PASSWD_SALT, REG_DATE, EMAIL, 
-                DEPT, TEL, ETC_COMMENT, LOGIN_STATUS, MODIFY_DATE, LIMIT_DATE) VALUES 
-            (
-                '{user_id}', '{user_passwd}', '{passwd_salt}', '{reg_date}', '{email}', 
-                '{dept}', '{tel}', '{etc_comment}', '{login_status}, '{modify_date}, '{limit_date}
-            )"
-        },
-
-        {
-            "desc" : "계정 수정",
-            "key": "rdb_update_user_account",
-	        "action" : "execute",
-            "query" : "UPDATE LLM_POLICY.USER_ACCOUNT {set} {where}"
-        },
-
-        {
-            "desc" : "계정 삭제",
-            "key": "rdb_delete_user_account",
-	        "action" : "execute",
-            "query" : "DELETE FROM LLM_POLICY.USER_ACCOUNT {where}"
-        },
-
-        {
-            "desc" : "그룹 추가",
-            "key": "rdb_insert_to_user_group",
-	        "action" : "execute",
-            "query" : "INSERT INTO LLM_POLICY.USER_GROUP(GROUP_ID, GROUP_NAME, REG_DATE, ETC_COMMENT, USE_FLAG) VALUES 
-            ({group_id}, '{group_name}', '{reg_date}', '{etc_comment}', {use_flag})"
-        },
-
-        {
-            "desc" : "그룹 수정",
-            "key": "rdb_update_set_user_group",
-	        "action" : "execute",
-            "query" : "UPDATE LLM_POLICY.USER_GROUP {set} {where}"            
-        },
-
-        {
-            "desc" : "그룹 삭제",
-            "key": "rdb_delete_user_group",
-	        "action" : "execute",
-            "query" : "DELETE FROM LLM_POLICY.USER_GROUP {where}"            
-        },
-
-        {
-            "desc" : "필터뷰 추가",
-            "key": "rdb_insert_to_filter_view",
-	        "action" : "execute",
-            "query" : "INSERT INTO LLM_POLICY.FILTER_VIEW_INFO(TYPE_ID, FILTER_NAME, REG_DATE, FILTER_CONDITION, ETC_COMMENT, USE_FLAG) VALUES 
-            ({type_id}, '{filter_name}', '{reg_date}', '{filter_condition}', '{etc_comment}', {use_flag})"
-        },
-
-        {
-            "desc" : "필터뷰 수정",
-            "key": "rdb_update_set_filter_view",
-	        "action" : "execute",
-            "query" : "UPDATE LLM_POLICY.FILTER_VIEW_INFO {set} {where}"
-        },
-
-        {
-            "desc" : "AI 서비스, 계정 추가",
-            "key": "rdb_insert_update_ai_user_account",
+            "desc" : "AI 서비스, 계정 추가 (과거)",
+            "key": "deprecate_rdb_insert_update_ai_user_account",
 	        "action" : "execute",
             "query" : "INSERT INTO app.AI_USER_ACCOUNT(USER_ID, REG_DATE, EMAIL, AI_SERVICE, ETC_COMMENT, USE_FLAG) VALUES 
             ('{user_id}', '{reg_date}', '{email}', {ai_service}, '{etc_comment}', {use_flag})
@@ -109,6 +45,13 @@
                 AI_SERVICE = VALUES(AI_SERVICE),
                 ETC_COMMENT = VALUES(ETC_COMMENT),
                 USE_FLAG = VALUES(USE_FLAG)"
+        },
+
+        {
+            "desc" : "AI 서비스, 계정 추가 (신규)",
+            "key": "rdb_insert_update_ai_user_account",
+	        "action" : "execute",
+            "query" : "INSERT INTO app.users(id, email, ai_service_id) VALUES  ('{uuid}', '{email}', '{email}', '{ai_service_id}')"
         }
 
     ]

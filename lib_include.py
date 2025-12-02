@@ -82,7 +82,7 @@ class APP_PARMETER_DEFINE:
     WEB_PORT = "port"
     CONFIG = "config"
     TEST = "test"
-    pass
+    # pass
 
 #log index define => index와 log writer id를 동일하게 관리
 class LOG_INDEX_DEFINE:
@@ -90,7 +90,7 @@ class LOG_INDEX_DEFINE:
     KEY_INPUT_FILTER = "input_filter"
     KEY_OUTPUT_FILTER = "output_filter"
     KEY_REGEX_FILTER = "regex_filter"
-    pass
+    # pass
 
 #local 설정 config define, 모듈이 아직 크지 않아서, local config에 정의한다.
 class LOCAL_CONFIG_DEFINE:
@@ -106,7 +106,7 @@ class LOCAL_CONFIG_DEFINE:
     VAL_DB_SERVER_DEFAULT_SCHEME = "http"
     
     VAL_DB_POLL_CYCLE_SECOND = 60
-    pass
+    # pass
 
 # ipc 통신 define
 class IPC_ROUTER_DEFINE:
@@ -114,12 +114,42 @@ class IPC_ROUTER_DEFINE:
     REQUEST_ROUTER_POINT = "router.point"
     
     ROUTER_PIPELINE_FILTER = "multiple_filter" #기존 multiple_filter, 그대로.
+    # pass
 
+# AI 서비스, ID to string define Map
+class AI_SERVICE_DEFINE:
+    
+    SERVICE_UNDEFINE = 0
+    SERVICE_CHAT_GPT = 1
+    SERVICE_GEMINI = 2
+    SERVICE_CLAUDE = 3
+    SERVICE_GROK = 4
+    
+    CODE_ASSIST_COPILOT = 10
+    CODE_ASSIST_CURSOR = 11
+    CODE_ASSIST_CLAUDE = 12
+    
+    # NAME_SERVICE_UNDEFINE = "undefined" #미지정이면, 일단 GPT로.
+    NAME_SERVICE_UNDEFINE = "openapi.chatgpt" #미지정이면, 일단 GPT로.
+    NAME_SERVICE_CHAT_GPT = "openapi.chatgpt"
+    NAME_SERVICE_GEMINI = "goole.gemini"
+    NAME_SERVICE_CLAUDE = "claude.ai"
+    NAME_SERVICE_GROK = "x.grok"
+    
+    NAME_CODE_ASSIST_COPILOT = "openapi.copilot"
+    NAME_CODE_ASSIST_CURSOR = "cursor.ai"
+    NAME_CODE_ASSIST_CLAUDE = "claude.code"
+    # pass
+    
+AI_SERVICE_NAME_MAP = {
+    
+    AI_SERVICE_DEFINE.SERVICE_CHAT_GPT : AI_SERVICE_DEFINE.NAME_SERVICE_CHAT_GPT
+   
+}
 
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
 TRACE_LOG_PATH = "./trace-log"
 TRACE_PREFIX = "pipe_line"  
-
 
 #load_env_file()에서 다시 로드한다. 우선 기본값 개념으로 할당.
 API_KEY = os.getenv("PIPELINES_API_KEY", "0p3n-w3bu!")
