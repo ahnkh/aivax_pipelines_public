@@ -147,8 +147,14 @@ class UserAccountDataHandler:
                 LOG().info(f"new user account exist, insert {strUserKey}")
                 
                 dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserKey)      
-                          
-                self.__insertNewUserAccount(dictNewUserAccount)
+                                                    
+                nError = self.__insertNewUserAccount(dictNewUserAccount)
+                
+                #TODO: 수집후 오류가 발생하면 exception이 발생한다. 오류가 없으면, 원본에도 저장한다.
+                #TODO: 키만 존재하면 되고, 실제 데이터는 기존과 동일하지 않아도 무방하기는 하다.
+                
+                if ERR_OK == nError:
+                    self.__dictCurrentUserInfo[strUserKey] = dictNewUserAccount
                 #pass
                 
             # pass
@@ -234,6 +240,8 @@ class UserAccountDataHandler:
         
         dictDBResult:dict = {}
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_insert_update_ai_user_account", dictDBInfo, dictDBResult)
+        
+        return ERR_OK
         
         # pass
     

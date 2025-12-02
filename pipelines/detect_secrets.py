@@ -55,16 +55,6 @@ class Pipeline(PipelineBase):
         # 프리픽스 완화(사내 토큰 접두 등)
         prefix_relax: bool = Field(default=True, description="특정 접두 토큰(ak-, tk-, ghp-/_) 완화 룰 적용")
         
-        ############ 2차 모델 시연을 위한 임시 소스 추가
-        # OpenSearch 설정
-        # os_enabled: bool = True
-        # os_url: str = "https://vax-opensearch:9200"
-        # os_index: str = "regex_filter"
-        # os_user: Optional[str] = "admin"
-        # os_pass: Optional[str] = "Sniper123!@#"
-        # os_insecure: bool = True
-        # os_timeout: int = 3
-        
         # 저장 옵션 => TODO: 미사용 옵션으로 보이며, 사용 출처 불분명
         store_response_text: bool = True          # 응답 전문 저장 여부
         response_max_bytes: int = 200_000         # 응답 텍스트 최대 바이트(UTF-8 기준)
@@ -72,7 +62,6 @@ class Pipeline(PipelineBase):
         include_filters_meta: bool = True         # body["_filters"] 저장
         include_usage: bool = True                # 토큰/지연 등 사용량 저장
         pass
-
         
     ########################################### public
     
@@ -458,164 +447,5 @@ AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐�
         '''
         
         return strBlockMessage
-    
-    
-    ####################################################### 지울 코드
-    
-    # def __init__(self):        
-    #     '''
-    #     '''
-        
-    #     super().__init__()
-        
-    #     self.type = "filter"
-    #     self.id = "secret_filter"
-    #     self.name = "secret_filter"
-        
-    #     self.valves = self.Valves()
-        
-    #     #TODO: 사용하지 않는 필드, 향후 제거
-    #     self.toggle = True
-    #     # self.logger = self._setup_logger()
-        
-    #     #TODO: 하단의 정규 표현식은, 정책으로 분리한다.
-
-    #     ''' #위치 이동 -> detect_secret_filter_pattern
-    #     # ---------- 멀티라인/블록 패턴 ----------
-    #     # PrivateKeyDetector: PEM 블록
-    #     self.re_pem_block = re.compile(
-    #         r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
-    #         re.MULTILINE,
-    #     )
-    #     # JwtTokenDetector: JWT 토큰
-    #     self.re_jwt = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
-
-    #     # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
-    #     key_kv = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
-    #     sep = r"\s*[:=]\s*"
-
-    #     # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
-    #     self.known_patterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
-    #         # AWSKeyDetector
-    #         ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
-    #         ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
-
-    #         # AzureStorageKeyDetector (connection string)
-    #         ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-    #         ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-
-    #         # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
-
-    #         # BasicAuthDetector: scheme://user:pass@host
-    #         ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
-
-    #         # CloudantDetector: https://user:pass@<account>.cloudant.com
-    #         ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
-
-    #         # DiscordBotTokenDetector
-    #         ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
-
-    #         # GitHubTokenDetector (classic/pat 등)
-    #         ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
-
-    #         # MailchimpDetector (키 형태: 32 hex + -usN)
-    #         ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
-
-    #         # SlackDetector
-    #         ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
-    #         ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
-
-    #         # StripeDetector
-    #         ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-    #         ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-
-    #         # TwilioKeyDetector
-    #         ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
-    #         ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
-
-    #         # KeywordDetector (일반 할당형)
-    #         ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
-    #         ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
-    #         ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
-
-    #         # OpenAI/Custom-like
-    #         ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
-    #         # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
-    #         ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
-    #     ]
-
-    #     # ---------- 엔트로피 후보/도우미 ----------
-    #     self.re_candidate = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
-    #     self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
-    #     self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
-    #     '''
-        
-    #     pass
-    
-    # #opensearch 저장, 과거 소스도 유지, 옵션으로 저장 방식을 선택하는 방향으로 개선한다.
-    # def _index_opensearch(self, doc: Dict[str, Any]) -> bool:
-        
-    #     import base64
-    #     import ssl
-        
-    #     v = self.valves
-    #     if not v.os_enabled:
-    #         return False
-
-    #     url = f"{v.os_url.rstrip('/')}/{v.os_index}/_doc"
-    #     payload = json.dumps(doc, ensure_ascii=False).encode("utf-8")
-
-    #     # 1) requests 우선
-    #     try:
-    #         import requests
-    #         auth = (v.os_user, v.os_pass) if v.os_user else None
-    #         verify = not v.os_insecure
-    #         r = requests.post(
-    #             url,
-    #             data=payload,
-    #             headers={"Content-Type": "application/json"},
-    #             auth=auth,
-    #             verify=verify,
-    #             timeout=v.os_timeout,
-    #         )
-    #         ok = r.status_code in (200, 201)
-            
-    #         if not ok:                
-    #             # self.logger.warning("[response->OS] status=%s body=%s", r.status_code, r.text[:400])
-    #             LOG().info(f"[response->OS] status={r.status_code} body={r.text[:400]}")
-                
-    #         return ok
-    #     except Exception as e:
-    #         # self.logger.debug("[response->OS] requests failed: %r -> fallback to urllib", e)
-    #         LOG().debug(f"[response->OS] requests failed: {e} -> fallback to urllib")
-    #         LOG().error(traceback.format_exc())
-
-    #     # 2) urllib 폴백
-    #     try:
-    #         from urllib.request import Request, urlopen
-    #         headers = {"Content-Type": "application/json"}
-    #         if v.os_user:
-    #             token = base64.b64encode(f"{v.os_user}:{v.os_pass or ''}".encode()).decode()
-    #             headers["Authorization"] = f"Basic {token}"
-
-    #         req = Request(url, data=payload, headers=headers, method="POST")
-    #         ctx = None
-    #         if url.startswith("https://") and v.os_insecure:
-    #             ctx = ssl._create_unverified_context()
-
-    #         with urlopen(req, timeout=v.os_timeout, context=ctx) as resp:
-    #             status = getattr(resp, "status", 200)
-    #             ok = status in (200, 201)
-    #             if not ok:
-    #                 body = resp.read(512).decode("utf-8", "ignore")
-    #                 # self.logger.warning("[response->OS] urllib bad status=%s body=%s", status, body)
-    #                 LOG().info(f"[response->OS] urllib bad status={status} body={body}")
-    #             return ok
-    #     except Exception as e:
-    #         # self.logger.warning("[response->OS] urllib failed: %r", e)
-    #         LOG().error(traceback.format_exc())
-    #         return False
-
-        
     
     
