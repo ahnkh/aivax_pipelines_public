@@ -265,7 +265,7 @@ class Pipeline(PipelineBase):
                 uuid = __user__.get(ApiParameterDefine.UUID, "")
                 
             #ai service 명 추가
-            strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type)                
+            strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")                
                             
             # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
             # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            

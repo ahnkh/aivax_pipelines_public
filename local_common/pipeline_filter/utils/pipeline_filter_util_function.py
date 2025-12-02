@@ -14,7 +14,8 @@ from lib_include import *
 # ----------------------------------------------------
 def ts_isoz() -> str:
     # UTC ISO 8601 + Z
-    return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    # return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.datetime.now().astimezone().isoformat()
 
 def safe_get(d: Dict[str, Any], *keys, default=None):
     cur = d

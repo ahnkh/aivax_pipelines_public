@@ -1,16 +1,16 @@
 from typing import Optional, Dict, Any, List, Union
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-import json
-import logging
-import base64
-import ssl
+# import json
+# import logging
+# import base64
+# import ssl
 
 from lib_include import *
 
 from type_hint import *
 
-from datetime import datetime
+# from datetime import datetime
 
 '''
 opensearch, 저장 pipeline
@@ -31,15 +31,6 @@ class Pipeline(PipelineBase):
             pipelines: List[str] = Field(default_factory=lambda: ["*"])
             priority: int = 0
             enabled: bool = True
-
-            # # OpenSearch 저장 설정
-            # os_enabled: bool = True
-            # os_url: str = "https://vax-opensearch:9200"   # 예: http://os:9200
-            # os_index: str = "input_filter"  # 자동 생성 허용 시 그대로 사용
-            # os_user: Optional[str] = "admin"           # 예: "admin"
-            # os_pass: Optional[str] = "Sniper123!@#"           # 예: "admin"
-            # os_insecure: bool = True                # https 자가서명 시 True
-            # os_timeout: int = 3                  # 초
 
             # 필드 기본값
             default_channel: str = "web"
@@ -109,25 +100,49 @@ class Pipeline(PipelineBase):
             or safe_get(meta, "request", "ip", default=None)
         )
         channel = meta.get("channel") or getattr(self.valves, "default_channel", "web")
+        
+        user_id:str = ""
+        user_role:str = getattr(self.valves, "default_user_role", None)
+        user_email:str = ""
+        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
+        uuid:str = ""
+        
+        #__user__ 거슬린다.
+        dictUserInfo:dict = __user__
+        
+        if None != dictUserInfo:
+            
+            user_id = dictUserInfo.get(ApiParameterDefine.NAME, "") #TODO: 이름이 현재는 없다.
+            user_role = dictUserInfo.get(ApiParameterDefine.ROLE, "") #TODO: 2단계만 수집 가능
+            user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "") #TODO: 2단계만 수집 가능
+            
+            ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
+            
+        #ai service 명, TOOD: 이 기능이 Filter마다 반복, 공통화가 필요하다.
+        strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "") #혹여 아예 엉뚱한 값이 들어오면, 공백으로 저장
 
-        user_id = (__user__ or {}).get("name") if isinstance(__user__, dict) else None
-        user_role = (__user__ or {}).get("role") if isinstance(__user__, dict) else getattr(self.valves, "default_user_role", None)
-        user_email = (__user__ or {}).get("email") if isinstance(__user__, dict) else None
+        # user_id = (__user__ or {}).get("name") if isinstance(__user__, dict) else None
+        # user_role = (__user__ or {}).get("role") if isinstance(__user__, dict) else getattr(self.valves, "default_user_role", None)
+        # user_email = (__user__ or {}).get("email") if isinstance(__user__, dict) else None
         
         # 위험한 코드, 향후 다른 형태로 개발
         # client_ip = __request__.client.host
         client_ip = ""
 
-        # 저장 문서
-        os_doc = {
+        # 저장 문서        
+        dictOpensearchDoc = {
             "@timestamp": ts_isoz(),
             "event":   {"id": message_id, "type": "query"},
             "request": {"id": message_id},
             "session": {"id": session_id},
-            "user":    {"id": user_id, "role": user_role, "email": user_email},
+            # "user":    {"id": user_id, "role": user_role, "email": user_email},
+            "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
             "src":     {"ip": client_ip}, 
             # "src":     {"ip": src_ip},
             "channel": channel,
+            
+            #25.12.02 ai 서비스 유형 추가
+            "ai_service" : strAIServiceName,
             "query":   {"text": query_text},
         }
 
@@ -140,7 +155,7 @@ class Pipeline(PipelineBase):
         # except Exception as e:
         #     logger.warning("[inlet->OS] index error: %r", e)
         
-        self.AddLogData(LOG_INDEX_DEFINE.KEY_INPUT_FILTER, os_doc)
+        self.AddLogData(LOG_INDEX_DEFINE.KEY_INPUT_FILTER, dictOpensearchDoc)
 
         #불필요한 전달, 제거 2단계가 필요하면 그때 다시 설계
         # return body
@@ -148,58 +163,3 @@ class Pipeline(PipelineBase):
 
     ################################################# 지울 소스
     
-    # ----------------------------
-# OpenSearch 인덱싱 (아이템포턴트)
-# ----------------------------
-    # def _index_opensearch(self, doc: Dict[str, Any], doc_id: Optional[str] = None) -> bool:
-    #     v = self.valves
-    #     if not v.os_enabled:
-    #         return False
-
-    #     base = f"{v.os_url.rstrip('/')}/{v.os_index}/_doc"
-    #     url = f"{base}/{doc_id}?op_type=create" if doc_id else base
-    #     payload = json.dumps(doc, ensure_ascii=False).encode("utf-8")
-
-    #     # 1) requests 경로
-    #     try:
-    #         import requests
-    #         auth = (v.os_user, v.os_pass) if v.os_user else None
-    #         verify = not v.os_insecure
-    #         method = requests.put if doc_id else requests.post
-    #         r = method(url, data=payload, headers={"Content-Type": "application/json"},
-    #                 auth=auth, verify=verify, timeout=v.os_timeout)
-    #         if r.status_code in (200, 201, 409):  # 409 = 이미 저장됨(중복 방지 OK)
-    #             if r.status_code == 409:
-    #                 LOG().info("[inlet->OS] idempotent skip (doc_id=%s)", doc_id)
-    #             return True
-    #         LOG().warning("[inlet->OS] status=%s body=%s", r.status_code, r.text[:400])
-    #         return False
-    #     except Exception:
-    #         LOG().debug("[inlet->OS] requests path failed; fallback to urllib")
-
-    #     # 2) urllib 폴백
-    #     try:
-    #         from urllib.request import Request, urlopen
-    #         from urllib.error import HTTPError
-    #         headers = {"Content-Type": "application/json"}
-    #         if v.os_user:
-    #             token = base64.b64encode(f"{v.os_user}:{v.os_pass or ''}".encode()).decode()
-    #             headers["Authorization"] = f"Basic {token}"
-    #         req = Request(url, data=payload, headers=headers, method=("PUT" if doc_id else "POST"))
-    #         ctx = ssl._create_unverified_context() if url.startswith("https://") and v.os_insecure else None
-    #         try:
-    #             with urlopen(req, timeout=v.os_timeout, context=ctx) as resp:
-    #                 status = getattr(resp, "status", 200)
-    #                 if status in (200, 201):
-    #                     return True
-    #                 body = resp.read(512).decode("utf-8", "ignore")
-    #                 LOG().warning("[inlet->OS] urllib bad status=%s body=%s", status, body)
-    #                 return False
-    #         except HTTPError as he:
-    #             if getattr(he, "code", None) == 409:
-    #                 LOG().info("[inlet->OS] idempotent skip (doc_id=%s)", doc_id)
-    #                 return True
-    #             raise
-    #     except Exception as e:
-    #         LOG().warning("[inlet->OS] urllib path failed: %r", e)
-    #         return False

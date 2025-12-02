@@ -44,4 +44,5 @@ class ApiParameterDefine:
     #TODO: 여기서 부터는 API와 상관없는 항목이다. => API에서 생성되는 항목으로, 여기까지는 같이 관리..
     USER_KEY = "user_key" #사용자 키, 추가
     UUID = "uuid" #uuid, 새로 추가 (프롬프트 수집시점에, uuid가 저장되어야 한다.)
+    ROLE = "role" #사용자 역할, 향후 수집 및 Define 분리 필요, 우선은 현재 사양 유지
     # pass
