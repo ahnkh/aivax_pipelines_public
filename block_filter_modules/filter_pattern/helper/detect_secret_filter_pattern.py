@@ -161,7 +161,6 @@ class DetectSecretFilterPattern (FilterPatternBase):
             # return ERR_OK 
             #TODO: 실패시의 예외, 반환에 대한 주의
         
-        
         return ERR_OK
     
     ################################################# private
@@ -225,7 +224,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             
             #TODO: 2개의 옵션이 필요 => dictionary쪽이 나을수 있겠다. tuple X
             regexFlag:int = dictPolicy.get("regexFlag", 0)
-            regexGroup:str = dictPolicy.get("regexGroup", 0)
+            regexGroup:int = dictPolicy.get("regexGroup", 0)
             regexGroupVal:str = dictPolicy.get("regexGroupVal", None)
             
             #TODO: 없는 경우에 대한 처리
@@ -238,8 +237,20 @@ class DetectSecretFilterPattern (FilterPatternBase):
             #regexFlag, 예외처리
             if None == regexFlag:
                 regexFlag = re.DOTALL
+            
+            if None == regexGroup:
+                regexGroup = 0
        
-            regexPattern:re.Pattern = re.compile(rule, regexFlag)
+       
+            #2025.12.02 정규표현식 오류, 
+            #try로 묶어서 임시 테스트
+            
+            regexPattern:re.Pattern = None
+            
+            try:
+                regexPattern:re.Pattern = re.compile(rule, regexFlag)
+            except Exception:
+                LOG().error(traceback.format_exc())
             
             #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
             # tupleRulePattern = (name, rule, regexPattern)

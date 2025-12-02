@@ -1,5 +1,8 @@
 
 
+#rule, base64
+import base64
+
 #외부 라이브러리
 from lib_include import *
 
@@ -13,133 +16,77 @@ class FilterDBPolicyRequestHelper:
     
     def __init__(self):
         pass
+      
+    #DB 정책 조회 버전2 - DB에서 직접 조회
+    def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+      
+      '''
+      sqlprintf 구조로 변경한다.
+      조회된 결과에서 기준 데이터 구조와 동일한 dictionary 형태로 업데이트
+      
+      '''
+      
+      '''
+      select id, name, type_mask, operator, rule, action, regex_flag, regex_group, regex_group_val, status from policy_rules where status = 'deployed'
+      '''
+      dictDBResult = {}
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule", {}, dictDBResult)
+      
+      lstQueryData:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
+      
+      #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)  
+      #TODO: 키구조 주의, 그대로 넣으면 안된다. 사양 파악후 정리.      
+      # 키를 생성해서, 다시 만든다. => DB에서 만든다. 그래도, 바로 복사는 안된다.
+      # self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
+      
+      lstNewFilterPolicy = []
+      
+      #일단 하나로 처리하자.
+      for dictPattern in lstQueryData:
+          
+        # id:str = dictPattern.get("id")
+        # name:str = dictPattern.get("name")
+        # type_mask:int = dictPattern.get("type_mask")
+        # operator:str = dictPattern.get("operator")
+        rule:str = dictPattern.get("rule")
+        # action:str = dictPattern.get("action")
+        # status:str = dictPattern.get("status")
+        
+        regex_flag:int = dictPattern.get("regex_flag")
+        regex_group:int = dictPattern.get("regex_group")
+        regex_group_val:str = dictPattern.get("regex_group_val")
+        
+        #이름 보정
+        dictPattern["regexFlag"] = regex_flag
+        dictPattern["regexGroup"] = regex_group
+        dictPattern["regexGroupVal"] = regex_group_val
+          
+        #TODO: action, base64 => decode 처리후 저장.
+          
+        byteBase64Decode = base64.b64decode(rule)
+          
+        #문자열로 변환
+        strBase64Decode = byteBase64Decode.decode("utf-8")
+          
+        #어차피 여기서만 조회, 그냥 업데이트
+        dictPattern["rule"] = strBase64Decode
+          
+        #그 연산이 그연산..
+        # dictNewPattern = {
+        #   "id" : id
+        # }
+          
+        lstNewFilterPolicy.append(dictPattern)
+        #pass
+        
+      dictFilterPolicy["data"] = lstNewFilterPolicy
+      
+      return ERR_OK
     
-    #DB 정책 조회, TODO: 하드코딩 => 잠시 제거
-    def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
-        
-        '''
-        다음 요청, python request 로 수신후, json 데이터를 반환한다.
-        curl -X GET 'http://10.0.17.101:3000/api/internal/policy/rules?sdate=2025-10-23T15:30:00Z&edate=2025-10-23T14:00:00Z&offset=0&limit=0'' 
-        -H 'accept:application/json'
-        
-        {
-  "statusCode": 201,
-  "message": "모든 정책 조회에 성공했습니다",
-  "data": [
-    {
-      "id": "78c85826-78f5-4e93-8aaf-833acb34d43c",
-      "name": "Masking rule",
-      "targets": [
-        "api"
-      ],
-      "typeMask": 2,
-      "operator": "AND",
-      "rule": "",
-      "prompt": "프롬프트",
-      "scope": "api",
-      "action": "masking",
-      "status": "deployed",
-      "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
-    },
-    {
-      "id": "fff8f239-d2ca-4984-8b34-180a802b2ef6",
-      "name": "테스트용 정책",
-      "targets": [
-        "pii"
-      ],
-      "typeMask": 2,
-      "operator": "AND",
-      "rule": "테스트용 정책 내용",
-      "prompt": "비밀번호 출력하지마",
-      "scope": "user",
-      "action": "accept",
-      "status": "deployed",
-      "adminId": "23679764-44d8-45b6-9344-39f0bcc25fd6"
-    },
-    {
-      "id": "e4f68a6e-a0d1-4387-a779-a900b22402a1",
-      "name": "test rule",
-      "targets": [
-        "pii"
-      ],
-      "typeMask": 1,
-      "operator": "AND",
-      "rule": "regex rule",
-      "prompt": "",
-      "scope": "user",
-      "action": "accept",
-      "status": "deployed",
-      "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
-    }
-  ],
-  "total": 3
-}
-        '''
-        
-        # TODO: 접속정보, 기준이 모호한 부분, 우선 외부 파라미터로 받는 부분까지는 개발.
-        strDBServer:str = dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_IP)
-        nDBPort:int = int(dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_PORT))
-        strScheme:str = dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_SCHEME)
-                
-        # strScheme:str = "http"
-        
-        # # strDBServer:str = "10.0.17.101"
-        # strDBServer:str = "127.0.0.1"
-        # nDBPort:int = 3000
-        
-        #TODO: 서버, 접속 여부 체크, 테스트 코드
-        
-        import socket
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        #일단 예외처리는 하지 않는다.
-        sock.settimeout(3)
-        # nError = sock.connect_ex((WebApiLocalDefine.OPT_WEB_API_LOCAL_HOST,nWebApiPort))
-        nError = sock.connect_ex((strDBServer,nDBPort))
-        sock.close()
-        
-        if 0 != nError:
-          LOG().error("fail connecto to db api server, close")
-          return ERR_FAIL
-                
-        strStartDate:str = datetime.datetime.now().strftime("%Y-%m-%dT00:00:00Z")
-        strEndDate:str = datetime.datetime.now().strftime("%Y-%m-%dT23:59:59Z")
-        nOffset:int = 0
-        nLimit:int = 0
-        
-        strUrl = (
-            f"{strScheme}://{strDBServer}:{nDBPort}/api/internal/policy/rules?"
-            f"sdate={strStartDate}&edate={strEndDate}&offset={nOffset}&limit={nLimit}"
-        )
-        
-        #ssl 인증서 무시
-        bSSLVerify = False
-        
-        nTimeOut = 10
-        
-        dictHeader = {
-            "accept" : "application/json"
-        }
-        
-        # DB 데이터, 요청
-        response:requests.Response = requests.get(strUrl, verify = bSSLVerify, timeout=nTimeOut, headers=dictHeader)
-        
-        strResponseData:str = response.text
-        
-        if response.status_code == 200:
-                        
-            dictLocalVal = json.loads(strResponseData, strict=False)
-            dictFilterPolicy.update(dictLocalVal)
-            
-        else:
-            raise Exception(f"fail request to db server, error = {response.status_code}({strResponseData})")
-            #return ERR_FAIL
-
-        return ERR_OK
+    
       
     #가상의 테스트 코드, 다음의 데이터가 반환되도록 처리
-    def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+    def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
       
         '''
         '''
@@ -333,6 +280,133 @@ class FilterDBPolicyRequestHelper:
         dictFilterPolicy.update(dictLocalVal)
 
         return ERR_OK
+      
+      
+  ############################################### 지울 코드
+  
+  #DB 정책 조회, TODO: 하드코딩 => 잠시 제거
+#     def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+        
+#         '''
+#         다음 요청, python request 로 수신후, json 데이터를 반환한다.
+#         curl -X GET 'http://10.0.17.101:3000/api/internal/policy/rules?sdate=2025-10-23T15:30:00Z&edate=2025-10-23T14:00:00Z&offset=0&limit=0'' 
+#         -H 'accept:application/json'
+        
+#         {
+#   "statusCode": 201,
+#   "message": "모든 정책 조회에 성공했습니다",
+#   "data": [
+#     {
+#       "id": "78c85826-78f5-4e93-8aaf-833acb34d43c",
+#       "name": "Masking rule",
+#       "targets": [
+#         "api"
+#       ],
+#       "typeMask": 2,
+#       "operator": "AND",
+#       "rule": "",
+#       "prompt": "프롬프트",
+#       "scope": "api",
+#       "action": "masking",
+#       "status": "deployed",
+#       "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
+#     },
+#     {
+#       "id": "fff8f239-d2ca-4984-8b34-180a802b2ef6",
+#       "name": "테스트용 정책",
+#       "targets": [
+#         "pii"
+#       ],
+#       "typeMask": 2,
+#       "operator": "AND",
+#       "rule": "테스트용 정책 내용",
+#       "prompt": "비밀번호 출력하지마",
+#       "scope": "user",
+#       "action": "accept",
+#       "status": "deployed",
+#       "adminId": "23679764-44d8-45b6-9344-39f0bcc25fd6"
+#     },
+#     {
+#       "id": "e4f68a6e-a0d1-4387-a779-a900b22402a1",
+#       "name": "test rule",
+#       "targets": [
+#         "pii"
+#       ],
+#       "typeMask": 1,
+#       "operator": "AND",
+#       "rule": "regex rule",
+#       "prompt": "",
+#       "scope": "user",
+#       "action": "accept",
+#       "status": "deployed",
+#       "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
+#     }
+#   ],
+#   "total": 3
+# }
+#         '''
+        
+#         # TODO: 접속정보, 기준이 모호한 부분, 우선 외부 파라미터로 받는 부분까지는 개발.
+#         strDBServer:str = dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_IP)
+#         nDBPort:int = int(dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_PORT))
+#         strScheme:str = dictPolicyLocalConfig.get(LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_SCHEME)
+                
+#         # strScheme:str = "http"
+        
+#         # # strDBServer:str = "10.0.17.101"
+#         # strDBServer:str = "127.0.0.1"
+#         # nDBPort:int = 3000
+        
+#         #TODO: 서버, 접속 여부 체크, 테스트 코드
+        
+#         import socket
+        
+#         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+#         #일단 예외처리는 하지 않는다.
+#         sock.settimeout(3)
+#         # nError = sock.connect_ex((WebApiLocalDefine.OPT_WEB_API_LOCAL_HOST,nWebApiPort))
+#         nError = sock.connect_ex((strDBServer,nDBPort))
+#         sock.close()
+        
+#         if 0 != nError:
+#           LOG().error("fail connecto to db api server, close")
+#           return ERR_FAIL
+                
+#         strStartDate:str = datetime.datetime.now().strftime("%Y-%m-%dT00:00:00Z")
+#         strEndDate:str = datetime.datetime.now().strftime("%Y-%m-%dT23:59:59Z")
+#         nOffset:int = 0
+#         nLimit:int = 0
+        
+#         strUrl = (
+#             f"{strScheme}://{strDBServer}:{nDBPort}/api/internal/policy/rules?"
+#             f"sdate={strStartDate}&edate={strEndDate}&offset={nOffset}&limit={nLimit}"
+#         )
+        
+#         #ssl 인증서 무시
+#         bSSLVerify = False
+        
+#         nTimeOut = 10
+        
+#         dictHeader = {
+#             "accept" : "application/json"
+#         }
+        
+#         # DB 데이터, 요청
+#         response:requests.Response = requests.get(strUrl, verify = bSSLVerify, timeout=nTimeOut, headers=dictHeader)
+        
+#         strResponseData:str = response.text
+        
+#         if response.status_code == 200:
+                        
+#             dictLocalVal = json.loads(strResponseData, strict=False)
+#             dictFilterPolicy.update(dictLocalVal)
+            
+#         else:
+#             raise Exception(f"fail request to db server, error = {response.status_code}({strResponseData})")
+#             #return ERR_FAIL
+
+#         return ERR_OK
       
       
       

@@ -35,7 +35,15 @@
             "query" : "SELECT 
                         CONCAT(email, '_', ai_service_id) AS user_key, id, email, user_group_id, ai_service_id, created_at, updated_at
                     FROM app.users {where} limit {limit}"
+        },
+
+        {
+            "desc" : "정책 패턴 조회, 단순 조회, 향후 복합 구조로 변경",
+            "key": "rdb_select_policy_rule",
+	        "action" : "query_for_list",
+            "query" : "select id, name, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules where status = 'deployed'"
         }
+
     ]
 }
 
