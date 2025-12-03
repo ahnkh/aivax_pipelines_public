@@ -79,34 +79,38 @@ class FilterPatternBase:
         
         dictPolicyCompareMap:dict = {}
         
+        #TODO: 이름은 같을수 있다. id로 비교해야 한다.
         for dictEachPolicy in lstCurrentPolicyData:
             
-            strRuleName:str = dictEachPolicy.get("name")            
-            dictPolicyCompareMap[strRuleName] = dictEachPolicy
+            # strRuleName:str = dictEachPolicy.get("name")
+            strRuleID:str = dictEachPolicy.get("id")
+            dictPolicyCompareMap[strRuleID] = dictEachPolicy
             
         #신규 룰을 선회, 다른 정책이 발견되면 changed (True)로 반환, 종료
         for dictNewPolicy in lstNewPolicyData:
+            
+            strNewRuleID:str = dictNewPolicy.get("id")
             
             strNewRuleName:str = dictNewPolicy.get("name")
             strNewAction:str = dictNewPolicy.get("action")
             strNewRulePattern:str = dictNewPolicy.get("rule")
             
-            dictCurrentPolicy:dict = dictPolicyCompareMap.get(strNewRuleName)
+            dictCurrentPolicy:dict = dictPolicyCompareMap.get(strNewRuleID)
             
             # 기존 정책이 없는 정책 (신규 추가)
             if None == dictCurrentPolicy:
                 
-                LOG().info(f"filter policy is changed, rule = {strNewRuleName}")
+                LOG().info(f"filter policy is changed, no rule existm, rule = {strNewRuleID},{strNewRuleName}")
                 return FilterPatternBase.POLICY_CHANGED
             
             # 둘다 있으면 정책의 내용을 비교
-            # strCurrentRuleName:str = dictCurrentPolicy.get("name")
+            strCurrentRuleName:str = dictCurrentPolicy.get("name")
             strCurrentAction:str = dictCurrentPolicy.get("action")
             strCurrentRulePattern:str = dictCurrentPolicy.get("rule")
             
             if (strNewAction != strCurrentAction) or (strNewRulePattern != strCurrentRulePattern):
                 
-                LOG().info(f"filter policy is changed, rule = {strNewRuleName}, pattern = {strCurrentRulePattern}")
+                LOG().info(f"filter policy is changed, action = {strCurrentAction}->{strNewAction}, id = {strNewRuleID}, name = {strCurrentRuleName}->{strNewRuleName}, rule = {strCurrentRulePattern}->{strNewRulePattern}")
                 return FilterPatternBase.POLICY_CHANGED
         
         #모든 정책을 순회했으면 changed.
