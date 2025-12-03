@@ -346,6 +346,9 @@ class Pipeline(PipelineBase):
         
         (spans, counts, dictDetectedRule) = detectSecretFilterPattern.TestRulePattern(strPrompt, strRule, strAction)
         
+        #TODO: 여기는 차단명이 없다. 테스트로 통일
+        strPolicyName:str = "정책 테스트"
+        
         #TODO: 반드시 다시 개발
         #사양변경, content 필드를 활용, masking일때는 masking 된 데이터를 보여주고
         #차단일때는 임의의 해당 문구를 추가
@@ -375,7 +378,7 @@ class Pipeline(PipelineBase):
                            
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
                 
-                strBlockMessage:str = self.__customBlockMessage()
+                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
                 dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
                 
             elif 0 < nMaskingCount:
@@ -386,7 +389,7 @@ class Pipeline(PipelineBase):
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = masked
 
                 #TODO: 여기서부터는 협의 필요                    
-                strBlockMessage:str = self.__customBlockMessage()
+                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
                 dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
             
         else:
