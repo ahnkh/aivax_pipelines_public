@@ -166,6 +166,10 @@ class Pipeline(PipelineBase):
             #TODO: 구조 변경 필요, valve 클래스, 참조가 어려운 문제
             valves = self.valves
             (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves)
+                        
+            #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
+            strPolicyID:str = dictDetectedRule.get("id", "")
+            strPolicyName:str = dictDetectedRule.get("name", "")
             
             # LOG().info(f"Masked: {counts}, len = {len(spans)}")
             
@@ -176,7 +180,8 @@ class Pipeline(PipelineBase):
                 nBlockCount = counts.get("block")
                 nMaskingCount = counts.get("masking")
                 
-                strBlockMessage:str = self.__customBlockMessage()
+                #정책 카테고리, name만 표기                
+                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
                 
                 #block 먼저 체크
                 if 0 < nBlockCount:
@@ -292,8 +297,8 @@ class Pipeline(PipelineBase):
                 "mode": std_action,
                 
                 #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
-                "policy_id" : dictDetectedRule.get("id", ""),
-                "policy_name" : dictDetectedRule.get("name", ""),
+                "policy_id" : strPolicyID,
+                "policy_name" : strPolicyName,
                 "src":     {"ip": client_ip},
                 
                 "pii": {
@@ -432,15 +437,15 @@ class Pipeline(PipelineBase):
         return "".join(out)
     
     #차단 메시지, 우선 하드코딩, 향후 ouput 데이터의 처리 모듈을 개발한다.
-    def __customBlockMessage(self, ) -> str:
+    def __customBlockMessage(self, strBlockCategory:str) -> str:
         
         '''
         시연용 하드코딩
         '''
         
-        strBlockMessage:str = '''[AIVAX] 프롬프트 차단
+        strBlockMessage:str = f'''[AIVAX] 프롬프트 차단
 AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
-❌탐지 유형은 'API 키의 탐지' 입니다.
+❌탐지 유형은 '{strBlockCategory}' 입니다.
 민감 정보를 전송할 경우, 기밀 정보 또는 개인 정보 유출등의 피해가 발생할 수 있으니 각별한 주의를 부탁드려요
 요청하신 프롬프트는 AIVAX에 의해서 요청이 차단되었습니다.
 세부 지침 사항은 관리자에게 문의해주세요

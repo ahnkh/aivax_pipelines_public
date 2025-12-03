@@ -11,28 +11,27 @@ from lib_include import *
 
 from type_hint import *
 
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO)
-
+# logger = logging.getLogger(__name__)
+# if not logger.handlers:
+#     logging.basicConfig(level=logging.INFO)
 
 # ---------------------------
 # 유틸
 # ---------------------------
-def _ts_isoz() -> str:
-    return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+# def _ts_isoz() -> str:
+#     return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def _safe_get(d: Dict[str, Any], *keys, default=None):
-    cur = d
-    try:
-        for k in keys:
-            if not isinstance(cur, dict):
-                return default
-            cur = cur.get(k)
-        return cur if cur is not None else default
-    except Exception:
-        return default
+# def _safe_get(d: Dict[str, Any], *keys, default=None):
+#     cur = d
+#     try:
+#         for k in keys:
+#             if not isinstance(cur, dict):
+#                 return default
+#             cur = cur.get(k)
+#         return cur if cur is not None else default
+#     except Exception:
+#         return default
 
 
 def _truncate_bytes(s: Optional[str], limit: int) -> Tuple[Optional[str], Optional[int]]:
@@ -88,13 +87,13 @@ def _get_session_id(body: Dict[str, Any], user: Optional[dict]) -> Tuple[str, bo
         ("conversation", "id"),
         ("session_id",),
     ]:
-        val = _safe_get(body, *keys, default=None)
+        val = safe_get(body, *keys, default=None)
         if val:
             return val, False
 
     # 3) _filters에 들어있을 가능성 
-    filt_sid = _safe_get(body, "_filters", "inlet", "__sid", default=None) \
-               or _safe_get(body, "_filters", "__sid", default=None)
+    filt_sid = safe_get(body, "_filters", "inlet", "__sid", default=None) \
+               or safe_get(body, "_filters", "__sid", default=None)
     if filt_sid:
         return filt_sid, False
 
@@ -258,45 +257,61 @@ class Pipeline(PipelineBase):
 
         # 메타/기본 정보
         meta: Dict[str, Any] = body.get("metadata") or {}
-        message_id_req = meta.get("message_id") or _safe_get(body, "request", "id", default=None)
-        response_id = meta.get("response_id") or _safe_get(body, "response", "id", default=None)
+        
+        message_id_req = meta.get("message_id") or safe_get(body, "request", "id", default=None)
+        response_id = meta.get("response_id") or safe_get(body, "response", "id", default=None)
 
         session_id, is_fallback = _get_session_id(body, user)
 
         # 채널 복구 (없으면 web)
         channel = _get_channel(body)
+        
+        user_id:str = ""
+        user_role:str = ""
+        user_email:str = ""
+        
+        if None != user:
+            
+            user_id = user.get(ApiParameterDefine.NAME, "")
+            user_role = user.get(ApiParameterDefine.ROLE, "")
+            user_email = user.get(ApiParameterDefine.EMAIL, "")
+            
 
-        user_id = (user or {}).get("name") if isinstance(user, dict) else None
-        user_role = (user or {}).get("role") if isinstance(user, dict) else None
-        user_email = (user or {}).get("email") if isinstance(user, dict) else None
-
+        # user_id = (user or {}).get("name") if isinstance(user, dict) else None
+        # user_role = (user or {}).get("role") if isinstance(user, dict) else None
+        # user_email = (user or {}).get("email") if isinstance(user, dict) else None
 
         # 모델/사용량/지연
-        model_name = _safe_get(body, "model", default=None) or _safe_get(meta, "model", default=None)
-        latency_ms = _safe_get(body, "latency_ms", default=None) or _safe_get(meta, "latency_ms", default=None)
+        model_name = safe_get(body, "model", default=None) or safe_get(meta, "model", default=None)
+        latency_ms = safe_get(body, "latency_ms", default=None) or safe_get(meta, "latency_ms", default=None)
+        
         usage = body.get("usage") or {}
-        prompt_tokens = _safe_get(usage, "prompt_tokens", default=None)
-        completion_tokens = _safe_get(usage, "completion_tokens", default=None)
-        total_tokens = _safe_get(usage, "total_tokens", default=None)
+        prompt_tokens = safe_get(usage, "prompt_tokens", default=None)
+        completion_tokens = safe_get(usage, "completion_tokens", default=None)
+        total_tokens = safe_get(usage, "total_tokens", default=None)
 
         # 필터링 메타
         filters_meta = body.get("_filters") if v.include_filters_meta else None
 
         # 어시스턴트 응답 추출 및 저장 정책 적용
         resp_text = self._extract_assistant_text(body)
+        
         original_size_bytes = None
+        
         if v.hash_only:
             resp_hash = _hash_text(resp_text)
             resp_text_to_store = None
+            
         elif v.store_response_text:
             resp_text_to_store, original_size_bytes = _truncate_bytes(resp_text, v.response_max_bytes)
             resp_hash = _hash_text(resp_text)
+            
         else:
             resp_text_to_store = None
             resp_hash = _hash_text(resp_text)
 
         doc = {
-            "@timestamp": _ts_isoz(),
+            "@timestamp": ts_isoz(),
             "event": {"id": response_id or message_id_req, "type": "response"},
             "request": {"id": message_id_req},
             "response": {
@@ -326,8 +341,13 @@ class Pipeline(PipelineBase):
     # outlet 훅
     # ---------------------------
     async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None) -> Dict[str, Any]:
+        
+        '''
+        '''
+        
         if not self.valves.enabled:
             return body
+        
         try:
             sid, _ = _get_session_id(body, user)
             meta = body.get("metadata") or {}
