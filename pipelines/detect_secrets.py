@@ -249,6 +249,7 @@ class Pipeline(PipelineBase):
             user_email:str = ""
             ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
             uuid:str = ""
+            client_host:str = ""
             
             dictUserInfo:dict = __user__
             
@@ -257,6 +258,8 @@ class Pipeline(PipelineBase):
                 user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
                 user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
                 ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+                
+                client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
                 
                 uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
                 
@@ -272,7 +275,7 @@ class Pipeline(PipelineBase):
             
             #위험한 코드, 다른 형태로 향후 개발.
             # client_ip = __request__.client.host
-            client_ip = ""
+            # client_ip = ""
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDoc:dict = {
@@ -299,7 +302,7 @@ class Pipeline(PipelineBase):
                 #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
                 "policy_id" : strPolicyID,
                 "policy_name" : strPolicyName,
-                "src":     {"ip": client_ip},
+                "src":     {"ip": client_host},
                 
                 "pii": {
                     "types": "API Key",
@@ -312,7 +315,6 @@ class Pipeline(PipelineBase):
                 
                 #masked contents 추가
                 "masked_contents" : dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS)
-                
                 
                 # "final_action": fa_internal,
             }

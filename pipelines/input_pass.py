@@ -94,18 +94,19 @@ class Pipeline(PipelineBase):
         session_id = meta.get("session_id")
         
         #TODO: 불합리한 로직, 개선 필요.
-        src_ip = (
-            meta.get("client_ip")
-            or meta.get("src_ip")
-            or meta.get("ip")
-            or safe_get(meta, "request", "ip", default=None)
-        )
+        # src_ip = (
+        #     meta.get("client_ip")
+        #     or meta.get("src_ip")
+        #     or meta.get("ip")
+        #     or safe_get(meta, "request", "ip", default=None)
+        # )
         channel = meta.get("channel") or getattr(self.valves, "default_channel", "web")
         
         user_id:str = ""
         user_role:str = getattr(self.valves, "default_user_role", None)
         user_email:str = ""
         ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
+        client_host:str = ""
         uuid:str = ""
         
         #__user__ 거슬린다.
@@ -116,6 +117,8 @@ class Pipeline(PipelineBase):
             user_id = dictUserInfo.get(ApiParameterDefine.NAME, "") #TODO: 이름이 현재는 없다.
             user_role = dictUserInfo.get(ApiParameterDefine.ROLE, "") #TODO: 2단계만 수집 가능
             user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "") #TODO: 2단계만 수집 가능
+            
+            client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
             
             ai_service_type = __user__.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
             uuid = __user__.get(ApiParameterDefine.UUID, "")
@@ -129,7 +132,7 @@ class Pipeline(PipelineBase):
         
         # 위험한 코드, 향후 다른 형태로 개발
         # client_ip = __request__.client.host
-        client_ip = ""
+        # client_ip = ""
 
         # 저장 문서        
         dictOpensearchDoc = {
@@ -139,7 +142,7 @@ class Pipeline(PipelineBase):
             "session": {"id": session_id},
             # "user":    {"id": user_id, "role": user_role, "email": user_email},
             "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
-            "src":     {"ip": client_ip}, 
+            "src":     {"ip": client_host}, 
             # "src":     {"ip": src_ip},
             "channel": channel,
             

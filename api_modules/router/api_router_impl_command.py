@@ -73,7 +73,9 @@ class ApiRouterImplCommand:
             ApiParameterDefine.UUID : strUUID,
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
-            ApiParameterDefine.AI_SERVICE : modelItem.ai_service
+            ApiParameterDefine.AI_SERVICE : modelItem.ai_service,
+            ApiParameterDefine.CLIENT_HOST : modelItem.client_host
+            
         }
         
         dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
