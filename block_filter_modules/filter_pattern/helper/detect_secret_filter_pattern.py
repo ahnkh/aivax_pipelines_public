@@ -126,7 +126,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
             LOG().error("invalid db data, no data, skip")
             return ERR_FAIL
         
-        LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
+        #TODO: 로그가 너무 많이 쌓이는 문제, 변경시에만 출력
+        # LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
         
         #TEST 디버깅, 필요할경우 정책 업데이트 (향후 제거)
         # for dictPolicy in data:
@@ -147,6 +148,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
         #TODO: 분기문 안에서 처리하는게 직관적으로 보인다.        
         # if False == bFilterChanged:
         if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
+            
+            LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
             
             #정책 카운트, data 항목 이하. TOOD: 모든 항목을 지우는 케이스도 고려할것.
             data:dict = dictFilterPolicy.get("data", {})
@@ -254,6 +257,12 @@ class DetectSecretFilterPattern (FilterPatternBase):
             
             #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
             # tupleRulePattern = (name, rule, regexPattern)
+            
+            # 예외처리, regexPattern이 존재하지 않으면, skip
+            if None == regexPattern:
+                
+                LOG().error(f"compile pattern error, skip regex pattern, id = {id}, name = {name}, rule = {rule}")
+                return ERR_FAIL
             
             dictRegexPattern:dict = {
                 "id" : id,
@@ -424,6 +433,12 @@ class DetectSecretFilterPattern (FilterPatternBase):
         regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
         
         #group 여부인지, 아닌지에 따른 분기, 여기는, 우선 나누지 않는다.
+        
+        #TODO: 1차 예외처리
+        if None == regex_pattern:
+            
+            LOG().error(f"invalid regex pattern, id = {id}, name = {name}, skip")
+            return ERR_FAIL
         
         if CONFIG_OPT_ENABLE == regex_group:
             for m in regex_pattern.finditer(text):

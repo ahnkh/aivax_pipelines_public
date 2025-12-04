@@ -18,6 +18,9 @@ TODO: RDB에 추가시 uuid를 추가해야 한다.
 
 class UserAccountDataHandler:
     
+    USER_QUEUE_LIMIT = 500 #Queue 제한값 지정, 최대 500명이 쌓여있으면 장애이다.
+    USER_QUEUE_DELETE_COUNT = 100
+    
     def __init__(self):
         
         #최초에 가지고 있고, 저장할 데이터
@@ -47,6 +50,22 @@ class UserAccountDataHandler:
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service
         }
         '''
+        
+        #dctionary의 제한값 설정, 제한값 이상으로 쌓이면, 과거 데이터를 삭제후 업데이트 한다.
+        #삭제 개수는 random, 일정량을 덜어낸다.
+        if UserAccountDataHandler.USER_QUEUE_LIMIT < len(self.__dictNewUserInfo):
+            
+            #과거 dictionary 삭제, 검증은 필요
+            
+            LOG().error(f"user queue is full, delete old user queue")
+            
+            dictNewUserInfo = self.__dictNewUserInfo
+            
+            keys = list(dictNewUserInfo.keys())[UserAccountDataHandler.USER_QUEUE_DELETE_COUNT:]
+            dictErasedUserInfo = {k: dictNewUserInfo[k] for k in keys}
+
+            dictNewUserInfo.clear()
+            dictNewUserInfo.update(dictErasedUserInfo)
         
         self.__dictNewUserInfo[strUserKey] = dictUserInfo
         
@@ -153,6 +172,8 @@ class UserAccountDataHandler:
                 #TODO: 수집후 오류가 발생하면 exception이 발생한다. 오류가 없으면, 원본에도 저장한다.
                 #TODO: 키만 존재하면 되고, 실제 데이터는 기존과 동일하지 않아도 무방하기는 하다.
                 
+                #TODO: 오류 발생시, 무한 반복되는 문제, N개 이상이면 초기화 되는 로직이 필요하다. => 날짜? 
+                #아니면, 여기서는 실패시 버리는 로직도 고려한다. => 1차적으로 개수 제한, dictionary의 개수가 제한값 이상이면, 과거 데이터 삭제.
                 if ERR_OK == nError:
                     self.__dictCurrentUserInfo[strUserKey] = dictNewUserAccount
                 #pass
