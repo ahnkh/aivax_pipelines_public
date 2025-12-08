@@ -339,7 +339,7 @@ class FilterDBPolicyRequestHelper:
   ######################################################### private
   
     #수집된 정책, convert
-    def __convertFilterRule(self, dictDBFilterRule:dict, dictNewFilterRule:dict):
+    def __convertFilterRule(self, dictDBFilterRule:dict):
       '''
       '''
       

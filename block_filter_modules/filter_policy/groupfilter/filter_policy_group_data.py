@@ -40,6 +40,6 @@ class FilterPolicyGroupData:
         '''
         '''
         
-        self.__dictPolicyMap:dict = {}
+        self.__dictPolicyRuleMap:dict = {}
         
         return ERR_OK

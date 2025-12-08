@@ -81,7 +81,7 @@ class FilterPolicyManager:
             
             try:
                 
-                dictFilterPolicy = {}
+                # dictFilterPolicy = {}
                 
                 #TODO: 우선 이것 하나만 구현, 일단 구분하지 않는다.
                 # 최초 단순 조회
