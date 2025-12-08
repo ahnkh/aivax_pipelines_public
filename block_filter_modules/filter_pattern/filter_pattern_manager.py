@@ -10,6 +10,7 @@ from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern imp
 
 from block_filter_modules.filter_pattern.helper.regex_filter_pattern import RegexFilterPattern
 
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
 '''
 filter 패턴에 대한 탐지 관리, Manager
@@ -57,7 +58,8 @@ class FilterPatternManager:
         return ERR_OK
     
     #정책관리자에서 정책이 변경되면, 변경된 정책을 dictionary 형태로 수신 받는다.
-    def notifyDBPolicyUpdateSignal(self, dictFilterPolicy:dict):
+    # def notifyDBPolicyUpdateSignal(self, dictFilterPolicy:dict):
+    def notifyDBPolicyUpdateSignal(self, filterPolicyGroupData:FilterPolicyGroupData):
         
         '''
         각 패턴 필터에 브로드캐스팅한다. 
@@ -69,7 +71,9 @@ class FilterPatternManager:
             
             filterPatternModule:FilterPatternBase = self.__filterPatternMap.get(strPatternKey)
             
-            filterPatternModule.notifyUpdateDBPatternPolicy(dictFilterPolicy)
+            # filterPatternModule.notifyUpdateDBPatternPolicy(dictFilterPolicy)
+            filterPatternModule.notifyUpdateDBPatternPolicy(filterPolicyGroupData)
+            # pass
         
         return ERR_OK
     

@@ -1,7 +1,10 @@
 
 from abc import ABC, abstractmethod
+import copy
 
 from lib_include import *
+
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
 '''
 Filter Pattern의 기본 클래스, 외부에서 공통으로 접근시 사용.
@@ -15,12 +18,14 @@ class FilterPatternBase:
     
     def __init__(self):
         
-        #수신받은 정책, 공통으로 저장 관리
-        self.__dictDBFilterPolicy:dict = {}
+        #수신받은 정책, 공통으로 저장 관리, 2단계, list로 관리
+        # self.__dictDBFilterPolicy:dict = {}
+        self.__listDBFilterPolicy:list = []
         pass
     
     #정책, DB의 정책을 업데이트, 보관한다.
-    def UpdateBaseDBFilterPolicy(self, dictDBFilterPolicy:dict):
+    # def UpdateBaseDBFilterPolicy(self, dictDBFilterPolicy:dict):
+    def UpdateBaseDBFilterPolicy(self, listDBFilterPolicy:list):
         
         '''
         우선 DB의 정책을 전체를 가지는 형태로 관리한다.
@@ -30,19 +35,21 @@ class FilterPatternBase:
         #기존에 정책이 존재한다면, 삭제한다.
         #TODO: hash, 변경여부를 체크하는 로직은 향후에 고려한다.
         
-        if 0 == len(dictDBFilterPolicy):
+        if 0 == len(listDBFilterPolicy):
             LOG().error("invalid db filter policy, skip update db filter")
             return ERR_FAIL
         
-        if 0 < len(self.__dictDBFilterPolicy):
-            self.__dictDBFilterPolicy.clear()
+        if 0 < len(self.__listDBFilterPolicy):
+            self.__listDBFilterPolicy.clear()
         
-        self.__dictDBFilterPolicy.update(dictDBFilterPolicy)
+        # self.__dictDBFilterPolicy.update(dictDBFilterPolicy)
+        self.__listDBFilterPolicy = copy.deepcopy(listDBFilterPolicy)
         
         return ERR_OK
     
     # 정책 비교 로직 추가, 같은 정책인지 확인 -> 우선 구현후 별도 확장 여부 검토
-    def IsFilterPolicyChanged(self, dictNewDBFilterPolicy:dict) -> bool:
+    # def IsFilterPolicyChanged(self, dictNewDBFilterPolicy:dict) -> bool:
+    def IsFilterPolicyChanged(self, lstNewPolicyData:list) -> bool:
         
         '''
         우선 전체를 순회, 변경되었는지 확인한다., data 필드만 추출한다. 
@@ -56,10 +63,11 @@ class FilterPatternBase:
         TODO: 구조상 분리해야 하는 기능이 있으나, 분리하지 않고 마무리 한다.
         '''
         
-        lstNewPolicyData:list = dictNewDBFilterPolicy.get("data")
+        # lstNewPolicyData:list = dictNewDBFilterPolicy.get("data")
         
         #처음에는 없다.
-        lstCurrentPolicyData:list = self.__dictDBFilterPolicy.get("data")
+        # lstCurrentPolicyData:list = self.__dictDBFilterPolicy.get("data")
+        lstCurrentPolicyData:list = self.__listDBFilterPolicy
         
         if None == lstCurrentPolicyData:
             LOG().info("filter policy is changed, no current data")
@@ -124,7 +132,7 @@ class FilterPatternBase:
     
     #각 하위 클래스에서 상속받아서, 다르게 사용할 수도 있도록 구성
     @abstractmethod
-    def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
         '''
         '''
         

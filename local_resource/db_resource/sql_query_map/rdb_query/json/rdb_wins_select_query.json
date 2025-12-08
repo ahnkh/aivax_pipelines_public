@@ -42,7 +42,25 @@
             "key": "rdb_select_policy_rule",
 	        "action" : "query_for_list",
             "query" : "select id, name, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules where status = 'deployed'"
+        },
+
+        {
+            "desc" : "정책 패턴 그룹 조회, filter 목록 조회",
+            "key": "rdb_select_policy_group_filters",
+	        "action" : "query_for_list",
+            "query" : "select id from app.filters"
+        },
+
+        {
+            "desc" : "정책 패턴 그룹 조회, filter rule",
+            "key": "rdb_select_policy_rule_by_filter_name",
+	        "action" : "query_for_list",
+            "query" : "select id, name, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules 
+            where id in (select policy_rule_id from app.policy_rule_filters where filter_id = '{filter_id}')"
         }
+
+
+        
 
     ]
 }

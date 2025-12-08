@@ -70,6 +70,13 @@ class FilterPolicyManager:
         
         filterDBPolicyRequestHelper:FilterDBPolicyRequestHelper = FilterDBPolicyRequestHelper()
         
+        # 정책 데이터, 유지후 계속 보유한다.
+        from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+        
+        #TODO: 순환 참조 이슈, 번거로워도 개별로 저장한다.
+        filterPolicyGroupData:FilterPolicyGroupData = FilterPolicyGroupData()
+        filterPolicyGroupData.Initialize()
+        
         while True:
             
             try:
@@ -77,13 +84,19 @@ class FilterPolicyManager:
                 dictFilterPolicy = {}
                 
                 #TODO: 우선 이것 하나만 구현, 일단 구분하지 않는다.
-                filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+                # 최초 단순 조회
+                # filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+                
+                # 2차, 그룹별 2 depth조회
+                filterDBPolicyRequestHelper.RequestFilterDBPolicyGroup(filterPolicyGroupData)
+                
                 
                 #정책의 가공이 필요하면, 이시점에서 가공 (미구현 상태에서 인수인계)
                 # self.__generateFilterPolicy()
                 
-                #패턴 관리자로 업데이트된 정책을 전달
-                filterPatternManager.notifyDBPolicyUpdateSignal(dictFilterPolicy)
+                #패턴 관리자로 업데이트된 정책을 전달, 2차 filterPolicyGroupData 전달 구조로 변경
+                # filterPatternManager.notifyDBPolicyUpdateSignal(dictFilterPolicy)
+                filterPatternManager.notifyDBPolicyUpdateSignal(filterPolicyGroupData)
                 
                 time.sleep(nThreadCycle)
                 

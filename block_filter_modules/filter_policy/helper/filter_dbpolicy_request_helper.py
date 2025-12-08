@@ -8,6 +8,8 @@ from lib_include import *
 
 from type_hint import *
 
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+
 '''
 Filter 정책 조회 모듈, http 요청, 응답 json 데이터만 받는 형태로 개발
 '''
@@ -16,6 +18,56 @@ class FilterDBPolicyRequestHelper:
     
     def __init__(self):
         pass
+      
+    #DB 데이터 조회
+    def RequestFilterDBPolicyGroup(self, filterPolicyGroupData:FilterPolicyGroupData):
+      
+      '''
+      filters 테이블을 조회한다.
+      filters 별 Rule을 조회한다. (1차)
+      향후 사용자, 그룹등 추가 depth로 확장한다. (향후)      
+      
+      TODO: 프로그램으로 할건지, DB 쿼리로 할건지 결정.
+      1차는 DB 쿼리로 가능, filter 키를 조회하고, filter 키 별로 loop 필요
+      다만, filter 키는 어디선가 관리 필요.
+      '''
+      
+      #filter 를 조회한다.
+      dictDBFilterResult = {}
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_group_filters", {}, dictDBFilterResult)
+      
+      lstFilterID:list = dictDBFilterResult.get(DBSQLDefine.QUERY_DATA)
+      
+      for dictFilterID in lstFilterID:
+          
+        # id:str = dictPattern.get("id")
+        # name:str = dictPattern.get("name")
+        # type_mask:int = dictPattern.get("type_mask")
+        # operator:str = dictPattern.get("operator")
+        id:str = dictFilterID.get("id")
+        
+        #각 id별로, 다시 조회
+        dictPolicyRuleResult = {}
+        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule_by_filter_name", {"filter_id" : id}, dictPolicyRuleResult)
+        
+        #1단계 - 2depth의 자료 구조로 저장
+        lstPolicyRule:list = dictPolicyRuleResult.get(DBSQLDefine.QUERY_DATA)
+        
+        #TODO: 데이터 보정 기능이 필요하다. 모듈화. 하나의 단위별로 loop
+        lstNewPolicyRule:list = []
+        
+        for dictDBPolicyRule in lstPolicyRule:
+          
+          #TODO: 각 정책, 다시 변환, 이거는 원본을 변경하자. 매번 새로 생성한다..
+          self.__convertFilterRule(dictDBPolicyRule)
+          
+          lstNewPolicyRule.append(dictDBPolicyRule)
+        
+        #filterid 별 정책 추가.
+        filterPolicyGroupData.AddPolicyRule(id, lstNewPolicyRule)                
+        # pass
+      
+      return ERR_OK
       
     #DB 정책 조회 버전2 - DB에서 직접 조회
     def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
@@ -44,6 +96,7 @@ class FilterDBPolicyRequestHelper:
       #일단 하나로 처리하자.
       for dictPattern in lstQueryData:
           
+        '''
         # id:str = dictPattern.get("id")
         # name:str = dictPattern.get("name")
         # type_mask:int = dictPattern.get("type_mask")
@@ -75,6 +128,9 @@ class FilterDBPolicyRequestHelper:
         # dictNewPattern = {
         #   "id" : id
         # }
+        '''
+        
+        self.__convertFilterRule(dictPattern)
           
         lstNewFilterPolicy.append(dictPattern)
         #pass
@@ -82,7 +138,6 @@ class FilterDBPolicyRequestHelper:
       dictFilterPolicy["data"] = lstNewFilterPolicy
       
       return ERR_OK
-    
     
       
     #가상의 테스트 코드, 다음의 데이터가 반환되도록 처리
@@ -280,6 +335,47 @@ class FilterDBPolicyRequestHelper:
         dictFilterPolicy.update(dictLocalVal)
 
         return ERR_OK
+      
+  ######################################################### private
+  
+    #수집된 정책, convert
+    def __convertFilterRule(self, dictDBFilterRule:dict, dictNewFilterRule:dict):
+      '''
+      '''
+      
+      # id:str = dictPattern.get("id")
+      # name:str = dictPattern.get("name")
+      # type_mask:int = dictPattern.get("type_mask")
+      # operator:str = dictPattern.get("operator")
+      rule:str = dictDBFilterRule.get("rule")
+      # action:str = dictPattern.get("action")
+      # status:str = dictPattern.get("status")
+      
+      regex_flag:int = dictDBFilterRule.get("regex_flag")
+      regex_group:int = dictDBFilterRule.get("regex_group")
+      regex_group_val:str = dictDBFilterRule.get("regex_group_val")
+      
+      #이름 보정
+      dictDBFilterRule["regexFlag"] = regex_flag
+      dictDBFilterRule["regexGroup"] = regex_group
+      dictDBFilterRule["regexGroupVal"] = regex_group_val
+        
+      #TODO: action, base64 => decode 처리후 저장.
+        
+      byteBase64Decode = base64.b64decode(rule)
+        
+      #문자열로 변환
+      strBase64Decode = byteBase64Decode.decode("utf-8")
+        
+      #어차피 여기서만 조회, 그냥 업데이트
+      dictDBFilterRule["rule"] = strBase64Decode
+        
+      #그 연산이 그연산..
+      # dictNewPattern = {
+      #   "id" : id
+      # }
+    
+      return ERR_OK
       
       
   ############################################### 지울 코드

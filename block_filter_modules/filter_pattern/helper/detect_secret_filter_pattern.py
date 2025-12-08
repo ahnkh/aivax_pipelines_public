@@ -10,6 +10,8 @@ from type_hint import *
 
 from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
 
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+
 '''
 정책 패턴 탐지, detect secret 패턴
 기존 개발 코드 리펙토링, 이후 정책 관리 DB 업데이트
@@ -21,6 +23,9 @@ TODO: 내부 정책이 존재할수 있으며, 1차 하드코딩, 모듈 분리
 '''
 
 class DetectSecretFilterPattern (FilterPatternBase):
+    
+    #DB 정책의 Key 정보, 상수로 관리
+    POLICY_DB_KEY = DBDefine.FILTER_KEY_DETECT_SECRET
     
     def __init__(self):
         
@@ -43,9 +48,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         #TODO: 이건 어떤 기능인지 확인후 이름 변경 우선 이기능은 유지
         self.re_b64_shape = None 
-        self.re_hex_shape = None
-        
-        pass
+        self.re_hex_shape = None        
+        # pass
     
     #초기화 로직, 상태, 정책이 존재하며, 정책은 향후 detect_secret policy로 이동한다.
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -113,21 +117,33 @@ class DetectSecretFilterPattern (FilterPatternBase):
         return (spans, counts, dictDetectRule)
         
     #상속, DB의 패턴 정책을 수신받는다. 
-    def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
+    # def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
+        
         '''
         전체 정책을 받고, 각 정책에서 필요한 부분을 추출해서 사용한다.
         TODO: 인수인계 시점에는 정책의 구분자가 없어, 받은 데이터의 rule에 대해서 로그로 확인까지만 구현한다.
+        
+        2단계, filterPolicyGroupData에서 filter key에 해당하는 정책을 수집한다.
+        이후 로직은 우선 기존과 동일하게 유지한다.
+        
         '''
         
+        strDBKey:str = DetectSecretFilterPattern.POLICY_DB_KEY
+        
+        lstPolicyRule:list = filterPolicyGroupData.GetPolicyRule(strDBKey)
+        
         #정상적인 수신이라는 가정 => 정상이 아니라도, None일수 있다.
-        data:list = dictFilterPolicy.get("data")
+        # data:list = dictFilterPolicy.get("data")
+        
+        #기존 모듈, 재활용
+        data:list = lstPolicyRule
         
         if None == data:
             LOG().error("invalid db data, no data, skip")
             return ERR_FAIL
         
-        #TODO: 로그가 너무 많이 쌓이는 문제, 변경시에만 출력
-        # LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
+        LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
         
         #TEST 디버깅, 필요할경우 정책 업데이트 (향후 제거)
         # for dictPolicy in data:
@@ -143,21 +159,19 @@ class DetectSecretFilterPattern (FilterPatternBase):
         #     LOG().debug(f"rule received, rule = {rule}, name = {name}, action = {action}")
         
         #TODO: 정책에 대한 비교, 이전 정책과 현재 정책이 같으면, skip한다.
-        bFilterChanged:bool = self.IsFilterPolicyChanged(dictFilterPolicy)
+        bFilterChanged:bool = self.IsFilterPolicyChanged(lstPolicyRule)
         
         #TODO: 분기문 안에서 처리하는게 직관적으로 보인다.        
         # if False == bFilterChanged:
         if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
             
-            LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
-            
             #정책 카운트, data 항목 이하. TOOD: 모든 항목을 지우는 케이스도 고려할것.
-            data:dict = dictFilterPolicy.get("data", {})
+            # data:dict = dictFilterPolicy.get("data", {})
 
             LOG().info(f"filter pattern policy is changed, rule count = {len(data)}")  
             
             #원본 정책, 저장한다.
-            self.UpdateBaseDBFilterPolicy(dictFilterPolicy)
+            self.UpdateBaseDBFilterPolicy(lstPolicyRule)
             
             #TODO: 패턴에 대한 반영 기능은 필요하다. 실제 사용 변수에 대한 업데이트, 개별 패턴으로 반영이 필요하다.
             self.__updateRegexPatternFromDB(data)                                  

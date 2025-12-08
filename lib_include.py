@@ -152,6 +152,14 @@ AI_SERVICE_NAME_MAP = {
    
 }
 
+# DB 관련 Define
+class DBDefine:
+    
+    FILTER_KEY_DETECT_SECRET = "filter-detect-secret"
+    FILTER_KEY_REGEX = "filter-regex"
+    
+    pass
+
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
 TRACE_LOG_PATH = "./trace-log"
 TRACE_PREFIX = "pipe_line"  
