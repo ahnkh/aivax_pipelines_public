@@ -188,7 +188,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             #정책 카운트, data 항목 이하. TOOD: 모든 항목을 지우는 케이스도 고려할것.
             # data:dict = dictFilterPolicy.get("data", {})
             
-            nRuleCount = filterPolicyGroupData.GetRuleCount()
+            nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
 
             LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
 
@@ -555,7 +555,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 if spans:
                     return True
             
-        return ERR_OK
+        return False
     
     # 서비스 패턴, 서비스 id로 매치한다.
     def __detectServiceBaseRegexPattern(self, listservicePattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, nServiceID:int) -> bool:
@@ -580,7 +580,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 if spans:
                     return True
         
-        return ERR_OK
+        return False
     
     # default 패턴, 기존과 동일
     def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict):

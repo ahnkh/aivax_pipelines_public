@@ -34,7 +34,7 @@ class FilterPatternManager:
         self.__filterPatternMap:dict = {
             
             FilterPatternManager.PATTERN_FILTER_DETECT_SECRET : None,
-            FilterPatternManager.PATTERN_FILTER_REGEX : None,
+            # FilterPatternManager.PATTERN_FILTER_REGEX : None,
         }
         
         pass

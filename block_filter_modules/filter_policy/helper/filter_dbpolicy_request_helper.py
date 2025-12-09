@@ -55,7 +55,7 @@ class FilterDBPolicyRequestHelper:
       
       #filter 를 조회한다.
       dictDBFilterResult = {}
-      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_group_filters", {}, dictDBFilterResult)
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_filters", {}, dictDBFilterResult)
       
       #AI service Map
       dictAIServiceNameMap:dict = AI_SERVICE_NAME_MAP
