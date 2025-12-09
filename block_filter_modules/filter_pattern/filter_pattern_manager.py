@@ -8,7 +8,7 @@ from block_filter_modules.filter_pattern.helper.filter_pattern_base import Filte
 
 from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern import DetectSecretFilterPattern
 
-from block_filter_modules.filter_pattern.helper.regex_filter_pattern import RegexFilterPattern
+# from block_filter_modules.filter_pattern.helper.regex_filter_pattern import RegexFilterPattern
 
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
@@ -49,11 +49,12 @@ class FilterPatternManager:
         detectSecretPattern = DetectSecretFilterPattern()
         detectSecretPattern.Initialize(dictJsonLocalConfigRoot)
         
-        regexFilterPattern = RegexFilterPattern()
-        regexFilterPattern.Initialize(dictJsonLocalConfigRoot)
+        #TODO: 기능 제거
+        # regexFilterPattern = RegexFilterPattern()
+        # regexFilterPattern.Initialize(dictJsonLocalConfigRoot)
         
         self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_DETECT_SECRET] = detectSecretPattern
-        self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_REGEX] = regexFilterPattern
+        # self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_REGEX] = regexFilterPattern
         
         return ERR_OK
     

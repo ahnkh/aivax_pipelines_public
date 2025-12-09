@@ -20,12 +20,16 @@ class FilterPatternBase:
         
         #수신받은 정책, 공통으로 저장 관리, 2단계, list로 관리
         # self.__dictDBFilterPolicy:dict = {}
-        self.__listDBFilterPolicy:list = []
+        # self.__listDBFilterPolicy:list = []
+        
+        # 정책 구조, scope 기반 map 구조로 변경
+        self.__dictPolicyRuleScopeMap:dict = {}
         pass
     
     #정책, DB의 정책을 업데이트, 보관한다.
     # def UpdateBaseDBFilterPolicy(self, dictDBFilterPolicy:dict):
-    def UpdateBaseDBFilterPolicy(self, listDBFilterPolicy:list):
+    # def UpdateBaseDBFilterPolicy(self, listDBFilterPolicy:list):
+    def UpdateBaseDBFilterPolicy(self, dictPolicyRuleScopeMap:dict):
         
         '''
         우선 DB의 정책을 전체를 가지는 형태로 관리한다.
@@ -35,21 +39,42 @@ class FilterPatternBase:
         #기존에 정책이 존재한다면, 삭제한다.
         #TODO: hash, 변경여부를 체크하는 로직은 향후에 고려한다.
         
-        if 0 == len(listDBFilterPolicy):
+        if 0 == len(dictPolicyRuleScopeMap):
             LOG().error("invalid db filter policy, skip update db filter")
             return ERR_FAIL
         
-        if 0 < len(self.__listDBFilterPolicy):
-            self.__listDBFilterPolicy.clear()
+        if 0 < len(self.__dictPolicyRuleScopeMap):
+            self.__dictPolicyRuleScopeMap.clear()
         
         # self.__dictDBFilterPolicy.update(dictDBFilterPolicy)
-        self.__listDBFilterPolicy = copy.deepcopy(listDBFilterPolicy)
+        self.__dictPolicyRuleScopeMap = copy.deepcopy(dictPolicyRuleScopeMap)
         
         return ERR_OK
     
+    #모든 scope의 filter, 변경 체크
+    def IsScopeBasedFilterPolicyChanged(self, dictPolicyRuleScopeMap:dict, lstScopeRange:list) -> bool:
+        
+        '''
+        각 scope 별 정책을 확인한다.
+        filter에서, scope중 하나라도 변경되면, 전체 업데이트, 메모리 변경이라도 영향도는 크지 않다.
+        '''
+        
+        # bChanged:bool = False
+        
+        for strScope in lstScopeRange:
+            
+            lstNewPolicyData:dict = dictPolicyRuleScopeMap.get(strScope)
+            bPolicyChanged:bool = self.IsFilterPolicyChanged(lstNewPolicyData, strScope)
+            
+            # 정책이 하나라도 변경되면, 변경
+            if True == bPolicyChanged:
+                return bPolicyChanged
+        
+        return False
+    
     # 정책 비교 로직 추가, 같은 정책인지 확인 -> 우선 구현후 별도 확장 여부 검토
     # def IsFilterPolicyChanged(self, dictNewDBFilterPolicy:dict) -> bool:
-    def IsFilterPolicyChanged(self, lstNewPolicyData:list) -> bool:
+    def IsFilterPolicyChanged(self, lstNewPolicyData:list, strScope:str) -> bool:
         
         '''
         우선 전체를 순회, 변경되었는지 확인한다., data 필드만 추출한다. 
@@ -67,7 +92,7 @@ class FilterPatternBase:
         
         #처음에는 없다.
         # lstCurrentPolicyData:list = self.__dictDBFilterPolicy.get("data")
-        lstCurrentPolicyData:list = self.__listDBFilterPolicy
+        lstCurrentPolicyData:list = self.__dictPolicyRuleScopeMap.get(strScope, [])
         
         if None == lstCurrentPolicyData:
             LOG().info("filter policy is changed, no current data")

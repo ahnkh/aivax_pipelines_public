@@ -2,6 +2,7 @@
 
 #rule, base64
 import base64
+import copy
 
 #외부 라이브러리
 from lib_include import *
@@ -32,311 +33,193 @@ class FilterDBPolicyRequestHelper:
       다만, filter 키는 어디선가 관리 필요.
       '''
       
+      # 정책을 조회한다. 개별 조회
+      dictDBPolicyRuleResult = {}
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule", {}, dictDBPolicyRuleResult)
+      
+      #정책에 대해서, 변환된 map을 생성한다. 
+      lstDBPolicyRule:list = dictDBPolicyRuleResult.get(DBSQLDefine.QUERY_DATA)
+      
+      dictPolicyRuleIDMap:dict = {}      
+      self.__generatePolicyRuleMap(lstDBPolicyRule, dictPolicyRuleIDMap)
+      
+      # 계정 정보를 조회한다. 서비스 정보는 우선 상수로 관리
+      # 사용성을 위해서, ID기준으로 map을 생성
+      dictDBUserResult = {}
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : ""}, dictDBUserResult)
+        
+      lstDBUserInfo:list = dictDBUserResult.get(DBSQLDefine.QUERY_DATA)
+      
+      dictUserIDMap:dict = {}
+      self.__generateUserInfoMap(lstDBUserInfo, dictUserIDMap)
+      
       #filter 를 조회한다.
       dictDBFilterResult = {}
       sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_group_filters", {}, dictDBFilterResult)
       
+      #AI service Map
+      dictAIServiceNameMap:dict = AI_SERVICE_NAME_MAP
+      
       lstFilterID:list = dictDBFilterResult.get(DBSQLDefine.QUERY_DATA)
       
+      # filter 별로 각 scope에 대한 정책을 만든다.
       for dictFilterID in lstFilterID:
           
         # id:str = dictPattern.get("id")
         # name:str = dictPattern.get("name")
         # type_mask:int = dictPattern.get("type_mask")
         # operator:str = dictPattern.get("operator")
-        id:str = dictFilterID.get("id")
+        strFilterID:str = dictFilterID.get("id")
         
-        #각 id별로, 다시 조회
-        dictPolicyRuleResult = {}
-        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule_by_filter_name", {"filter_id" : id}, dictPolicyRuleResult)
+        
+        #각 filter id별로, policy group을 조회한다. 이름은 DB테이블명을 따라간다.
+        dictPolicyRuleFilterResult = {}
+        # '''
+        # select id, filter_id, scope, policy_rule_id, subject_id from app.policy_rule_filters where filter_id = '{filter_id}'
+        # '''
+        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule_filters", {"filter_id" : strFilterID}, dictPolicyRuleFilterResult)
         
         #1단계 - 2depth의 자료 구조로 저장
-        lstPolicyRule:list = dictPolicyRuleResult.get(DBSQLDefine.QUERY_DATA)
+        lstPolicyRuleFilter:list = dictPolicyRuleFilterResult.get(DBSQLDefine.QUERY_DATA)
+        
+        #데이터 확인, 없으면 skip
+        if 0 == len(lstPolicyRuleFilter):
+          #테스트용 로그 
+          # LOG().debug(f"skip update filter policy, filter = {strFilterID}, no data")
+          continue
+        
+        filterPolicyGroupData.ClearPolicyRule(strFilterID)
         
         #TODO: 데이터 보정 기능이 필요하다. 모듈화. 하나의 단위별로 loop
-        lstNewPolicyRule:list = []
+        # lstNewPolicyRule:list = []
         
-        for dictDBPolicyRule in lstPolicyRule:
-          
-          #TODO: 각 정책, 다시 변환, 이거는 원본을 변경하자. 매번 새로 생성한다..
-          self.__convertFilterRule(dictDBPolicyRule)
-          
-          lstNewPolicyRule.append(dictDBPolicyRule)
+        # 개별 필터에 대해서, scope별로 Rule을 저장한다.
+        #TODO: scope 범위로, 미리 생성한다., list를 만들어야 한다.
+        dictPolicyRuleScopeMap = {
+          DBDefine.POLICY_FILTER_SCOPE_USER : [],
+          DBDefine.POLICY_FILTER_SCOPE_SERVICE : [],
+          DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
+          DBDefine.POLICY_FILTER_SCOPE_DEFAULT : [],
+        }        
+        self.__generateFilterScopeMap(dictPolicyRuleIDMap, lstPolicyRuleFilter, dictPolicyRuleScopeMap, dictUserIDMap, dictAIServiceNameMap)
         
         #filterid 별 정책 추가.
-        filterPolicyGroupData.AddPolicyRule(id, lstNewPolicyRule)                
+        filterPolicyGroupData.AddPolicyRule(strFilterID, dictPolicyRuleScopeMap)                
         # pass
-      
-      return ERR_OK
-      
-    #DB 정책 조회 버전2 - DB에서 직접 조회
-    def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
-      
-      '''
-      sqlprintf 구조로 변경한다.
-      조회된 결과에서 기준 데이터 구조와 동일한 dictionary 형태로 업데이트
-      
-      '''
-      
-      '''
-      select id, name, type_mask, operator, rule, action, regex_flag, regex_group, regex_group_val, status from policy_rules where status = 'deployed'
-      '''
-      dictDBResult = {}
-      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule", {}, dictDBResult)
-      
-      lstQueryData:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
-      
-      #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)  
-      #TODO: 키구조 주의, 그대로 넣으면 안된다. 사양 파악후 정리.      
-      # 키를 생성해서, 다시 만든다. => DB에서 만든다. 그래도, 바로 복사는 안된다.
-      # self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
-      
-      lstNewFilterPolicy = []
-      
-      #일단 하나로 처리하자.
-      for dictPattern in lstQueryData:
-          
-        '''
-        # id:str = dictPattern.get("id")
-        # name:str = dictPattern.get("name")
-        # type_mask:int = dictPattern.get("type_mask")
-        # operator:str = dictPattern.get("operator")
-        rule:str = dictPattern.get("rule")
-        # action:str = dictPattern.get("action")
-        # status:str = dictPattern.get("status")
-        
-        regex_flag:int = dictPattern.get("regex_flag")
-        regex_group:int = dictPattern.get("regex_group")
-        regex_group_val:str = dictPattern.get("regex_group_val")
-        
-        #이름 보정
-        dictPattern["regexFlag"] = regex_flag
-        dictPattern["regexGroup"] = regex_group
-        dictPattern["regexGroupVal"] = regex_group_val
-          
-        #TODO: action, base64 => decode 처리후 저장.
-          
-        byteBase64Decode = base64.b64decode(rule)
-          
-        #문자열로 변환
-        strBase64Decode = byteBase64Decode.decode("utf-8")
-          
-        #어차피 여기서만 조회, 그냥 업데이트
-        dictPattern["rule"] = strBase64Decode
-          
-        #그 연산이 그연산..
-        # dictNewPattern = {
-        #   "id" : id
-        # }
-        '''
-        
-        self.__convertFilterRule(dictPattern)
-          
-        lstNewFilterPolicy.append(dictPattern)
-        #pass
-        
-      dictFilterPolicy["data"] = lstNewFilterPolicy
       
       return ERR_OK
     
       
-    #가상의 테스트 코드, 다음의 데이터가 반환되도록 처리
-    def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
-      
-        '''
-        '''
-        
-        dictLocalVal = {
-          
-          "data" : [
-            {
-              "name": "PEM 패턴",                          
-              "rule": "-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",              
-              "action": "block",
-              "regex_flag" : 16,
-              "regex_group" : 0,
-              "regex_group_val" : None,              
-            },
-            
-            {
-              "name": "JWT",                          
-              "rule": "\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b",              
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 0,
-              "regex_group_val" : None              
-            },
-            
-            {
-              "name": "aws_access_key_id",                          
-              "rule": "\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b",              
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : None              
-            },
-            
-            {
-              "name": "aws_secret_access_key",                          
-              "rule": "(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])",              
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : None              
-            },
-            
-            {
-              "name": "azure_storage_account_key",                          
-              "rule": "(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})",              
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "azure_conn_string",                          
-              "rule": "(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})",              
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "basic_auth_creds",                          
-              "rule": "(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "CREDS"
-            },
-            
-            {
-              "name": "cloudant_creds",                          
-              "rule": "(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "CREDS"              
-            },
-            
-            {
-              "name": "discord_bot_token",                          
-              "rule": "\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "github_token",                          
-              "rule": "\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "mailchimp_api_key",                          
-              "rule": "\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "slack_token",                          
-              "rule": "\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "slack_webhook_path",                          
-              "rule": "(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "stripe_secret",                          
-              "rule": "\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"
-            },
-            
-            {
-              "name": "stripe_publishable",                          
-              "rule": "\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "twilio_account_sid",                          
-              "rule": "\b(?P<VAL>AC[0-9a-fA-F]{32})\b",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "twilio_auth_token",                          
-              "rule": "(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "openai_like",                          
-              "rule": "\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "ak_tk_token",                          
-              "rule": "\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b",
-              "action": "block",
-              "regex_flag" : 0,
-              "regex_group" : 1,
-              "regex_group_val" : "VAL"              
-            },
-            
-            {
-              "name": "candidate",                          
-              "rule": "[A-Za-z0-9+/=._\-]{16,}",
-              "action": "masking",
-              "regex_flag" : 0,
-              "regex_group" : 0,
-              "regex_group_val" : None
-            }
-            
-          ]  
-        }
-        
-        dictFilterPolicy.update(dictLocalVal)
-
-        return ERR_OK
-      
   ######################################################### private
+  
+    # 사용자 계정, ID기반 검색을 위한 Map을 생성한다.
+    def __generateUserInfoMap(self, lstDBUserInfo:list, dictUserInfoMap:dict):
+      '''
+      '''
+      
+      for dictUserInfo in lstDBUserInfo:
+        
+        id:str = dictUserInfo.get("id")
+        
+        dictUserInfoMap[id] = dictUserInfo
+      
+      return ERR_OK
+  
+    #개별 정책에 대한 scope map을 생성한다.
+    def __generateFilterScopeMap(self, dictPolicyRuleIDMap:dict, lstPolicyRuleFilter:list, dictPolicyRuleScopeMap:dict, dictUserIDMap:dict, dictAIServiceNameMap:dict):
+      
+      '''
+      '''
+      
+      for dictDBPolicyRuleFilter in lstPolicyRuleFilter:
+          
+          #여기서, scope 별로 분기, filter에 대해서 scope 별로 정책 관리
+          
+          #TODO: 우선 개발후 리펙토링
+          
+          # dictDBPolicyRuleFilter.get("id")
+          # dictDBPolicyRuleFilter.get("filter_id")
+          scope = dictDBPolicyRuleFilter.get("scope")
+          policy_rule_id = dictDBPolicyRuleFilter.get("policy_rule_id")
+          
+          #TODO: subject_id는 저장만 하고, 탐지 시점에 찾아야 하는 방안의 검토.
+          subject_id = dictDBPolicyRuleFilter.get(DBDefine.DB_FIELD_SUBJECT_ID)
+          
+          #TODO: scope가 있던 없던, policy_rule_id는 존재한다., 예외처리는 필요
+          #policy_rule_id로 정책을 가져온다.
+          
+          dictPolicyRule:dict = dictPolicyRuleIDMap.get(policy_rule_id)
+          
+          #중간 버퍼를 두고 scope별로 map을 관리.
+          #TODO: 중복으로 사용가능하고, subject_id등 추가적인 정보가 필요하다.
+          #각 정책에 대해서 복사
+          dictNewPolicyRule:dict = copy.deepcopy(dictPolicyRule)
+          
+          #default가 아니면, subject_id를 저장한다. => 가져오는게 아니라, 부가 정보를 각각 저장해야 할수도 있다.
+          #여기에 대한 처리 필요.
+          if scope != DBDefine.POLICY_FILTER_SCOPE_DEFAULT:
+            dictNewPolicyRule[DBDefine.DB_FIELD_SUBJECT_ID] = subject_id
+            
+          self.__updateReplaceSubjectIDValue(dictNewPolicyRule, scope, subject_id, dictUserIDMap, dictAIServiceNameMap)
+          
+          
+          #여기는 list로 담는다.
+          #TODO: scope가 에상 외의 값이 추가되면, 한번쯤 점검해야 한다. range 오류체크는 우선 무시.
+          dictPolicyRuleScopeMap[scope].append(dictNewPolicyRule)
+          
+      return ERR_OK
+    
+    #subject_id에 따른 분기, ID, Value 업데이트
+    def __updateReplaceSubjectIDValue(self, dictNewPolicyRule:dict, strScope:str, strSubjectID:str, dictUserInfoMap:dict, dictNameServiceMap:dict):
+      
+      '''
+      scope가 user => userid 업데이트
+      service => serviceid 업데이트
+      group => 미정
+      default, 해당 없음.
+      '''
+      
+      #ID는 DB값을 추가, join 대체.
+      dictNewPolicyRule[DBDefine.DB_FIELD_SUBJECT_ID] = strSubjectID
+      
+      if DBDefine.POLICY_FILTER_SCOPE_USER == strScope:
+        
+        #TODO: 향후 디버깅 관련해서 검토 필요.
+        
+        #일단, ID에 매칭되는 user 정보를 전달한다.
+        dictUserInfo:dict = dictUserInfoMap.get(strSubjectID)
+        
+        dictNewPolicyRule[DBDefine.DB_FIELD_SUBJECT_VAL] = dictUserInfo
+        
+      # elif DBDefine.POLICY_FILTER_SCOPE_SERVICE == strScope:
+        
+      #   # 서비스, 서비스 ID만 있으면 된다.
+        
+      # elif DBDefine.POLICY_FILTER_SCOPE_GROUP == strScope:
+        
+      #   # 미정
+      #   pass
+      # # elif DBDefine.POLICY_FILTER_SCOPE_DEFAULT
+      
+      return ERR_OK
+  
+    #비교를 위해서 정책을 ID 기반 hashmap으로 생성한다.
+    def __generatePolicyRuleMap(self, lstDBPolicyRule:list, dictPolicyRuleIDMap:dict):
+      
+      '''
+      '''
+      
+      for dictDBPolicyRule in lstDBPolicyRule:
+        
+        #정책 id, id로 dictionary를 만든다.
+        id:str = dictDBPolicyRule.get("id")
+        
+        self.__convertFilterRule(dictDBPolicyRule)
+        
+        dictPolicyRuleIDMap[id] = dictDBPolicyRule
+        # pass
+      
+      return ERR_OK
   
     #수집된 정책, convert
     def __convertFilterRule(self, dictDBFilterRule:dict):
@@ -379,6 +262,272 @@ class FilterDBPolicyRequestHelper:
       
       
   ############################################### 지울 코드
+  
+    # #DB 정책 조회 버전2 - DB에서 직접 조회
+    # def RequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+      
+    #   '''
+    #   sqlprintf 구조로 변경한다.
+    #   조회된 결과에서 기준 데이터 구조와 동일한 dictionary 형태로 업데이트
+      
+    #   '''
+      
+    #   '''
+    #   select id, name, type_mask, operator, rule, action, regex_flag, regex_group, regex_group_val, status from policy_rules where status = 'deployed'
+    #   '''
+    #   dictDBResult = {}
+    #   sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule", {}, dictDBResult)
+      
+    #   lstQueryData:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
+      
+    #   #같은 구조를 유지, 그대로 복사한다. (혹시 몰라 deep copy)  
+    #   #TODO: 키구조 주의, 그대로 넣으면 안된다. 사양 파악후 정리.      
+    #   # 키를 생성해서, 다시 만든다. => DB에서 만든다. 그래도, 바로 복사는 안된다.
+    #   # self.__dictCurrentUserInfo:dict = copy.deepcopy(dictQueryData)
+      
+    #   lstNewFilterPolicy = []
+      
+    #   #일단 하나로 처리하자.
+    #   for dictPattern in lstQueryData:
+          
+    #     '''
+    #     # id:str = dictPattern.get("id")
+    #     # name:str = dictPattern.get("name")
+    #     # type_mask:int = dictPattern.get("type_mask")
+    #     # operator:str = dictPattern.get("operator")
+    #     rule:str = dictPattern.get("rule")
+    #     # action:str = dictPattern.get("action")
+    #     # status:str = dictPattern.get("status")
+        
+    #     regex_flag:int = dictPattern.get("regex_flag")
+    #     regex_group:int = dictPattern.get("regex_group")
+    #     regex_group_val:str = dictPattern.get("regex_group_val")
+        
+    #     #이름 보정
+    #     dictPattern["regexFlag"] = regex_flag
+    #     dictPattern["regexGroup"] = regex_group
+    #     dictPattern["regexGroupVal"] = regex_group_val
+          
+    #     #TODO: action, base64 => decode 처리후 저장.
+          
+    #     byteBase64Decode = base64.b64decode(rule)
+          
+    #     #문자열로 변환
+    #     strBase64Decode = byteBase64Decode.decode("utf-8")
+          
+    #     #어차피 여기서만 조회, 그냥 업데이트
+    #     dictPattern["rule"] = strBase64Decode
+          
+    #     #그 연산이 그연산..
+    #     # dictNewPattern = {
+    #     #   "id" : id
+    #     # }
+    #     '''
+        
+    #     self.__convertFilterRule(dictPattern)
+          
+    #     lstNewFilterPolicy.append(dictPattern)
+    #     #pass
+        
+    #   dictFilterPolicy["data"] = lstNewFilterPolicy
+      
+    #   return ERR_OK
+  
+    # #가상의 테스트 코드, 다음의 데이터가 반환되도록 처리
+    # def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):
+      
+    #   '''
+    #   '''
+      
+    #   dictLocalVal = {
+        
+    #     "data" : [
+    #       {
+    #         "name": "PEM 패턴",                          
+    #         "rule": "-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",              
+    #         "action": "block",
+    #         "regex_flag" : 16,
+    #         "regex_group" : 0,
+    #         "regex_group_val" : None,              
+    #       },
+          
+    #       {
+    #         "name": "JWT",                          
+    #         "rule": "\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b",              
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 0,
+    #         "regex_group_val" : None              
+    #       },
+          
+    #       {
+    #         "name": "aws_access_key_id",                          
+    #         "rule": "\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b",              
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : None              
+    #       },
+          
+    #       {
+    #         "name": "aws_secret_access_key",                          
+    #         "rule": "(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])",              
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : None              
+    #       },
+          
+    #       {
+    #         "name": "azure_storage_account_key",                          
+    #         "rule": "(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})",              
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "azure_conn_string",                          
+    #         "rule": "(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})",              
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "basic_auth_creds",                          
+    #         "rule": "(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "CREDS"
+    #       },
+          
+    #       {
+    #         "name": "cloudant_creds",                          
+    #         "rule": "(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "CREDS"              
+    #       },
+          
+    #       {
+    #         "name": "discord_bot_token",                          
+    #         "rule": "\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "github_token",                          
+    #         "rule": "\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "mailchimp_api_key",                          
+    #         "rule": "\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "slack_token",                          
+    #         "rule": "\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "slack_webhook_path",                          
+    #         "rule": "(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "stripe_secret",                          
+    #         "rule": "\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"
+    #       },
+          
+    #       {
+    #         "name": "stripe_publishable",                          
+    #         "rule": "\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "twilio_account_sid",                          
+    #         "rule": "\b(?P<VAL>AC[0-9a-fA-F]{32})\b",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "twilio_auth_token",                          
+    #         "rule": "(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "openai_like",                          
+    #         "rule": "\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "ak_tk_token",                          
+    #         "rule": "\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b",
+    #         "action": "block",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 1,
+    #         "regex_group_val" : "VAL"              
+    #       },
+          
+    #       {
+    #         "name": "candidate",                          
+    #         "rule": "[A-Za-z0-9+/=._\-]{16,}",
+    #         "action": "masking",
+    #         "regex_flag" : 0,
+    #         "regex_group" : 0,
+    #         "regex_group_val" : None
+    #       }
+          
+    #     ]  
+    #   }
+      
+    #   dictFilterPolicy.update(dictLocalVal)
+
+    #   return ERR_OK
   
   #DB 정책 조회, TODO: 하드코딩 => 잠시 제거
 #     def testRequestToDBPolicy(self, dictFilterPolicy:dict, dictPolicyLocalConfig:dict):

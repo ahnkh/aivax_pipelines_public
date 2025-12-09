@@ -202,7 +202,7 @@ class UserAccountDataHandler:
         FROM app.users {where} limit {limit}
         '''
         dictDBResult = {}
-        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : "", "limit":1}, dictDBResult)
+        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : ""}, dictDBResult)
         
         lstQueryData:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
         

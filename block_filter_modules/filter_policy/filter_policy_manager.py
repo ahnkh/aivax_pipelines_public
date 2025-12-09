@@ -81,15 +81,12 @@ class FilterPolicyManager:
             
             try:
                 
-                # dictFilterPolicy = {}
                 
-                #TODO: 우선 이것 하나만 구현, 일단 구분하지 않는다.
                 # 최초 단순 조회
                 # filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
                 
                 # 2차, 그룹별 2 depth조회
                 filterDBPolicyRequestHelper.RequestFilterDBPolicyGroup(filterPolicyGroupData)
-                
                 
                 #정책의 가공이 필요하면, 이시점에서 가공 (미구현 상태에서 인수인계)
                 # self.__generateFilterPolicy()
@@ -144,16 +141,16 @@ class FilterPolicyManager:
         
         return ERR_OK
     
-    #Filter 정책의 생성, 각 Policy 관리 모듈을 가진다. 향후 고려
-    def __generateFilterPolicy(self, ):
+    # #Filter 정책의 생성, 각 Policy 관리 모듈을 가진다. 향후 고려
+    # def __generateFilterPolicy(self, ):
         
-        '''
-        HTTP 요청으로 DB에서 데이터를 가져온다.
-        가져온 데이터를 각 policy로 이관한다. 이때 구분 기준이 필요하다.
-        우선, 한화 시스템 기준으로 detect secret policy를 할당하자.
-        개별 모듈별 관리의 기준은 개별 정책 모듈에서 관리한다.
-        '''
+    #     '''
+    #     HTTP 요청으로 DB에서 데이터를 가져온다.
+    #     가져온 데이터를 각 policy로 이관한다. 이때 구분 기준이 필요하다.
+    #     우선, 한화 시스템 기준으로 detect secret policy를 할당하자.
+    #     개별 모듈별 관리의 기준은 개별 정책 모듈에서 관리한다.
+    #     '''
         
-        # self.__detectSecretPolicy.GeneratePolicy()
+    #     # self.__detectSecretPolicy.GeneratePolicy()
         
-        return ERR_OK
+    #     return ERR_OK

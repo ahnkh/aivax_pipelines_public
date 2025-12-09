@@ -121,6 +121,27 @@ class Pipeline(PipelineBase):
         last:dict = messages[-1]
         content = last.get("content")
         
+        #탐지시 사용자 이름, 서비스명을 추출후 던져야 한다.
+        #TODO: user_id는 유지하고, uuid 필드를 새로 추가하자.
+        #TODO: 불필요한 연산, 나중에 개선하자.
+        user_id:str = ""
+        user_email:str = ""
+        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
+        uuid:str = ""
+        client_host:str = ""
+        
+        dictUserInfo:dict = __user__
+        
+        if None != dictUserInfo:
+            
+            user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
+            user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
+            ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+            
+            client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
+            
+            uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
+        
         #테스트용 로그 추가
         # LOG().debug(f"run detect secret inlet, prompt = {content}")
         
@@ -165,7 +186,7 @@ class Pipeline(PipelineBase):
             
             #TODO: 구조 변경 필요, valve 클래스, 참조가 어려운 문제
             valves = self.valves
-            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves)
+            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves, user_id, ai_service_type)
                         
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")
@@ -243,28 +264,7 @@ class Pipeline(PipelineBase):
             
             meta = body.get("metadata") or {}
             
-            #TODO: user_id는 유지하고, uuid 필드를 새로 추가하자.
-            #TODO: 불필요한 연산, 나중에 개선하자.
-            user_id:str = ""
-            user_email:str = ""
-            ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
-            uuid:str = ""
-            client_host:str = ""
-            
-            dictUserInfo:dict = __user__
-            
-            if None != dictUserInfo:
-                
-                user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
-                user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
-                ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
-                
-                client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
-                
-                uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
-                
-            #ai service 명 추가
-            strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")                
+                        
                             
             # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
             # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            
@@ -276,6 +276,9 @@ class Pipeline(PipelineBase):
             #위험한 코드, 다른 형태로 향후 개발.
             # client_ip = __request__.client.host
             # client_ip = ""
+            
+            #ai service 명 추가
+            # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")   
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDoc:dict = {
@@ -310,8 +313,8 @@ class Pipeline(PipelineBase):
                     "confidence": 1.0
                 },
                 
-                #25.12.02 ai 서비스 유형 추가
-                "ai_service" : strAIServiceName,
+                #25.12.02 ai 서비스 유형 추가                
+                "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
                 
                 #masked contents 추가
                 "masked_contents" : dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS)
