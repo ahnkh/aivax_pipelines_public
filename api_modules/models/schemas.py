@@ -144,9 +144,9 @@ class VariantFilterForm(BaseModel):
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")
     
-    # file 분석 기능 추가, 옵션 
-    # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.
-    file_path : Optional[str] = Field(default="", description="분석용 파일 경로")    
+    # file 분석 기능 추가, 옵션, 다수의 리스트를 전달
+    # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.    
+    attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
     pass
     
 class AddPipelineForm(BaseModel):

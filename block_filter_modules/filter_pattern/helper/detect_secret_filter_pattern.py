@@ -10,6 +10,7 @@ from type_hint import *
 
 from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
 
+# 그룹별 regex filter
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
 '''

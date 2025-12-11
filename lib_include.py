@@ -180,13 +180,9 @@ TRACE_PREFIX = "pipe_line"
 API_KEY = os.getenv("PIPELINES_API_KEY", "0p3n-w3bu!")
 PIPELINES_DIR = os.getenv("PIPELINES_DIR", "./pipelines")
 
-
-
-
 CONFIG_FILE_PATH = "./local_resource/config.json"
 
 CONFIG_OPT_ENABLE = 1 #설정config json True/False 대응, 1: True, 기타 : False
 CONFIG_OPT_DISABLE = 0
-
 
 from mainapp.module_function import sqlprintf

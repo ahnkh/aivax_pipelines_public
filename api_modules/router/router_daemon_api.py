@@ -31,9 +31,11 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     **filter_list** : 차단 필터 리스트    
     - _secret_filter_ : <u>API 차단 필터</u>
     
-    - llm_filter : AI 필터 (불완전 버전, 검증 필요)
+    - llm_filter : AI 필터 (신규 llm/slm 필터로 변경)
     - input_filter : opensearch 저장 (프롬프트)
-    - output_filter : opensearch 저장 (LLM 응답)    
+    - output_filter : opensearch 저장 (LLM 응답)
+    
+    - file_filter : file에 대한 필터 기능 제공
     
     - <del>load_detect_secrets : AI 차단 필터 (불완전 버전, 검증 필요)</del>
     - <del>inlet_raw_logger : 테스트용, 미사용</del>

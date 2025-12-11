@@ -80,6 +80,10 @@ class Pipeline(PipelineBase):
             
             "messages": [
                 {"role":"user", "content":""}
+            ],
+            
+            "attach_file": [
+                "/home1/aivax/resource_data/attach_file/test.docs"
             ]
         }
         
@@ -149,14 +153,15 @@ class Pipeline(PipelineBase):
         # last:dict = messages[-1]
         # content = last.get("content")
         
-        if not isinstance(messages, list):
-            # LOG().error(f"invalid messages, {messages}")
-            raise Exception(f"invalid messages format, id = {self.id}, message = {messages}")
-            # raise HTTPException(
-            #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            #     detail=f"invalid messages format, id = {self.id}, message = {messages}")
+        # TODO: 2단계 미사용, 불필요 기능, 2단계 사용시에도 더 적절하게 예외처리.
+        # if not isinstance(messages, list):
+        #     # LOG().error(f"invalid messages, {messages}")
+        #     raise Exception(f"invalid messages format, id = {self.id}, message = {messages}")
+        #     # raise HTTPException(
+        #     #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        #     #     detail=f"invalid messages format, id = {self.id}, message = {messages}")
             
-            # return body
+        #     # return body
         
         detectSecretFilterPattern:DetectSecretFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_DETECT_SECRET)
 
@@ -281,7 +286,7 @@ class Pipeline(PipelineBase):
             # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")   
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
-            dictOpensearchDoc:dict = {
+            dictOpensearchDocument:dict = {
                 "@timestamp": ts_isoz(),
                 "filter" : self.id,
                 "filter_name": self.name,
@@ -323,7 +328,7 @@ class Pipeline(PipelineBase):
             }
 
             # self._index_opensearch(os_doc_final)
-            self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDoc)
+            self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
 
             '''
             #2025.11.15 2단계 모델에 반영되었으나, 3단계 모델에서는 ssl proxy로 전달되지 않아 주석 처리

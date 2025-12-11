@@ -6,7 +6,6 @@ from lib_include import *
 from type_hint import *
 
 from api_modules.helper.router_custom_helper import RouterCustomHelper
-from api_modules.helper.file_analsys_api_helper import FileAnalysisApiHelper
 
 '''
 fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
@@ -19,7 +18,6 @@ class ApiRouterImplCommand:
         
         #helper, static 최소화
         self.__routerCustomHelper = RouterCustomHelper()
-        self.__fileAnaysisHelper = FileAnalysisApiHelper()
         pass
     
     
@@ -79,18 +77,13 @@ class ApiRouterImplCommand:
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service,
-            ApiParameterDefine.CLIENT_HOST : modelItem.client_host
-            
+            ApiParameterDefine.CLIENT_HOST : modelItem.client_host            
         }
         
         dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
         
         # #부가정보에 대해서는 향후 formdata를 model_dict로 변환하거나, dictionary로 직접 변환한다.
         # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
-        
-        #파일명 관련, 별도 처리한다. TODO: 몇개의 인자가 될지는 모른다.
-        modelItem.file_path
-        
         
         #TODO: 메소드 이름, 향후 config로 관리, 지금은 하드코딩
         strFilterMethodName = "inlet"
@@ -100,6 +93,7 @@ class ApiRouterImplCommand:
         
         #TODO: regex 패턴의 inlet 범위는 사실상 한개로 압축되며, input filter 포함 2개이다.
         lstPipeFilterName:list = modelItem.filter_list
+        
         for strPipelineFilterName in lstPipeFilterName:
             
             pipeline = dictPipelineMap.get(strPipelineFilterName, None)

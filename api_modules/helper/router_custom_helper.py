@@ -80,8 +80,11 @@ class RouterCustomHelper:
             
             "metadata" : {
                 ApiParameterDefine.SESSION_ID : modelItem.session_id,
-                "message_id" : "" #TODO: 현재는 사용하지 않는 필드
-            }
+                "message_id" : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
+            },
+            
+            #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.
+            ApiParameterDefine.ATTACH_FILE : modelItem.attach_files
         }
         
         return dictBody
@@ -133,8 +136,6 @@ class RouterCustomHelper:
             #Block, 찾으면 바로 업데이트 후 Skip
             if PipelineFilterDefine.CODE_BLOCK == nActionCode:
                 
-                
-                
                 # # #masked contents
                 # #TODO: 중복, 함수화
                 # strMaskedContents:str = dictFilterOutput.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "")
@@ -178,10 +179,7 @@ class RouterCustomHelper:
         raise HTTPException(status_code = nErrorCode, detail = dictOutput) 
         # pass
     
-    
     ############################################################# private
-    
-    
     
     #Output 결과 업데이트, 모듈 재활용    
     def __updateOutputContents(self, dictFinalResult:dict, dictFilterOutput:dict):

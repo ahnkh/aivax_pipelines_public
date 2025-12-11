@@ -10,7 +10,11 @@ from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern imp
 
 # from block_filter_modules.filter_pattern.helper.regex_filter_pattern import RegexFilterPattern
 
+from block_filter_modules.filter_pattern.helper.file_filter_pattern import FileFilterPattern
+
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+
+
 
 '''
 filter 패턴에 대한 탐지 관리, Manager
@@ -26,7 +30,11 @@ class FilterPatternManager:
     
     #filter 패턴 키, 상수 나중에 공통으로 이동
     PATTERN_FILTER_DETECT_SECRET = "detect_secret"
-    PATTERN_FILTER_REGEX = "regex"
+    # PATTERN_FILTER_REGEX = "regex"
+    PATTERN_FILTER_FILE = "file_filter"
+    
+    #SLM 기능, 아직 미 개발
+    PATTERN_FILTER_SLM = "slm_filter"
     
     def __init__(self):
         
@@ -35,6 +43,7 @@ class FilterPatternManager:
             
             FilterPatternManager.PATTERN_FILTER_DETECT_SECRET : None,
             # FilterPatternManager.PATTERN_FILTER_REGEX : None,
+            FilterPatternManager.PATTERN_FILTER_FILE : None,
         }
         
         pass
@@ -49,12 +58,16 @@ class FilterPatternManager:
         detectSecretPattern = DetectSecretFilterPattern()
         detectSecretPattern.Initialize(dictJsonLocalConfigRoot)
         
+        fileFilterPattern = FileFilterPattern()
+        fileFilterPattern.Initialize(dictJsonLocalConfigRoot)
+        
         #TODO: 기능 제거
         # regexFilterPattern = RegexFilterPattern()
         # regexFilterPattern.Initialize(dictJsonLocalConfigRoot)
         
         self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_DETECT_SECRET] = detectSecretPattern
         # self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_REGEX] = regexFilterPattern
+        self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_FILE] = fileFilterPattern
         
         return ERR_OK
     
@@ -72,9 +85,9 @@ class FilterPatternManager:
             
             filterPatternModule:FilterPatternBase = self.__filterPatternMap.get(strPatternKey)
             
-            # filterPatternModule.notifyUpdateDBPatternPolicy(dictFilterPolicy)
-            filterPatternModule.notifyUpdateDBPatternPolicy(filterPolicyGroupData)
-            # pass
+            if None != filterPatternModule:                            
+                filterPatternModule.notifyUpdateDBPatternPolicy(filterPolicyGroupData)                
+                # pass
         
         return ERR_OK
     

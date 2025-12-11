@@ -42,6 +42,11 @@ class ApiParameterDefine:
     AI_SERVICE = "ai_service"
     CLIENT_HOST = "client_host"
     
+    #message, pipeline으로 전달하는 데이터, 우선 여기에 추가
+    META_DATA = "metadata"
+    MESSAGES = "messages"
+    ATTACH_FILE = "attach_file"
+    
     #TODO: 여기서 부터는 API와 상관없는 항목이다. => API에서 생성되는 항목으로, 여기까지는 같이 관리..
     USER_KEY = "user_key" #사용자 키, 추가
     UUID = "uuid" #uuid, 새로 추가 (프롬프트 수집시점에, uuid가 저장되어야 한다.)
