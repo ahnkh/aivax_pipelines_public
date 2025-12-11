@@ -186,7 +186,7 @@ class Pipeline(PipelineBase):
             
             #TODO: 구조 변경 필요, valve 클래스, 참조가 어려운 문제
             valves = self.valves
-            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves, user_id, ai_service_type)
+            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves, user_id, uuid, ai_service_type)
                         
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")

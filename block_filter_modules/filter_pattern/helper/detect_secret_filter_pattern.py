@@ -31,14 +31,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         super().__init__()
 
-        # 패턴, 우선 그대로 옮기고, 다시 리펙토링
         #TODO: 하드코딩 데이터 => DB로 치환
-
-        #기본 하드코딩된 정규 표현식, 주석 처리
-        # self.__regexPEMBlock:re.Pattern = None
-        # self.__regexJWTPattern:re.Pattern = None
-
-        # self.__listKnownRegexPatterns:List[Tuple[str, re.Pattern, Optional[str]]] = None
 
         #TODO: 이 패턴은 남긴다.
         self.__regexCandidate:re.Pattern = None
@@ -76,7 +69,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
 
     #기본 모듈, 그대로 이동 (기존 detect_spans)
-    def DetectPattern(self, strContents:str, valves:Any, strUserID:str, nServiceType:int): #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+    def DetectPattern(self, strContents:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int): #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
 
         '''
         기존 코드, 그대로 이관
@@ -87,7 +80,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         # return ERR_OK
 
         #TODO: 반환값이 변경되었다. typing 구문 제외
-        return self.__detectFilterFromDB(strContents, valves, strUserID, nServiceType)
+        return self.__detectFilterFromDB(strContents, valves, strUserID, strUUID, nServiceType)
 
     #정책 테스트, 한개의 정책만 테스트 한다. TODO: 우선 개발후 2차 리펙토링
     def TestRulePattern(self, strPrompt:str, strRegexRule:str, strAction:str):
@@ -459,7 +452,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
 
     # filter 처리 리펙토링, 탐지 기능 재구현
-    def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, nServiceType:int):
+    def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int):
 
         '''
         db의 필터 정책을 순회하여, action 값이 maskinig, block여부에 따라, 먼저 걸린 순서로 반환한다.
@@ -484,7 +477,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         #service 타입, user 필드에 따른 서비스별 분기가 있기에, 각각 만들어야 한다.
         
         # 각 연결된 탐지, 수행
-        self.__detectLinkedRegexPatternList(self.__dictDBScopeRegexPattern, text, spans, counts, dictDetectRule, strUserID, nServiceType)
+        self.__detectLinkedRegexPatternList(self.__dictDBScopeRegexPattern, text, spans, counts, dictDetectRule, strUserID, strUUID, nServiceType)
         
         #탐지는 같은데, 걸리는 조합이 다르다. 탐지가 되면 skip, 아니면 next
 
@@ -502,13 +495,14 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         return (spans, counts, dictDetectRule)
     
-    def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, strUserID:str, nServiceType:int):
+    def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, 
+                                       strUserID:str, strUUID:str, nServiceType:int):
         
         '''
         '''
         
         listUserPattern:list = dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_USER)
-        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, strPromptText, spans, counts, dictDetectRule, strUserID)
+        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, strPromptText, spans, counts, dictDetectRule, strUserID, strUUID)
         
         if True == bDetectUser:
             return ERR_OK
@@ -531,7 +525,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         return ERR_OK
     
     # 사용자 패턴, 사용자로 등록된 정책을 찾아서, 해당 사용자와 일치하는 정책만 탐지를 수행한다. 정책 구조는 동일
-    def __detectUserBasePattern(self, listUserPattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, strUserID:str) -> bool:
+    def __detectUserBasePattern(self, listUserPattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, strUserID:str, strUUID:str) -> bool:
         
         '''
         #마지막에 bool값을 전달, next를 수행할지를 결정한다.
@@ -541,14 +535,15 @@ class DetectSecretFilterPattern (FilterPatternBase):
             
             #여기서 subjectid, subject val 값와 user를 비교한다. 넘어오는것은 user 명이다. (엔진에서 추출)
             
-            steUserIDVal = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_VAL)
+            #subjectid로 user일때는 user의 uuid가 들어온다.
+            strDBUserUUID:str = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
             
             # 일치하는 UserID만 비교
-            if strUserID == steUserIDVal:     
+            if strUUID == strDBUserUUID:     
                 
                 #LOG, 향후 제거
-                strUserUUID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
-                LOG().info(f"detect user base regex pattern, id = {strUserUUID}, name = {strUserID}")        
+                # strUserUUID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
+                LOG().info(f"detect user base regex pattern, id = {strDBUserUUID}, name = {strUserID}")        
                 self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
                 
                 # 여기는 detect_secret과 같은 구조 (향후 사양 확인후 개선 필요)

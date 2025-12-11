@@ -26,6 +26,10 @@ class UserAccountDataHandler:
         #최초에 가지고 있고, 저장할 데이터
         self.__dictCurrentUserInfo:dict = {}
         
+        #uuid기반의 계정정보, filter를 사용시 id를 찾기 위한 용도로 미리 생성
+        #TODO: 이름으로 찾으면, 매칭이 안된다. 엔진에서 id,email이 넘어온다는 가정하에 사용 => 기존 dictCurrentUserInfo로 사용 가능.
+        # self.__dictUUIDHashUserNameInfo:dict = {}
+        
         self.__lock = threading.Lock()
         
         #받아올 데이터, insert 시점에 저장된 계정정보와 다른것만 추가
@@ -70,6 +74,9 @@ class UserAccountDataHandler:
         self.__dictNewUserInfo[strUserKey] = dictUserInfo
         
         return ERR_OK
+    
+    #계정정보, 최신 데이터 전달후 pipeline에서 참조
+    
     
     #UUID를 발급한다.
     def GenerateUUID(self, strUserKey:str)-> str:
@@ -176,6 +183,7 @@ class UserAccountDataHandler:
                 #아니면, 여기서는 실패시 버리는 로직도 고려한다. => 1차적으로 개수 제한, dictionary의 개수가 제한값 이상이면, 과거 데이터 삭제.
                 if ERR_OK == nError:
                     self.__dictCurrentUserInfo[strUserKey] = dictNewUserAccount
+                                        
                 #pass
                 
             # pass
