@@ -6,6 +6,7 @@ from lib_include import *
 from type_hint import *
 
 from api_modules.helper.router_custom_helper import RouterCustomHelper
+from api_modules.helper.file_analsys_api_helper import FileAnalysisApiHelper
 
 '''
 fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
@@ -15,6 +16,10 @@ fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
 class ApiRouterImplCommand:
     
     def __init__(self):
+        
+        #helper, static 최소화
+        self.__routerCustomHelper = RouterCustomHelper()
+        self.__fileAnaysisHelper = FileAnalysisApiHelper()
         pass
     
     
@@ -61,7 +66,7 @@ class ApiRouterImplCommand:
         # strPromptMessage:str = modelItem.prompt    
         # strPromptMessage:str = RouterCustomHelper.ConvertPromptMessage(modelItem)
         
-        dictBodyParameter:dict = RouterCustomHelper.GenerateInletBodyParameter(modelItem)
+        dictBodyParameter:dict = self.__routerCustomHelper.GenerateInletBodyParameter(modelItem)
         
         #이건 어쩔수 없다. 매 요청마다 사용자 키를 생성, 이메일과 서비스 조합
         strUserKey:str = f"{modelItem.email}_{modelItem.ai_service}"
@@ -82,13 +87,10 @@ class ApiRouterImplCommand:
         
         # #부가정보에 대해서는 향후 formdata를 model_dict로 변환하거나, dictionary로 직접 변환한다.
         # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
-        # dictExtParameter = {
-        #     #부가정보, 추가적인 파라미터는 우선 여기에 추가 
-        #     #만일 modelItem의 항목이 늘어나면, 여기에 추가해서 전달
-        #     # ApiParameterDefine.PARAM_MAIN_APP : mainApp
-        # }
         
-        #inlet을 호출하는 것은 유지해보자.
+        #파일명 관련, 별도 처리한다. TODO: 몇개의 인자가 될지는 모른다.
+        modelItem.file_path
+        
         
         #TODO: 메소드 이름, 향후 config로 관리, 지금은 하드코딩
         strFilterMethodName = "inlet"
@@ -96,7 +98,7 @@ class ApiRouterImplCommand:
         #TODO: 가공을 위해서, 전체를 모아서 저장하자.
         dictFilterResult = {}
         
-        #일단 작성후 refactoring
+        #TODO: regex 패턴의 inlet 범위는 사실상 한개로 압축되며, input filter 포함 2개이다.
         lstPipeFilterName:list = modelItem.filter_list
         for strPipelineFilterName in lstPipeFilterName:
             
@@ -105,7 +107,7 @@ class ApiRouterImplCommand:
             if None == pipeline:
                 #TODO: 에외처리로 가는 방향, raise 처리 공통화는 2차 리펙토링때 개선            
                 strErrorMessage:str = f"invalid pipeline, not exist pipeline, id = {strPipelineFilterName}"            
-                RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
+                self.__routerCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
                 continue #TODO: 호출될수 없는 구문
                     
             #예외처리, 다시 작성 필요 => 더 적절항 방법 존재.
@@ -156,7 +158,7 @@ class ApiRouterImplCommand:
         apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)    
             
         #Filer별 요청후, 마지막에 취합
-        RouterCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
+        self.__routerCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
         
         #개별 pipeline 결과
         apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)

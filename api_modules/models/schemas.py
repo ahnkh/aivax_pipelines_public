@@ -143,7 +143,11 @@ class VariantFilterForm(BaseModel):
     ai_service : Optional[int] = Field(default=0, description="ai 서비스 타입 (GPT=0, CLAUDE=1, GEMINI=2,)")
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")
-    pass   
+    
+    # file 분석 기능 추가, 옵션 
+    # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.
+    file_path : Optional[str] = Field(default="", description="분석용 파일 경로")    
+    pass
     
 class AddPipelineForm(BaseModel):
     url: str
@@ -151,13 +155,11 @@ class AddPipelineForm(BaseModel):
 class DeletePipelineForm(BaseModel):
     id: str    
     
-    
 #filter 룰 테스트 기능 추가
 class FilterRuleTestItem(BaseModel):
     
     prompt: str = Field(default="", description="입력 프롬프트")
     
     rule:str = Field(default="", description="정책 Rule")
-    action:str = Field(default="", description="action (block/masking)")
-    
+    action:str = Field(default="", description="action (block/masking)")    
     pass

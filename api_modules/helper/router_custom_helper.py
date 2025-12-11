@@ -17,9 +17,8 @@ class RouterCustomHelper:
         
         pass
     
-    #filter 메시지, 프롬프트 convert
-    @staticmethod
-    def ConvertPromptMessage(modelItem: VariantFilterForm) -> str:
+    #filter 메시지, 프롬프트 convert    
+    def ConvertPromptMessage(self, modelItem: VariantFilterForm) -> str:
         
         '''
         프롬프트 관리, 입력값을 변환하여, pipeline filter에서 사용가능한 프롬프트로 변환한다.
@@ -46,9 +45,8 @@ class RouterCustomHelper:
         
         return strPromptMessage
     
-    #inlet으로 filter함수를 통일하고, body 요청 메시지를 생성한다.
-    @staticmethod
-    def GenerateInletBodyParameter(modelItem: VariantFilterForm) -> dict:
+    #inlet으로 filter함수를 통일하고, body 요청 메시지를 생성한다.    
+    def GenerateInletBodyParameter(self, modelItem: VariantFilterForm) -> dict:
         '''
         #다음의 구조이다.
         "body":
@@ -68,11 +66,11 @@ class RouterCustomHelper:
         role 하드코딩은 나중에 수정
         '''
         
-        strPromptMessage:str = RouterCustomHelper.ConvertPromptMessage(modelItem)
+        strPromptMessage:str = self.ConvertPromptMessage(modelItem)
         
         if None == strPromptMessage or 0 == len(strPromptMessage):
             strErrorMessage:str = f"invalid prompt, no data"            
-            RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR, ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR_MSG, strErrorMessage, apiResponseHandler)            
+            self.GenerateHttpException(ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR, ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR_MSG, strErrorMessage, apiResponseHandler)            
             return None
                 
         dictBody = {
@@ -87,26 +85,9 @@ class RouterCustomHelper:
         }
         
         return dictBody
-    
-    #오류 발생시 대응 공통화
-    @staticmethod
-    def GenerateHttpException(nErrorCode:int, strMsgCode:str, strErrorMessage:str, apiResponseHandler:ApiResponseHandlerEX = None):
         
-        '''
-        '''
-        
-        #TODO: 생성하자 마자. api code 성공 상태로 추가
-        apiResponseHandler.attachFailCode(nErrorCode, strMsgCode, strErrorMessage)
-
-        dictOutput = apiResponseHandler.outResponse()
-        
-        raise HTTPException(status_code = nErrorCode, detail = dictOutput) 
-        # pass
-        
-        
-    #응답 데이터 가공, 판정 기능의 개발, 일단 하나의 모듈에서 개발, 향후 분리한다.
-    @staticmethod
-    def GenerateOutputFinalDecision(dictFinalResult:dict, dictEachFilterOutput:dict):
+    #응답 데이터 가공, 판정 기능의 개발, 일단 하나의 모듈에서 개발, 향후 분리한다.\    
+    def GenerateOutputFinalDecision(self, dictFinalResult:dict, dictEachFilterOutput:dict):
         
         '''
         개별 output을 순회한다.
@@ -164,7 +145,7 @@ class RouterCustomHelper:
                 # dictFinalResult[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockContents
                 # dictFinalResult[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedContents
                 
-                RouterCustomHelper.UpdateOutputContents(dictFinalResult, dictFilterOutput)
+                self.__updateOutputContents(dictFinalResult, dictFilterOutput)
                 return ERR_OK
             
             #masking, 최초 masking 만 저장한다.
@@ -179,13 +160,31 @@ class RouterCustomHelper:
         if 0 < len(dictMaskHitHistory):
             
             LOG().debug("update masked contents")
-            RouterCustomHelper.UpdateOutputContents(dictFinalResult, dictMaskHitHistory)
+            self.__updateOutputContents(dictFinalResult, dictMaskHitHistory)
         
         return ERR_OK
     
-    #Output 결과 업데이트, 모듈 재활용
-    @staticmethod
-    def UpdateOutputContents(dictFinalResult:dict, dictFilterOutput:dict):
+    #오류 발생시 대응 공통화    
+    def GenerateHttpException(self, nErrorCode:int, strMsgCode:str, strErrorMessage:str, apiResponseHandler:ApiResponseHandlerEX = None):
+        
+        '''
+        '''
+        
+        #TODO: 생성하자 마자. api code 성공 상태로 추가
+        apiResponseHandler.attachFailCode(nErrorCode, strMsgCode, strErrorMessage)
+
+        dictOutput = apiResponseHandler.outResponse()
+        
+        raise HTTPException(status_code = nErrorCode, detail = dictOutput) 
+        # pass
+    
+    
+    ############################################################# private
+    
+    
+    
+    #Output 결과 업데이트, 모듈 재활용    
+    def __updateOutputContents(self, dictFinalResult:dict, dictFilterOutput:dict):
         
         '''
         '''
