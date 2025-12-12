@@ -15,7 +15,7 @@ class OpenAIChatMessage(BaseModel):
     content: Union[str, List]
     
     model_config = ConfigDict(extra="allow")
-
+    pass
 
 class OpenAIChatCompletionForm(BaseModel):
     stream: bool = True
@@ -23,21 +23,22 @@ class OpenAIChatCompletionForm(BaseModel):
     messages: List[OpenAIChatMessage]
 
     model_config = ConfigDict(extra="allow")
+    pass
 
 
 class FilterForm(BaseModel):
     body: dict
     user: Optional[dict] = None
     model_config = ConfigDict(extra="allow")
+    pass
     
-# 다중 차단 필터 - 사용자 정보 관리
-class VariantFilterUserItem(BaseModel):
+# # 다중 차단 필터 - 사용자 정보 관리 => depth 제거, 이력만 유지
+# class VariantFilterUserItem(BaseModel):
     
-    id : Optional[str] = Field(default="", description="사용자ID")
-    email : Optional[str] = Field(default="", description="email")
-    client_host : Optional[str] = Field(default="", description="사용자 host, ip")
-    session_id : Optional[str] = Field(default="", description="session id")
-    
+#     id : Optional[str] = Field(default="", description="사용자ID")
+#     email : Optional[str] = Field(default="", description="email")
+#     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
+#     session_id : Optional[str] = Field(default="", description="session id") 
 
 #엔진등, 다중 차단을 위한 API 데이터
 class VariantFilterForm(BaseModel):
@@ -49,6 +50,7 @@ class VariantFilterForm(BaseModel):
     - inlet_raw_logger : 테스트용, 미사용
     - secret_filter : API 차단 필터
     - regex_filter : 정규표현식 기반 필터
+    - file_block_filter : 파일 분석 필터
     - input_filter : opensearch 저장 (프롬프트)
     - output_filter : opensearch 저장 (LLM 응답)    
     
@@ -68,7 +70,7 @@ class VariantFilterForm(BaseModel):
     }'
     '''
     
-    filter_list: Optional[List[str]] = ["input_filter", "secret_filter"] #차단 필터 리스트, 기본값 secret_filter
+    filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter"] #차단 필터 리스트, 기본값 secret_filter
     
     # prompt: str = "프롬프트를 입력해주세요" #
     prompt: str = Field(default="", description="입력 프롬프트")
@@ -146,7 +148,9 @@ class VariantFilterForm(BaseModel):
     
     # file 분석 기능 추가, 옵션, 다수의 리스트를 전달
     # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.    
-    attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
+    # attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
+    
+    attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
     pass
     
 class AddPipelineForm(BaseModel):

@@ -38,7 +38,10 @@ class ApiParameterDefine:
     USER_ID = "user_id"
     NAME = "name"
     EMAIL = "email"
+    
     SESSION_ID = "session_id"
+    MESSAGE_ID = "message_id"
+    
     AI_SERVICE = "ai_service"
     CLIENT_HOST = "client_host"
     
@@ -46,6 +49,14 @@ class ApiParameterDefine:
     META_DATA = "metadata"
     MESSAGES = "messages"
     ATTACH_FILE = "attach_file"
+    
+    FILE_NAME = "file_name"
+    FILE_SUMMARY = "file_summary" #파일 차단, 요약 (TODO: 별도로 분리해야 한다.)
+    # FILE_DETAIL = "file_detail" #파일 차단, 상세
+    FILE_INFO = "file_info" #파일 속성, 부가정보
+    
+    POLICY_ID = "policy_id"
+    POLICY_NAME = "policy_name"
     
     #TODO: 여기서 부터는 API와 상관없는 항목이다. => API에서 생성되는 항목으로, 여기까지는 같이 관리..
     USER_KEY = "user_key" #사용자 키, 추가

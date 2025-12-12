@@ -80,7 +80,7 @@ class RouterCustomHelper:
             
             "metadata" : {
                 ApiParameterDefine.SESSION_ID : modelItem.session_id,
-                "message_id" : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
+                ApiParameterDefine.MESSAGE_ID : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
             },
             
             #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.

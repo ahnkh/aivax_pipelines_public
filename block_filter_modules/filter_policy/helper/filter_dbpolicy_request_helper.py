@@ -150,6 +150,11 @@ class FilterDBPolicyRequestHelper:
           
           dictPolicyRule:dict = dictPolicyRuleIDMap.get(policy_rule_id)
           
+          #TODO: 예외처리, 정책에 해당하는 룰이 없을수 있다. (잘못된 매핑)
+          if None == dictPolicyRule:
+            LOG().error(f"invalid policy rule (not exist), policy_rule_id = {policy_rule_id}, scope = {scope}")
+            continue
+          
           #중간 버퍼를 두고 scope별로 map을 관리.
           #TODO: 중복으로 사용가능하고, subject_id등 추가적인 정보가 필요하다.
           #각 정책에 대해서 복사
@@ -160,7 +165,8 @@ class FilterDBPolicyRequestHelper:
           if scope != DBDefine.POLICY_FILTER_SCOPE_DEFAULT:
             dictNewPolicyRule[DBDefine.DB_FIELD_SUBJECT_ID] = subject_id
             
-          self.__updateReplaceSubjectIDValue(dictNewPolicyRule, scope, subject_id, dictUserIDMap, dictAIServiceNameMap)
+            self.__updateReplaceSubjectIDValue(dictNewPolicyRule, scope, subject_id, dictUserIDMap, dictAIServiceNameMap)
+            # pass
           
           
           #여기는 list로 담는다.
@@ -214,7 +220,12 @@ class FilterDBPolicyRequestHelper:
         #정책 id, id로 dictionary를 만든다.
         id:str = dictDBPolicyRule.get("id")
         
-        self.__convertFilterRule(dictDBPolicyRule)
+        nError = self.__convertFilterRule(dictDBPolicyRule)
+        
+        if ERR_FAIL == nError:
+          
+          LOG().error(f"fail convert rule, id = {id}, skip insert")
+          continue
         
         dictPolicyRuleIDMap[id] = dictDBPolicyRule
         # pass
@@ -226,37 +237,48 @@ class FilterDBPolicyRequestHelper:
       '''
       '''
       
-      # id:str = dictPattern.get("id")
-      # name:str = dictPattern.get("name")
-      # type_mask:int = dictPattern.get("type_mask")
-      # operator:str = dictPattern.get("operator")
-      rule:str = dictDBFilterRule.get("rule")
-      # action:str = dictPattern.get("action")
-      # status:str = dictPattern.get("status")
+      try:
+        
+        # id:str = dictPattern.get("id")
+        # name:str = dictPattern.get("name")
+        # type_mask:int = dictPattern.get("type_mask")
+        # operator:str = dictPattern.get("operator")
+        rule:str = dictDBFilterRule.get("rule")
+        # action:str = dictPattern.get("action")
+        # status:str = dictPattern.get("status")
+        
+        regex_flag:int = dictDBFilterRule.get("regex_flag")
+        regex_group:int = dictDBFilterRule.get("regex_group")
+        regex_group_val:str = dictDBFilterRule.get("regex_group_val")
+        
+        #이름 보정
+        dictDBFilterRule["regexFlag"] = regex_flag
+        dictDBFilterRule["regexGroup"] = regex_group
+        dictDBFilterRule["regexGroupVal"] = regex_group_val
+          
+        #TODO: action, base64 => decode 처리후 저장.
+          
+        #TODO: base64 인코딩 실패의 예외처리 포함, 예외 발생시, 해당 룰을 제외하고 나머지 룰만 처리
+        byteBase64Decode = base64.b64decode(rule)
+          
+        #문자열로 변환
+        strBase64Decode = byteBase64Decode.decode("utf-8")
+          
+        #어차피 여기서만 조회, 그냥 업데이트
+        dictDBFilterRule["rule"] = strBase64Decode
+          
+        #그 연산이 그연산..
+        # dictNewPattern = {
+        #   "id" : id
+        # }
+        
+      except Exception as err:
+        
+        LOG().error(traceback.format_exc())
+        
+        #TODO: 연산이 실패한 룰은, 무시한다.
+        return ERR_FAIL
       
-      regex_flag:int = dictDBFilterRule.get("regex_flag")
-      regex_group:int = dictDBFilterRule.get("regex_group")
-      regex_group_val:str = dictDBFilterRule.get("regex_group_val")
-      
-      #이름 보정
-      dictDBFilterRule["regexFlag"] = regex_flag
-      dictDBFilterRule["regexGroup"] = regex_group
-      dictDBFilterRule["regexGroupVal"] = regex_group_val
-        
-      #TODO: action, base64 => decode 처리후 저장.
-        
-      byteBase64Decode = base64.b64decode(rule)
-        
-      #문자열로 변환
-      strBase64Decode = byteBase64Decode.decode("utf-8")
-        
-      #어차피 여기서만 조회, 그냥 업데이트
-      dictDBFilterRule["rule"] = strBase64Decode
-        
-      #그 연산이 그연산..
-      # dictNewPattern = {
-      #   "id" : id
-      # }
     
       return ERR_OK
       

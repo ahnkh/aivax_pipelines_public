@@ -207,7 +207,7 @@ def main():
         #실행 파라미터 추가.        
         run_uvicorn(app, strFastApiHost, nFastApiPort)
         
-    except Exception as err:         
+    except Exception as err:
         LOG().error(traceback.format_exc())
         
     finally:        

@@ -40,7 +40,7 @@ class ApiRouterImplCommand:
         dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
         
         #테스트, 디버그
-        LOG().debug(f"call pipeline map info = {dictPipelineMap}")
+        # LOG().debug(f"call pipeline map info = {dictPipelineMap}")
         
         #시나리오, pipeline 리스트를 여러개 가져온다.
         #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과

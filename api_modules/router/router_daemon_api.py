@@ -33,9 +33,8 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     
     - llm_filter : AI 필터 (신규 llm/slm 필터로 변경)
     - input_filter : opensearch 저장 (프롬프트)
-    - output_filter : opensearch 저장 (LLM 응답)
-    
-    - file_filter : file에 대한 필터 기능 제공
+    - output_filter : opensearch 저장 (LLM 응답)    
+    - file_block_filter : file에 대한 필터 기능 제공
     
     - <del>load_detect_secrets : AI 차단 필터 (불완전 버전, 검증 필요)</del>
     - <del>inlet_raw_logger : 테스트용, 미사용</del>
@@ -79,27 +78,6 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     '''
     
     return await doRouterFunction("doFilterApiRouter", modelItem, request)
-    
-    # try:
-
-    #     return await doFilterApiRouter(modelItem, request)
-
-    # except HTTPException as err:
-
-    #     LOG().error(traceback.format_exc()) 
-
-    #     dictOutput:dict = err.detail    
-    #     return dictOutput
-
-    # except Exception as err:
-        
-    #     # LOG().error(str(err))        
-    #     LOG().error(traceback.format_exc())  
-        
-    #     apiResponseHandler = ApiResponseHandlerEX()
-    #     apiResponseHandler.attachFailCode(ApiErrorDefine.API_UNKNOWN_ERROR, ApiErrorDefine.API_UNKNOWN_ERROR_MSG, str(err))
-
-    #     return apiResponseHandler.outResponse()
     
     
 #정책 추가 인터페이스, 정책에 대한 테스트와 응답 결과만 반환한다.

@@ -4,6 +4,7 @@ import copy
 
 from lib_include import *
 
+# 그룹별 regex filter
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
 '''
@@ -52,7 +53,7 @@ class FilterPatternBase:
         return ERR_OK
     
     #모든 scope의 filter, 변경 체크
-    def IsScopeBasedFilterPolicyChanged(self, dictPolicyRuleScopeMap:dict, lstScopeRange:list) -> bool:
+    def IsScopeBasedFilterPolicyChanged(self, dictPolicyRuleScopeMap:dict) -> bool:
         
         '''
         각 scope 별 정책을 확인한다.
@@ -60,6 +61,14 @@ class FilterPatternBase:
         '''
         
         # bChanged:bool = False
+        
+        # 이건 안으로 감춘다.
+        lstScopeRange = [
+            DBDefine.POLICY_FILTER_SCOPE_USER,
+            DBDefine.POLICY_FILTER_SCOPE_SERVICE,
+            DBDefine.POLICY_FILTER_SCOPE_GROUP,
+            DBDefine.POLICY_FILTER_SCOPE_DEFAULT
+        ]
         
         for strScope in lstScopeRange:
             
@@ -87,6 +96,11 @@ class FilterPatternBase:
         
         TODO: 구조상 분리해야 하는 기능이 있으나, 분리하지 않고 마무리 한다.
         '''
+        
+        #TODO: 예외처피 필요, 파라미터가 잘못되는 경우가 있다.
+        if None == lstNewPolicyData:
+            LOG().error(f"invalid new policy data, skip, scope = {strScope}")
+            return FilterPatternBase.POLICY_NOT_CHANGED
         
         # lstNewPolicyData:list = dictNewDBFilterPolicy.get("data")
         

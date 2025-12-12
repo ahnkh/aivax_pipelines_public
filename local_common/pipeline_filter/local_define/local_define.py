@@ -15,4 +15,8 @@ class PipelineFilterDefine:
     CODE_BLOCK = 1
     CODE_MASKING = 2
     
+    # opensearch에 저장되는 stage 정의
+    FILTER_STAGE_REGEX = "regex",
+    FILTER_STAGE_FILE_BLOCK = "file-block",
+    
     pass

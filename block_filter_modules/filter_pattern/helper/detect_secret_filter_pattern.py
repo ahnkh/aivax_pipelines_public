@@ -13,6 +13,9 @@ from block_filter_modules.filter_pattern.helper.filter_pattern_base import Filte
 # 그룹별 regex filter
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
+# 별도 helper
+from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy_generate_helper import RegexPolicygenerateHelper
+
 '''
 정책 패턴 탐지, detect secret 패턴
 기존 개발 코드 리펙토링, 이후 정책 관리 DB 업데이트
@@ -25,8 +28,10 @@ TODO: 내부 정책이 존재할수 있으며, 1차 하드코딩, 모듈 분리
 
 class DetectSecretFilterPattern (FilterPatternBase):
 
-    #DB 정책의 Key 정보, 상수로 관리
-    POLICY_FILTER_KEY = DBDefine.FILTER_KEY_DETECT_SECRET
+    #DB 정책의 Key 정보, 상수로 관리, 사양변경, detect secret을 regex로 통일한다. (정규 표현식은 regex로 통일)
+    # 소스코드 이름은, 영향범위가 커서 나중에 수정
+    # 대신 pipeline은 detect secret을 당분간 유지 (sslproxy 영향, 테스트후 향후 개선)
+    POLICY_FILTER_KEY = DBDefine.FILTER_KEY_REGEX
 
     def __init__(self):
 
@@ -46,6 +51,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
         #TODO: 이건 어떤 기능인지 확인후 이름 변경 우선 이기능은 유지
         self.re_b64_shape = None
         self.re_hex_shape = None
+        
+        #helper 추가
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None        
         # pass
 
     #초기화 로직, 상태, 정책이 존재하며, 정책은 향후 detect_secret policy로 이동한다.
@@ -63,8 +71,16 @@ class DetectSecretFilterPattern (FilterPatternBase):
             DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
             DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
         }
+        
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
+        
+        self.__regexCandidate:re.Pattern = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
 
-        self.__initializeRegexPattern()
+        #TODO: 이 기능은 파악이 안되어 유지
+        self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
+        self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
+
+        # self.__initializeRegexPattern()
 
         return ERR_OK
 
@@ -132,8 +148,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         이후 로직은 우선 기존과 동일하게 유지한다.
         '''
 
-        strFilterKey:str = DetectSecretFilterPattern.POLICY_FILTER_KEY
-
+        '''
         dictPolicyRuleScopeMap:dict = filterPolicyGroupData.GetPolicyRule(strFilterKey)
 
         #N개의 scope 존재, 복사가 되어야 한다.
@@ -192,265 +207,43 @@ class DetectSecretFilterPattern (FilterPatternBase):
             #TODO: 패턴에 대한 반영 기능은 필요하다. 실제 사용 변수에 대한 업데이트, 개별 패턴으로 반영이 필요하다.
             #TODO: rule compile 이슈, rule과 compile을 따로 가져갈지에 대한 검토
             # self.__updateRegexPatternFromDB(data)
-            self.__updateRegexPatternScopeRangeFromDB(dictPolicyRuleScopeMap)
+            # self.__updateRegexPatternScopeRangeFromDB(dictPolicyRuleScopeMap)            
+            self.__regexPolicyGenerateHelper.UpdateRegexPatternScopeRangeFromDB(dictPolicyRuleScopeMap)
             
             # return ERR_OK
             #TODO: 실패시의 예외, 반환에 대한 주의
+            
+        '''
+        
+        strFilterKey:str = DetectSecretFilterPattern.POLICY_FILTER_KEY
+        
+        #TODO: 이 로직은 유지
+        dictPolicyRuleScopeMap:dict = filterPolicyGroupData.GetPolicyRule(strFilterKey)
+        
+        bFilterChanged:bool = self.IsScopeBasedFilterPolicyChanged(dictPolicyRuleScopeMap)
+        
+        if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
+            
+            nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
+            LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
+            
+            # 먼저 초기화
+            self.__dictDBScopeRegexPattern:dict = {
+                DBDefine.POLICY_FILTER_SCOPE_USER : [],
+                DBDefine.POLICY_FILTER_SCOPE_SERVICE : [],
+                DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
+                DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
+            }
+            
+            self.UpdateBaseDBFilterPolicy(dictPolicyRuleScopeMap)
+
+            self.__regexPolicyGenerateHelper.GenerateRegexGroupPolicy(dictPolicyRuleScopeMap, self.__dictDBScopeRegexPattern)
+            #pass
 
         return ERR_OK
 
     ################################################# private
     
-    # scope 단위로, Regex 패턴을 생성, 업데이트
-    def __updateRegexPatternScopeRangeFromDB(self, dictPolicyRuleScopeMap:dict):
-        '''        
-        '''
-        
-        # 먼저 초기화
-        self.__dictDBScopeRegexPattern:dict = {
-            DBDefine.POLICY_FILTER_SCOPE_USER : [],
-            DBDefine.POLICY_FILTER_SCOPE_SERVICE : [],
-            DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
-            DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
-        }
-        
-        #TODO: 자원 절약은 나중에 검토하자.
-        # lstScopeRange = [
-        #     DBDefine.POLICY_FILTER_SCOPE_USER,
-        #     DBDefine.POLICY_FILTER_SCOPE_SERVICE,
-        #     DBDefine.POLICY_FILTER_SCOPE_GROUP,
-        #     DBDefine.POLICY_FILTER_SCOPE_DEFAULT
-        # ]
-        
-        #TODO: 전체 loop
-        for strScope in dictPolicyRuleScopeMap:
-            
-            #scope 별 list, 참조로 반환
-            lstFilterData:list = dictPolicyRuleScopeMap.get(strScope)
-            
-            #새로 추가할 regex rule
-            lstNewFilterData:list = self.__dictDBScopeRegexPattern.get(strScope)
-            
-            self.__updateRegexPatternFromDB(strScope, lstFilterData, lstNewFilterData)
-        
-        return ERR_OK
-
-    #DB에서 정책을 받아서 업데이트 한다.
-    def __updateRegexPatternFromDB(self, strScope:str, lstFilterData:list, lstNewFilterData:list):
-
-        '''
-
-        다음 패턴, rule만 받아서, 지정된 패턴에 추가한다.
-        data": [
-        {
-        "id": "78c85826-78f5-4e93-8aaf-833acb34d43c",
-        "name": "Masking rule",
-        "targets": [
-            "api"
-        ],
-        "typeMask": 2,
-        "operator": "AND",
-        "rule": "",
-        "prompt": "프롬프트",
-        "scope": "api",
-        "action": "masking",
-        "status": "deployed",
-        "adminId": "973050c6-b5ee-4afd-979e-07d4b1659c8b"
-        },
-
-        TODO: 우선 rule을 받고, 이후 하나씩 확장한다.
-
-        추가적인 정규식 flag 패턴이 필요하다. MULTILINE으로 되어 있다.
-
-        SRE_FLAG_IGNORECASE = 2 # case insensitive
-        SRE_FLAG_LOCALE = 4 # honour system locale
-        SRE_FLAG_MULTILINE = 8 # treat target as multiline string
-        SRE_FLAG_DOTALL = 16 # treat target as a single string
-        SRE_FLAG_UNICODE = 32 # use unicode "locale"
-        SRE_FLAG_VERBOSE = 64 # ignore whitespace and comments
-        SRE_FLAG_DEBUG = 128 # debugging
-        SRE_FLAG_ASCII = 256 # use ascii "locale"
-        '''
-
-        #TODO: 마찬가지로, 기존 데이터 삭제, 다만 데이터가 동일한지 체크하는 로직 필요
-        # self.__listDBRegexPattern.clear()
-
-        for dictPolicy in lstFilterData:
-
-            #정책ID, 이름을 추가, 최초에 걸린 ID와 Name을 추가하여, 반환하도록 개선.
-            id:str = dictPolicy.get("id")
-            name:str = dictPolicy.get("name")
-
-            rule:str = dictPolicy.get("rule")
-
-            action:str = dictPolicy.get("action")
-
-            #수신받은 rule을, 신규의 db filter 패턴에 추가한다.
-            #기존과 동일한 패턴으로 관리를 위해서 tuple로 관리, 이름과 rule
-            #성능의 약간의 개선을 위해서 컴파일된 객체로 관리 (TODO: DB 갱신 시점에 반복 갱신은 개선 필요)
-
-            #TODO: 추가적인 컴파일 옵션이 필요하다. 우선
-            # regex_flag:int = re.DOTALL
-
-            #TODO: 2개의 옵션이 필요 => dictionary쪽이 나을수 있겠다. tuple X
-            regexFlag:int = dictPolicy.get("regexFlag", 0)
-            regexGroup:int = dictPolicy.get("regexGroup", 0)
-            regexGroupVal:str = dictPolicy.get("regexGroupVal", None)
-            
-            strDBSubjectID:str = dictPolicy.get(DBDefine.DB_FIELD_SUBJECT_ID, "")
-            strDBSubjectVal:str = dictPolicy.get(DBDefine.DB_FIELD_SUBJECT_VAL, "")
-
-            #TODO: 없는 경우에 대한 처리
-
-            #없으면 실행을 제외한다.
-            if None == rule or 0 == len(rule):
-                LOG().error(f"invalid flag, no rule")
-                continue
-
-            #regexFlag, 예외처리
-            if None == regexFlag:
-                regexFlag = re.DOTALL
-
-            if None == regexGroup:
-                regexGroup = 0
-
-            #2025.12.02 정규표현식 오류,
-            #try로 묶어서 임시 테스트
-
-            regexPattern:re.Pattern = None
-
-            try:
-                regexPattern:re.Pattern = re.compile(rule, regexFlag)
-            except Exception:
-                LOG().error(traceback.format_exc())
-
-            #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
-            # tupleRulePattern = (name, rule, regexPattern)
-
-            # 예외처리, regexPattern이 존재하지 않으면, skip
-            if None == regexPattern:
-
-                LOG().error(f"compile pattern error, skip regex pattern, id = {id}, name = {name}, rule = {rule}")
-                return ERR_FAIL
-
-            dictRegexPattern:dict = {
-                "id" : id,
-                "name" : name,
-                "rule" : rule,
-                "action" : action,
-                "regex_pattern" : regexPattern,
-                "regex_flag" : regexFlag,
-                "regex_group" : regexGroup,
-                "regex_group_val" : regexGroupVal,
-                DBDefine.DB_FIELD_SUBJECT_ID : strDBSubjectID,
-                DBDefine.DB_FIELD_SUBJECT_VAL : strDBSubjectVal,
-            }
-
-            # LOG().debug(f"update regex pattern, policy = {dictPolicy}")
-
-            # self.__listDBRegexPattern.append(dictRegexPattern)
-            lstNewFilterData.append(dictRegexPattern)
-
-        LOG().info(f"regex db, filter = {DetectSecretFilterPattern.POLICY_FILTER_KEY}, scope = {strScope}, count = {len(lstNewFilterData)}")
-
-        return ERR_OK
-
-    #기 구현된 detect secret pattern의 정규식, 이관
-    def __initializeRegexPattern(self, ):
-
-        '''
-        '''
-
-        # ---------- 엔트로피 후보/도우미 ----------
-        self.__regexCandidate:re.Pattern = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
-
-        #TODO: 이 기능은 파악이 안되어 유지
-        self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
-        self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
-
-        return ERR_OK
-
-        #정책 테스트, 별도의 정책을 만든다. DB 패턴, List로 관리
-        #기존 정책, 한개를 제외
-        #해당 정책에서 rule을 조회
-
-        # self.__regexPEMBlock:re.Pattern = re.compile(
-        #     r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
-        #     re.MULTILINE,
-        # )
-
-        # # JwtTokenDetector: JWT 토큰
-        # self.__regexJWTPattern:re.Pattern = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
-
-        # # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
-        # key_kv:str = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
-        # sep:str = r"\s*[:=]\s*"
-
-        # #TODO: DB 테스트를 위해서, 정책을 주석 처리한다.
-        # # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
-        # self.__listKnownRegexPatterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
-
-        #     # AWSKeyDetector
-
-        #     ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
-        #     ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
-
-        #     # AzureStorageKeyDetector (connection string)
-        #     ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-        #     ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
-
-        #     # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
-
-        #     # BasicAuthDetector: scheme://user:pass@host
-        #     ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
-
-        #     # CloudantDetector: https://user:pass@<account>.cloudant.com
-        #     ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
-
-        #     # DiscordBotTokenDetector
-        #     ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
-
-        #     # GitHubTokenDetector (classic/pat 등)
-        #     ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
-
-        #     # MailchimpDetector (키 형태: 32 hex + -usN)
-        #     ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
-
-        #     # SlackDetector
-        #     ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
-        #     ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
-
-        #     # StripeDetector
-        #     ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-        #     ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
-
-        #     # TwilioKeyDetector
-        #     ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
-        #     ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
-
-        #     # KeywordDetector (일반 할당형)
-        #     ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
-        #     ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
-        #     ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
-
-        #     # OpenAI/Custom-like
-        #     ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
-        #     # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
-        #     ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
-
-        # ]
-
-
-        #TODO: 테스트
-        '''
-        self.__listKnownRegexPatterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
-
-            # AWSKeyDetector
-            ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
-        ]
-        '''
-
-
 
     # filter 처리 리펙토링, 탐지 기능 재구현
     def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int):
@@ -822,5 +615,91 @@ class DetectSecretFilterPattern (FilterPatternBase):
     #     #         counts["known"] += 1
 
     #     return spans, counts
+    
+    
+    #기 구현된 detect secret pattern의 정규식, 이관
+    # def __initializeRegexPattern(self, ):
+
+    #     '''
+    #     '''
+
+    #     # ---------- 엔트로피 후보/도우미 ----------
+    #     self.__regexCandidate:re.Pattern = re.compile(r"[A-Za-z0-9+/=._\-]{16,}")  # 후보 토큰(완화)
+
+    #     #TODO: 이 기능은 파악이 안되어 유지
+    #     self.re_b64_shape = re.compile(r"^[A-Za-z0-9+/=]+$")
+    #     self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
+
+    #     return ERR_OK
+
+    #     #정책 테스트, 별도의 정책을 만든다. DB 패턴, List로 관리
+    #     #기존 정책, 한개를 제외
+    #     #해당 정책에서 rule을 조회
+
+    #     # self.__regexPEMBlock:re.Pattern = re.compile(
+    #     #     r"-----BEGIN (?P<K>[^-\r\n]+?) KEY-----[\s\S]+?-----END (?P=K) KEY-----",
+    #     #     re.MULTILINE,
+    #     # )
+
+    #     # # JwtTokenDetector: JWT 토큰
+    #     # self.__regexJWTPattern:re.Pattern = re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
+
+    #     # # ---------- 알려진 패턴(값 그룹명 group='VAL' 권장, 필요시 개별 그룹명) ----------
+    #     # key_kv:str = r"(?:api[_-]?key|x-api-key|api[_-]?token|x-api-token|auth[_-]?token|password|passwd|pwd|secret|private[_-]?key)"
+    #     # sep:str = r"\s*[:=]\s*"
+
+    #     # #TODO: DB 테스트를 위해서, 정책을 주석 처리한다.
+    #     # # (label, pattern, value_group_name) — group 없으면 전체 매치 사용
+    #     # self.__listKnownRegexPatterns: List[Tuple[str, re.Pattern, Optional[str]]] = [
+
+    #     #     # AWSKeyDetector
+
+    #     #     ("aws_access_key_id", re.compile(r"\b(?:AKIA|ASIA|ANPA|ABIA)[0-9A-Z]{16}\b"), None),
+    #     #     ("aws_secret_access_key", re.compile(r"(?<![A-Za-z0-9/+=])([A-Za-z0-9/+=]{40})(?![A-Za-z0-9/+=])"), None),
+
+    #     #     # AzureStorageKeyDetector (connection string)
+    #     #     ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+    #     #     ("azure_conn_string", re.compile(r"(?i)\bDefaultEndpointsProtocol=\w+;AccountName=\w+;AccountKey=(?P<VAL>[A-Za-z0-9+/=]{30,})"), "VAL"),
+
+    #     #     # Base64HighEntropyString — 정규식으로 직접 잡기보다는 엔트로피가 담당(아래)
+
+    #     #     # BasicAuthDetector: scheme://user:pass@host
+    #     #     ("basic_auth_creds", re.compile(r"(?i)\b(?:https?|ftp|ssh)://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@"), "CREDS"),
+
+    #     #     # CloudantDetector: https://user:pass@<account>.cloudant.com
+    #     #     ("cloudant_creds", re.compile(r"(?i)https?://(?P<CREDS>[^:@\s/]+:[^@\s/]+)@[^/\s]*\.cloudant\.com"), "CREDS"),
+
+    #     #     # DiscordBotTokenDetector
+    #     #     ("discord_bot_token", re.compile(r"\b(?P<VAL>[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27})\b"), "VAL"),
+
+    #     #     # GitHubTokenDetector (classic/pat 등)
+    #     #     ("github_token", re.compile(r"\b(?P<VAL>(?:ghp|gho|ghu|ghs|ghr)[-_][A-Za-z0-9]{16,})\b"), "VAL"),
+
+    #     #     # MailchimpDetector (키 형태: 32 hex + -usN)
+    #     #     ("mailchimp_api_key", re.compile(r"\b(?P<VAL>[0-9a-f]{32}-us\d{1,2})\b"), "VAL"),
+
+    #     #     # SlackDetector
+    #     #     ("slack_token", re.compile(r"\b(?P<VAL>xox[abprs]-[A-Za-z0-9-]{10,})\b"), "VAL"),
+    #     #     ("slack_webhook_path", re.compile(r"(?i)https://hooks\.slack\.com/services/(?P<VAL>T[A-Z0-9]+/B[A-Z0-9]+/[A-Za-z0-9]+)"), "VAL"),
+
+    #     #     # StripeDetector
+    #     #     ("stripe_secret", re.compile(r"\b(?P<VAL>sk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+    #     #     ("stripe_publishable", re.compile(r"\b(?P<VAL>pk_(?:live|test)_[A-Za-z0-9]{16,})\b"), "VAL"),
+
+    #     #     # TwilioKeyDetector
+    #     #     ("twilio_account_sid", re.compile(r"\b(?P<VAL>AC[0-9a-fA-F]{32})\b"), "VAL"),
+    #     #     ("twilio_auth_token", re.compile(r"(?<![A-Za-z0-9])(?P<VAL>[0-9a-fA-F]{32})(?![A-Za-z0-9])"), "VAL"),
+
+    #     #     # KeywordDetector (일반 할당형)
+    #     #     ("kv_quoted", re.compile(rf'(?i)\b{key_kv}\b{sep}"(?P<VAL>[^"\r\n]{{6,}})"'), "VAL"),
+    #     #     ("kv_single_quoted", re.compile(rf"(?i)\b{key_kv}\b{sep}'(?P<VAL>[^'\r\n]{{6,}})'"), "VAL"),
+    #     #     ("kv_bare", re.compile(rf"(?i)\b{key_kv}\b{sep}(?P<VAL>[^\s\"'`]{{8,}})"), "VAL"),
+
+    #     #     # OpenAI/Custom-like
+    #     #     ("openai_like", re.compile(r"\b(?P<VAL>sk-[A-Za-z0-9]{16,})\b"), "VAL"),
+    #     #     # 사내/커스텀 접두(예: ak-, tk- ... -dev/-test 꼬리)
+    #     #     ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
+
+    #     # ]
 
 

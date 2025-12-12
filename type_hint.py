@@ -7,7 +7,7 @@
 from api_modules.models.schemas import (
     OpenAIChatMessage, OpenAIChatCompletionForm, 
     FilterForm, AddPipelineForm, 
-    DeletePipelineForm, VariantFilterForm, VariantFilterUserItem,
+    DeletePipelineForm, VariantFilterForm,
     FilterRuleTestItem
 )
      

@@ -23,7 +23,8 @@ MASK_DEFAULT = "[AIVAX MASKING]"
 
 class Pipeline(PipelineBase):
     
-    def __init__(self):        
+    def __init__(self):
+        
         '''
         '''
         
@@ -302,7 +303,10 @@ class Pipeline(PipelineBase):
                 # "request": {"id": msg_id},
                 # "session": {"id": sess_id},
                 # "user":    {"id": user_id},
-                "stage":   "detect_secrets",
+                
+                # stage, regex로 통일
+                # "stage":   "detect_secrets",
+                "stage":   PipelineFilterDefine.FILTER_STAGE_REGEX,
                 # "detection": detection_status,
                 "should_block": (std_action == "block"),
                 "mode": std_action,
