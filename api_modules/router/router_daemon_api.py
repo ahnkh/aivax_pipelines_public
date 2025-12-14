@@ -87,66 +87,7 @@ async def testFilterRule(modelItem: FilterRuleTestItem, request: Request) -> dic
     '''
     
     return await doRouterFunction("doTestFilterRule", modelItem, request)
-    
-    # try:
 
-    #     return await doTestFilterRule(modelItem, request)
-
-    # except HTTPException as err:
-
-    #     LOG().error(traceback.format_exc()) 
-
-    #     dictOutput:dict = err.detail    
-    #     return dictOutput
-
-    # except Exception as err:
-        
-    #     # LOG().error(str(err))        
-    #     LOG().error(traceback.format_exc())  
-        
-    #     apiResponseHandler = ApiResponseHandlerEX()
-    #     apiResponseHandler.attachFailCode(ApiErrorDefine.API_UNKNOWN_ERROR, ApiErrorDefine.API_UNKNOWN_ERROR_MSG, str(err))
-
-    #     return apiResponseHandler.outResponse()
-    
-    
-#api router 실행, 공통화
-# async def doRouterFuction(strMethodName:str, modelItem: Any, request: Request) -> dict:
-async def doRouterFunction(strMethodName:str, *args, **kwargs) -> dict:
-    '''
-    '''
-    
-    try:
-        
-        # 현재 모듈 참조
-        module = sys.modules[__name__]  
-        
-        #TODO: 인자 주의
-        methodFunction = getattr(module, strMethodName)
-        
-        if inspect.iscoroutinefunction(methodFunction):
-            return await methodFunction(*args, **kwargs)
-        else:
-            return methodFunction(*args, **kwargs)
-
-    except HTTPException as err:
-
-        LOG().error(traceback.format_exc()) 
-
-        dictOutput:dict = err.detail    
-        return dictOutput
-
-    except Exception as err:
-        
-        # LOG().error(str(err))        
-        LOG().error(traceback.format_exc())  
-        
-        apiResponseHandler = ApiResponseHandlerEX()
-        apiResponseHandler.attachFailCode(ApiErrorDefine.API_UNKNOWN_ERROR, ApiErrorDefine.API_UNKNOWN_ERROR_MSG, str(err))
-
-        return apiResponseHandler.outResponse()
-
-    
 #저장 인터페이스, TODO: API가 많을것 같지는 않다. 만약에 많아지면, 호출 기능 공통화, 이 API 까지는 각각 개발
 @app.post("/v1/log/add-log")
 async def addLogToOpenSearch(request: Request):
@@ -206,14 +147,58 @@ async def addLogToOpenSearch(request: Request):
     
     #TODO: 여기까지만 개별로 생성, 이후 API가 추가되면 공통화
     
-    try:
-    
-        byteRawBody = await request.body()
+    byteRawBody = await request.body()
         
-        dictItemModel = {}
-        JsonHelper.LoadToDictionary(byteRawBody, dictItemModel)
+    dictItemModel = {}
+    JsonHelper.LoadToDictionary(byteRawBody, dictItemModel)
+    
+    return await doRouterFunction("doLogApiRouter", dictItemModel)
+    
+    # try:
+    
+    #     byteRawBody = await request.body()
+        
+    #     dictItemModel = {}
+    #     JsonHelper.LoadToDictionary(byteRawBody, dictItemModel)
 
-        return await doLogApiRouter(dictItemModel)
+    #     return await doLogApiRouter(dictItemModel)
+
+    # except HTTPException as err:
+
+    #     LOG().error(traceback.format_exc()) 
+
+    #     dictOutput:dict = err.detail    
+    #     return dictOutput
+
+    # except Exception as err:
+        
+    #     # LOG().error(str(err))        
+    #     LOG().error(traceback.format_exc())  
+        
+    #     apiResponseHandler = ApiResponseHandlerEX()
+    #     apiResponseHandler.attachFailCode(ApiErrorDefine.API_UNKNOWN_ERROR, ApiErrorDefine.API_UNKNOWN_ERROR_MSG, str(err))
+
+    #     return apiResponseHandler.outResponse()
+    
+    
+#api router 실행, 공통화
+# async def doRouterFuction(strMethodName:str, modelItem: Any, request: Request) -> dict:
+async def doRouterFunction(strMethodName:str, *args, **kwargs) -> dict:
+    '''
+    '''
+    
+    try:
+        
+        # 현재 모듈 참조
+        module = sys.modules[__name__]  
+        
+        #TODO: 인자 주의
+        methodFunction = getattr(module, strMethodName)
+        
+        if inspect.iscoroutinefunction(methodFunction):
+            return await methodFunction(*args, **kwargs)
+        else:
+            return methodFunction(*args, **kwargs)
 
     except HTTPException as err:
 
