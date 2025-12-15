@@ -78,7 +78,7 @@ class RouterCustomHelper:
             
             ApiParameterDefine.META_DATA : {
                 ApiParameterDefine.SESSION_ID : modelItem.session_id,
-                ApiParameterDefine.MESSAGE_ID : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
+                ApiParameterDefine.MESSAGE_ID : modelItem.message_id #TODO: 없는 필드, sessionid를 같이 추가한다.
             },
             
             ApiParameterDefine.MESSAGES: [
@@ -106,7 +106,7 @@ class RouterCustomHelper:
             
             ApiParameterDefine.META_DATA : {
                 ApiParameterDefine.SESSION_ID : modelItem.session_id,
-                ApiParameterDefine.MESSAGE_ID : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
+                ApiParameterDefine.MESSAGE_ID : modelItem.message_id #TODO: 없는 필드, sessionid를 같이 추가한다.
             },
             
         }

@@ -278,8 +278,9 @@ class Pipeline(PipelineBase):
         # message_id_req = metadata.get(ApiParameterDefine.MESSAGE_ID) or safe_get(body, "request", "id", default=None)
         # response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
         
-        message_id_req:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
         session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
+        
         response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
 
         #sessionid, api에서 바로 가져온다.        
@@ -337,8 +338,9 @@ class Pipeline(PipelineBase):
 
         doc = {
             "@timestamp": ts_isoz(),
-            "event": {"id": response_id or message_id_req, "type": "response"},
-            "request": {"id": message_id_req},
+            "event": {"id": response_id or message_id, "type": "response"},
+            "request": {"id": message_id},
+            
             "response": {
                 "id": response_id,
                 "text": resp_text_to_store,

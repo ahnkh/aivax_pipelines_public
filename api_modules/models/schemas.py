@@ -70,7 +70,8 @@ class VariantFilterForm(BaseModel):
     }'
     '''
     
-    filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter"] #차단 필터 리스트, 기본값 secret_filter
+    # filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter"] #차단 필터 리스트, 기본값 secret_filter
+    filter_list: Optional[List[str]] = ["input_filter", "secret_filter"] #테스트
     
     # prompt: str = "프롬프트를 입력해주세요" #
     prompt: str = Field(default="", description="입력 프롬프트")
@@ -151,6 +152,9 @@ class VariantFilterForm(BaseModel):
     attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
     
     # attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
+    
+    # 요청 및 응답간의 연결 키
+    message_id:str = Field(default="", description="message id")
     pass
 
 #outputfilter form 추가
@@ -163,6 +167,8 @@ class OutputFilterItem(BaseModel):
     ai_service : Optional[int] = Field(default=0, description="ai 서비스 타입 (GPT=0, CLAUDE=1, GEMINI=2,)")
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")   
+    
+    message_id:str = Field(default="", description="message id")
     pass    
     
 class AddPipelineForm(BaseModel):

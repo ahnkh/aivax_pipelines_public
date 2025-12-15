@@ -125,7 +125,8 @@ class Pipeline(PipelineBase):
         #     #body의 전달은, 사이드 이펙트가 우려되어 유지.
         #     return body
 
-        messages = body.get("messages") or []
+        # messages = body.get(ApiParameterDefine.MESSAGES) or []
+        messages = body.get(ApiParameterDefine.MESSAGES)
         
         last:dict = messages[-1]
         content = last.get("content")
@@ -267,14 +268,15 @@ class Pipeline(PipelineBase):
             # 우선 테스트.
             std_action = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
             
-            meta = body.get("metadata") or {}
+            # meta = body.get("metadata") or {}
+            metadata:dict = body.get(ApiParameterDefine.META_DATA)
                             
             # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
             # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            
             # ai_service_type = (__user__ or {}).get(ApiParameterDefine.AI_SERVICE) if isinstance(__user__, dict) else None
             
-            msg_id = meta.get("message_id")
-            sess_id = meta.get("session_id")
+            message_id = metadata.get(ApiParameterDefine.MESSAGE_ID)
+            session_id = metadata.get(ApiParameterDefine.SESSION_ID)
             
             #위험한 코드, 다른 형태로 향후 개발.
             # client_ip = __request__.client.host
@@ -291,8 +293,8 @@ class Pipeline(PipelineBase):
                 "content": content,
                 "message":msg,
                 
-                "request": {"id": msg_id},
-                "session": {"id": sess_id},
+                "request": {"id": message_id},
+                "session": {"id": session_id},
                 
                 "user": {"id": user_id, "email": user_email, "uuid" : uuid},
 
