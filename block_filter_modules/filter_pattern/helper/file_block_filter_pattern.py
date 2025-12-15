@@ -44,12 +44,6 @@ TODO: 파일명 체크, 절대 경로이면 그대로 사용하고, 상대경로
 - 1차 개발은 절대 경로로 지정한다.
 '''
 
-# 내부 상수 - MIME Type
-MIME_DOC = "application/msword"
-MIME_DOCX = "application/octet-stream"
-MIME_HWP = "application/x-hwp"
-MIME_PDF = "application/pdf"
-
 class FileBlockFilterPattern(FilterPatternBase):
     
     POLICY_FILTER_KEY = DBDefine.FILTER_KEY_BLOCK_FILE
@@ -243,7 +237,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         strMimeType:str = magic.from_file(strFileName, mime=True)
         
-        #TOOD: mimetype, 정의 필요
+        #file 유형, 파일 확장자가 아닌, mimetype으로 분기, dict
         
         #TODO: 기타 정보 수집
         #TODO: 리펙토링은 나중, 우선 만들어 보자.
@@ -252,6 +246,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         dictEachFileOutput[ApiParameterDefine.FILE_INFO] = {
             "mime_type" : strMimeType,
+            "file_ext" : FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN),
             "size" : stat.st_size,
             "hash" : hashlib.sha256(open(strFileName,'rb').read()).hexdigest()
         }
@@ -261,16 +256,16 @@ class FileBlockFilterPattern(FilterPatternBase):
         #TODO: size가 방대하여, 정규식을 사용할수 없는지 확인 필요. 1차는 미확인
         strContents:str = ""
         
-        if MIME_DOCX == strMimeType:
+        if FileDefine.MIME_DOCX == strMimeType:
         
             # 텍스트 추출, 테스트,word 만 테스트
             strContents = docx2txt.process(strFileName)
             
-        elif MIME_HWP == strMimeType:
+        elif FileDefine.MIME_HWP == strMimeType:
             pass
         
         else:
-            raise Exception (f"unkown file type {strMimeType}")
+            raise Exception (f"unsupported file type {strMimeType}")
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
         
@@ -384,6 +379,14 @@ class FileBlockFilterPattern(FilterPatternBase):
 
         #안걸렸으면, 다음 정규식
         return False
+    
+    # file 확장 타입, 분기
+    def __getFileExt(self, strMimeType:str) -> str:
+        
+        '''
+        '''
+        
+        return ""
     
     # # 파일을 읽는 로직 분리,mimetype에 따른 분기
     # # string 반환은, 감당하자. string을 저장하는건 메모리 부담이 크다.

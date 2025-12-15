@@ -79,7 +79,7 @@ class VariantFilterForm(BaseModel):
     # prompt:str = "API_key=sk-1234567-0000-abdcdef"
     
     #케이스2, 결과 = 차단 실패, 키 길이 문제, 15~20 으로 유연하게 정규식 변경 필요    
-    prompt:str = "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"
+    # prompt:str = "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"
     
     #케이스4, 결과 = 차단 실패
 #     prompt:str = '''
@@ -133,7 +133,7 @@ class VariantFilterForm(BaseModel):
     
     # 일단 나머지는 유지.    
     # etc_flag: dict = Field(default=None, description="부가옵션")    
-    etc_flag: Optional[dict] = Field(default={}, description="부가옵션")
+    # etc_flag: Optional[dict] = Field(default={}, description="부가옵션")
     # user: Optional[dict] = None
     # model_config = ConfigDict(extra="allow") 
     
@@ -148,10 +148,22 @@ class VariantFilterForm(BaseModel):
     
     # file 분석 기능 추가, 옵션, 다수의 리스트를 전달
     # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.    
-    # attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
+    attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
     
-    attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
+    # attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
     pass
+
+#outputfilter form 추가
+class OutputFilterItem(BaseModel):
+    
+    llm_output: str = Field(default="", description="llm응답 결과") 
+    
+    user_id : Optional[str] = Field(default="", description="사용자ID")
+    email : Optional[str] = Field(default="", description="email")
+    ai_service : Optional[int] = Field(default=0, description="ai 서비스 타입 (GPT=0, CLAUDE=1, GEMINI=2,)")
+    client_host : Optional[str] = Field(default="", description="사용자 host, ip")
+    session_id : Optional[str] = Field(default="", description="session id")   
+    pass    
     
 class AddPipelineForm(BaseModel):
     url: str
@@ -167,3 +179,4 @@ class FilterRuleTestItem(BaseModel):
     rule:str = Field(default="", description="정책 Rule")
     action:str = Field(default="", description="action (block/masking)")    
     pass
+

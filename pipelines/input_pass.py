@@ -10,6 +10,8 @@ from lib_include import *
 
 from type_hint import *
 
+from block_filter_modules.etc_utils.filter_custom_utils import FilterCustomUtils
+
 # from datetime import datetime
 
 '''
@@ -36,8 +38,11 @@ class Pipeline(PipelineBase):
             default_channel: str = "web"
             default_user_role: Optional[str] = None
 
-        self.Valves = Valves
+        # self.Valves = Valves
         self.valves = Valves()
+        
+        # 공용 helper
+        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
 
     # 프레임워크 훅
     async def on_startup(self):
@@ -66,7 +71,8 @@ class Pipeline(PipelineBase):
         
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
 
-        meta: Dict[str, Any] = body.get("metadata") or {}
+        # meta: Dict[str, Any] = body.get("metadata") or {}
+        metadata:dict = body.get(ApiParameterDefine.META_DATA)
         
         # openwebui가 아니면 불필요 기능, 제거
         # stage = meta.get("stage") or meta.get("hook") or body.get("stage")
@@ -74,9 +80,10 @@ class Pipeline(PipelineBase):
         #     # return body
         #     raise Exception(f"invalid stage, id = {self.id}, stage = {stage}")
 
-        msgs: List[Dict[str, Any]] = body.get("messages") or []
+        msgs: List[Dict[str, Any]] = body.get(ApiParameterDefine.MESSAGES, [])
         query_text = None
         last_role = None
+        
         if isinstance(msgs, list) and msgs:
             for m in reversed(msgs):
                 if isinstance(m, dict) and m.get("role") == "user":
@@ -90,8 +97,8 @@ class Pipeline(PipelineBase):
             # return body
 
         # 메타에서 id, 세션, ip, 채널 등 추출(없으면 None/기본값)
-        message_id = meta.get("message_id")
-        session_id = meta.get("session_id")
+        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
         
         #TODO: 불합리한 로직, 개선 필요.
         # src_ip = (
@@ -100,31 +107,35 @@ class Pipeline(PipelineBase):
         #     or meta.get("ip")
         #     or safe_get(meta, "request", "ip", default=None)
         # )
-        channel = meta.get("channel") or getattr(self.valves, "default_channel", "web")
+        #TODO: channel 정보 미수집, getattr은 불합리
+        # channel = metadata.get("channel") or getattr(self.valves, "default_channel", "web")
+        channel:str = self.valves.default_channel
         
-        user_id:str = ""
-        user_role:str = getattr(self.valves, "default_user_role", None)
+        # user_role:str = getattr(self.valves, "default_user_role", None)
+        user_role:str = self.valves.default_user_role
+        
+        user_id:str = ""        
         user_email:str = ""
         ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
-        client_host:str = ""
         uuid:str = ""
+        client_host:str = ""
         
         #__user__ 거슬린다.
-        dictUserInfo:dict = __user__
+        # dictUserInfo:dict = __user__
         
-        if None != dictUserInfo:
+        # if None != dictUserInfo:
             
-            user_id = dictUserInfo.get(ApiParameterDefine.NAME, "") #TODO: 이름이 현재는 없다.
-            user_role = dictUserInfo.get(ApiParameterDefine.ROLE, "") #TODO: 2단계만 수집 가능
-            user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "") #TODO: 2단계만 수집 가능
+        #     user_id = dictUserInfo.get(ApiParameterDefine.NAME, "") #TODO: 이름이 현재는 없다.
+        #     user_role = dictUserInfo.get(ApiParameterDefine.ROLE, "") #TODO: 2단계만 수집 가능
+        #     user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "") #TODO: 2단계만 수집 가능
             
-            client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
+        #     client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
             
-            ai_service_type = __user__.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
-            uuid = __user__.get(ApiParameterDefine.UUID, "")
+        #     ai_service_type = __user__.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+        #     uuid = __user__.get(ApiParameterDefine.UUID, "")
             
         #ai service 명, TOOD: 이 기능이 Filter마다 반복, 공통화가 필요하다.
-        strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "") #혹여 아예 엉뚱한 값이 들어오면, 공백으로 저장
+        # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "") #혹여 아예 엉뚱한 값이 들어오면, 공백으로 저장
 
         # user_id = (__user__ or {}).get("name") if isinstance(__user__, dict) else None
         # user_role = (__user__ or {}).get("role") if isinstance(__user__, dict) else getattr(self.valves, "default_user_role", None)
@@ -133,6 +144,8 @@ class Pipeline(PipelineBase):
         # 위험한 코드, 향후 다른 형태로 개발
         # client_ip = __request__.client.host
         # client_ip = ""
+        
+        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
 
         # 저장 문서        
         dictOpensearchDoc = {
@@ -147,18 +160,9 @@ class Pipeline(PipelineBase):
             "channel": channel,
             
             #25.12.02 ai 서비스 유형 추가
-            "ai_service" : strAIServiceName,
+            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             "query":   {"text": query_text},
         }
-
-        # print(os_doc)
-
-        # (C) 아이템포턴트 저장: 동일 message_id는 한 번만
-        # try:
-        #     doc_id = f"{message_id}:query" if message_id else None
-        #     self._index_opensearch(os_doc, doc_id=doc_id)
-        # except Exception as e:
-        #     logger.warning("[inlet->OS] index error: %r", e)
         
         self.AddLogData(LOG_INDEX_DEFINE.KEY_INPUT_FILTER, dictOpensearchDoc)
 

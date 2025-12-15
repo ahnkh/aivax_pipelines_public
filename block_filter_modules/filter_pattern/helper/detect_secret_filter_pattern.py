@@ -148,73 +148,6 @@ class DetectSecretFilterPattern (FilterPatternBase):
         이후 로직은 우선 기존과 동일하게 유지한다.
         '''
 
-        '''
-        dictPolicyRuleScopeMap:dict = filterPolicyGroupData.GetPolicyRule(strFilterKey)
-
-        #N개의 scope 존재, 복사가 되어야 한다.
-
-        #정상적인 수신이라는 가정 => 정상이 아니라도, None일수 있다.
-        # data:list = dictFilterPolicy.get("data")
-
-        # #기존 모듈, 재활용
-        # data:list = lstPolicyRule
-
-        # if None == data:
-        #     LOG().error("invalid db data, no data, skip")
-        #     return ERR_FAIL
-
-        # LOG().debug(f"notify update db pattern policy in detect secret patternm, rule count = {len(data)}")
-
-        #TEST 디버깅, 필요할경우 정책 업데이트 (향후 제거)
-        # for dictPolicy in data:
-
-        #     rule:str = dictPolicy.get("rule")
-        #     name:str = dictPolicy.get("name")
-        #     action:str = dictPolicy.get("action")
-
-        #     #TODO: 2개의 옵션이 필요 => dictionary쪽이 나을수 있겠다. tuple X
-        #     regex_flag:int = dictPolicy.get("regex_flag")
-        #     regex_group:str = dictPolicy.get("regex_group")
-
-        #     LOG().debug(f"rule received, rule = {rule}, name = {name}, action = {action}")
-
-        #TODO: 정책에 대한 비교, 이전 정책과 현재 정책이 같으면, skip한다.
-        # bFilterChanged:bool = self.IsFilterPolicyChanged(lstPolicyRule)
-        
-        lstScopeRange = [
-            DBDefine.POLICY_FILTER_SCOPE_USER,
-            DBDefine.POLICY_FILTER_SCOPE_SERVICE,
-            DBDefine.POLICY_FILTER_SCOPE_GROUP,
-            DBDefine.POLICY_FILTER_SCOPE_DEFAULT
-        ]
-        
-        bFilterChanged:bool = self.IsScopeBasedFilterPolicyChanged(dictPolicyRuleScopeMap, lstScopeRange)
-
-        #TODO: 분기문 안에서 처리하는게 직관적으로 보인다.
-        # if False == bFilterChanged:
-        if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
-
-            #정책 카운트, data 항목 이하. TOOD: 모든 항목을 지우는 케이스도 고려할것.
-            # data:dict = dictFilterPolicy.get("data", {})
-            
-            nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
-
-            LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
-
-            #원본 정책, 저장한다.
-            self.UpdateBaseDBFilterPolicy(dictPolicyRuleScopeMap)
-
-            #TODO: 패턴에 대한 반영 기능은 필요하다. 실제 사용 변수에 대한 업데이트, 개별 패턴으로 반영이 필요하다.
-            #TODO: rule compile 이슈, rule과 compile을 따로 가져갈지에 대한 검토
-            # self.__updateRegexPatternFromDB(data)
-            # self.__updateRegexPatternScopeRangeFromDB(dictPolicyRuleScopeMap)            
-            self.__regexPolicyGenerateHelper.UpdateRegexPatternScopeRangeFromDB(dictPolicyRuleScopeMap)
-            
-            # return ERR_OK
-            #TODO: 실패시의 예외, 반환에 대한 주의
-            
-        '''
-        
         strFilterKey:str = DetectSecretFilterPattern.POLICY_FILTER_KEY
         
         #TODO: 이 로직은 유지
@@ -379,9 +312,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         for dictDBPattern in listDBRegexPattern:
             self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
-        
-        #제일 마지막이다.
-        # return (spans, counts, dictDetectRule)
+                
         return ERR_OK
         
 
@@ -402,7 +333,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
 
-        #group 여부인지, 아닌지에 따른 분기, 여기는, 우선 나누지 않는다.
+        #group 여부인지, 아닌지에 따른 분기, 여기는, 우선 나누지 않는다. (UI 개발 필요)
 
         #TODO: 1차 예외처리
         if None == regex_pattern:

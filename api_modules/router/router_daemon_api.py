@@ -12,7 +12,7 @@ from type_hint import *
 #TODO: 매번 호출해야 하는 문제. 이건 static으로 하자...
 # from api_modules.helper.router_custom_helper import RouterCustomHelper
 
-from api_modules.router.api_router_impl_command import ApiRouterImplCommand
+from api_modules.router.sub_modules.api_router_impl_command import ApiRouterImplCommand
 
 app = ApiRouterEx(
     # prefix="/",
@@ -33,9 +33,10 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     
     - llm_filter : AI 필터 (신규 llm/slm 필터로 변경)
     - input_filter : opensearch 저장 (프롬프트)
-    - output_filter : opensearch 저장 (LLM 응답)    
+    
     - file_block_filter : file에 대한 필터 기능 제공
     
+    - <del>output_filter : opensearch 저장 (LLM 응답, 별도 API로 개발)</del>
     - <del>load_detect_secrets : AI 차단 필터 (불완전 버전, 검증 필요)</del>
     - <del>inlet_raw_logger : 테스트용, 미사용</del>
     - <del>regex_filter : 정규표현식 기반 필터 (정규식 불완전, 탐지안되는 기능)</del>
@@ -64,12 +65,20 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
         -H 'Content-Type: application/json'
         -d '{
         "filter_list": [
-            "secret_filter"
+            "secret_filter",
+            "input_filter",
+            "file_block_filter"
         ],
         "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
-        "encoding": false,
-        "etc_flag": {            
-        }
+        "user_id": "ghahn",
+        "email": "ghahn@wins21.co.kr",
+        "ai_service":1,
+        "client_host":"127.0.0.1",
+        "session_id":"",
+        "attach_files": [
+            "/home1/aivax/data_resource/attach_file/sample.docx"
+        ]
+        
     }'    
     ```
     
@@ -78,6 +87,15 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     '''
     
     return await doRouterFunction("doFilterApiRouter", modelItem, request)
+
+#output filter에 대한 api 제공
+@app.post("/v1/filter/output_filter")
+async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
+    
+    '''
+    '''
+        
+    return await doRouterFunction("doOutputApiRouter", modelItem, request)
     
     
 #정책 추가 인터페이스, 정책에 대한 테스트와 응답 결과만 반환한다.
@@ -236,6 +254,14 @@ async def doFilterApiRouter(modelItem: VariantFilterForm, request: Request) -> d
     mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
     
     return await command.doFilterApiRouter(mainApp, modelItem, request)
+
+#output 응답 전달 본체
+async def doOutputApiRouter(modelItem: OutputFilterItem, request: Request) -> dict:
+    
+    #mainApp 연결은 필요할 것으로 예상
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
+    
+    return await command.doOutputApiRouter(mainApp, modelItem, request)
     
 
 #로그 저장 기능, 여기까지만 별도로 작성하고, 신규 API가 필요하면 정규화 + 리펙토링

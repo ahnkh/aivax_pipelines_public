@@ -45,7 +45,7 @@ class RouterCustomHelper:
         
         return strPromptMessage
     
-    #inlet으로 filter함수를 통일하고, body 요청 메시지를 생성한다.    
+    #inlet으로 filter함수를 통일하고, body 요청 메시지를 생성한다. 
     def GenerateInletBodyParameter(self, modelItem: VariantFilterForm) -> dict:
         '''
         #다음의 구조이다.
@@ -68,26 +68,51 @@ class RouterCustomHelper:
         
         strPromptMessage:str = self.ConvertPromptMessage(modelItem)
         
+        #TODO: file 분석시 다시 확인, prompt가 없을 수 있다.
         if None == strPromptMessage or 0 == len(strPromptMessage):
             strErrorMessage:str = f"invalid prompt, no data"            
             self.GenerateHttpException(ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR, ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR_MSG, strErrorMessage, apiResponseHandler)            
             return None
                 
         dictBody = {
-            "messages": [
-                {"role":"user", "content":strPromptMessage}
-            ],
             
-            "metadata" : {
+            ApiParameterDefine.META_DATA : {
                 ApiParameterDefine.SESSION_ID : modelItem.session_id,
                 ApiParameterDefine.MESSAGE_ID : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
             },
+            
+            ApiParameterDefine.MESSAGES: [
+                {"role":"user", "content":strPromptMessage}
+            ],
             
             #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.
             ApiParameterDefine.ATTACH_FILE : modelItem.attach_files
         }
         
         return dictBody
+    
+    #output parameter, 거의 동일하다.
+    def GenerateOutletBodyParameter(self, modelItem: OutputFilterItem) -> dict:
+        '''
+        TOOD: inline과 일부 코드 중복, 향후 리펙토링 (또는 유지)
+        '''
+        
+        strOutput:str = modelItem.llm_output
+        
+        dictBody = {
+            ApiParameterDefine.MESSAGES: [
+                {"role":"user", "content":strOutput}
+            ],
+            
+            ApiParameterDefine.META_DATA : {
+                ApiParameterDefine.SESSION_ID : modelItem.session_id,
+                ApiParameterDefine.MESSAGE_ID : modelItem.session_id #TODO: 없는 필드, sessionid를 같이 추가한다.
+            },
+            
+        }
+        
+        return dictBody
+    
         
     #응답 데이터 가공, 판정 기능의 개발, 일단 하나의 모듈에서 개발, 향후 분리한다.\    
     def GenerateOutputFinalDecision(self, dictFinalResult:dict, dictEachFilterOutput:dict):

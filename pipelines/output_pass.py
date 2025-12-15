@@ -56,10 +56,14 @@ def _hash_text(s: Optional[str]) -> Optional[str]:
 # 세션/채널 복구 헬퍼 (★추가)
 # ---------------------------
 def _fallback_session(user: Optional[dict], channel: Optional[str]) -> str:
-    """유저/채널/날짜 기반 의사 세션ID 생성"""
+    '''
+    유저/채널/날짜 기반 의사 세션ID 생성
+    '''
+    
     uid = (user or {}).get("id") or "anon"
     ch = channel or "web"
-    day = datetime.now(timezone.utc).strftime("%Y%m%d")
+    
+    day = datetime.datetime.now(timezone.utc).strftime("%Y%m%d")
     seed = f"{uid}:{ch}:{day}".encode("utf-8")
     return "ps-" + hashlib.sha1(seed).hexdigest()[:16]
 
@@ -127,14 +131,14 @@ class Pipeline(PipelineBase):
             priority: int = 0
             enabled: bool = True
 
-            # OpenSearch 설정
-            os_enabled: bool = True
-            os_url: str = "https://vax-opensearch:9200"
-            os_index: str = "output_filter"
-            os_user: Optional[str] = "admin"
-            os_pass: Optional[str] = "Sniper123!@#"
-            os_insecure: bool = True
-            os_timeout: int = 3
+            # # OpenSearch 설정
+            # os_enabled: bool = True
+            # os_url: str = "https://vax-opensearch:9200"
+            # os_index: str = "output_filter"
+            # os_user: Optional[str] = "admin"
+            # os_pass: Optional[str] = "Sniper123!@#"
+            # os_insecure: bool = True
+            # os_timeout: int = 3
 
             # 저장 옵션
             store_response_text: bool = True          # 응답 전문 저장 여부
@@ -143,7 +147,7 @@ class Pipeline(PipelineBase):
             include_filters_meta: bool = True         # body["_filters"] 저장
             include_usage: bool = True                # 토큰/지연 등 사용량 저장
 
-        self.Valves = Valves
+        # self.Valves = Valves
         self.valves = Valves()
 
     # 프레임워크 훅
@@ -157,114 +161,135 @@ class Pipeline(PipelineBase):
         pass
 
     # ---------------------------
-    # OpenSearch 인덱싱
-    # ---------------------------
-    def _index_opensearch(self, doc: Dict[str, Any]) -> bool:
-        v = self.valves
-        if not v.os_enabled:
-            return False
-
-        url = f"{v.os_url.rstrip('/')}/{v.os_index}/_doc"
-        payload = json.dumps(doc, ensure_ascii=False).encode("utf-8")
-
-        # 1) requests 우선
-        try:
-            import requests
-            auth = (v.os_user, v.os_pass) if v.os_user else None
-            verify = not v.os_insecure
-            r = requests.post(
-                url,
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                auth=auth,
-                verify=verify,
-                timeout=v.os_timeout,
-            )
-            ok = r.status_code in (200, 201)
-            if not ok:
-                logger.warning("[response->OS] status=%s body=%s", r.status_code, r.text[:400])
-            return ok
-        except Exception as e:
-            logger.debug("[response->OS] requests failed: %r -> fallback to urllib", e)
-
-        # 2) urllib 폴백
-        try:
-            from urllib.request import Request, urlopen
-            headers = {"Content-Type": "application/json"}
-            if v.os_user:
-                token = base64.b64encode(f"{v.os_user}:{v.os_pass or ''}".encode()).decode()
-                headers["Authorization"] = f"Basic {token}"
-
-            req = Request(url, data=payload, headers=headers, method="POST")
-            ctx = None
-            if url.startswith("https://") and v.os_insecure:
-                ctx = ssl._create_unverified_context()
-
-            with urlopen(req, timeout=v.os_timeout, context=ctx) as resp:
-                status = getattr(resp, "status", 200)
-                ok = status in (200, 201)
-                if not ok:
-                    body = resp.read(512).decode("utf-8", "ignore")
-                    logger.warning("[response->OS] urllib bad status=%s body=%s", status, body)
-                return ok
-        except Exception as e:
-            logger.warning("[response->OS] urllib failed: %r", e)
-            return False
-
-    # ---------------------------
     # 어시스턴트 텍스트 추출
     # ---------------------------
     def _extract_assistant_text(self, body: Dict[str, Any]) -> Optional[str]:
         # 1) messages[*].role in ("assistant", "model")
-        msgs = body.get("messages")
-        if isinstance(msgs, list) and msgs:
-            for m in reversed(msgs):
-                role = (m or {}).get("role")
-                if role in ("assistant", "model"):
-                    txt = (m or {}).get("content")
-                    if isinstance(txt, str) and txt:
-                        return txt
+        
+        # msgs = body.get("messages")
+        lstMessage:list = body.get(ApiParameterDefine.MESSAGES)
+        
+        strContent:str = ""
+        
+        #message, 처음 메시지.
+        if 0 < len(lstMessage):
+            
+            strContent = lstMessage[0].get("content")
+            
+        return strContent
+        
+        
+        #TODO: 단순화, 들어가지 않는 데이터는 버린다.
+        # if isinstance(msgs, list) and msgs:
+            
+        #     for m in reversed(msgs):
+        #         role = (m or {}).get("role")
+                
+        #         if role in ("assistant", "model"):
+        #             txt = (m or {}).get("content")
+        #             if isinstance(txt, str) and txt:
+        #                 return txt
+        
+        # # 2) choices[0].message.content (OpenAI 호환)
+        # choices = body.get("choices")
+        # if isinstance(choices, list) and choices:
+        #     ch0 = choices[0] or {}
+        #     msg = ch0.get("message") or {}
+        #     if isinstance(msg, dict):
+        #         txt = msg.get("content")
+        #         if isinstance(txt, str) and txt:
+        #             return txt
+        #     txt = ch0.get("text")
+        #     if isinstance(txt, str) and txt:
+        #         return txt
 
-        # 2) choices[0].message.content (OpenAI 호환)
-        choices = body.get("choices")
-        if isinstance(choices, list) and choices:
-            ch0 = choices[0] or {}
-            msg = ch0.get("message") or {}
-            if isinstance(msg, dict):
-                txt = msg.get("content")
-                if isinstance(txt, str) and txt:
-                    return txt
-            txt = ch0.get("text")
-            if isinstance(txt, str) and txt:
-                return txt
+        # # 3) 기타 관용 키
+        # for key in ("response", "output", "result", "assistant"):
+        #     val = body.get(key)
+        #     if isinstance(val, str) and val:
+        #         return val
+        #     if isinstance(val, dict):
+        #         txt = val.get("content")
+        #         if isinstance(txt, str) and txt:
+        #             return txt
+        # return None
 
-        # 3) 기타 관용 키
-        for key in ("response", "output", "result", "assistant"):
-            val = body.get(key)
-            if isinstance(val, str) and val:
-                return val
-            if isinstance(val, dict):
-                txt = val.get("content")
-                if isinstance(txt, str) and txt:
-                    return txt
-        return None
+    # ---------------------------
+    # outlet 훅
+    # ---------------------------
+    # async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None) -> Dict[str, Any]:
+    async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None, dictOuputResponse:dict = None) : #-> Dict[str, Any]:
+        
+        '''
+        '''
+        
+        # 기능 제거
+        # if not self.valves.enabled:
+        #     return body
+        
+        dictUser:dict = user
+        
+        #TODO: 기능 식별이 안되어, 제거, session id는 api의 응답으로 가져온다.
+        # sid, _ = _get_session_id(body, dictUser)
+            
+        # meta = body.get("metadata") or {}
+        
+        # if "__sid" not in meta:
+        #     meta["__sid"] = sid
+        
+        # body["metadata"] = meta
 
+        doc = self.__makeOpensearchDocument(body, dictUser)
+        #ok = self._index_opensearch(doc)
+        
+        #TODO: 좀더 개선후 추가
+        self.AddLogData(LOG_INDEX_DEFINE.KEY_OUTPUT_FILTER, doc)
+        
+        
+        # try:
+            
+            
+        #     #if not ok:
+        #     #    logger.warning("[response_opensearch] OpenSearch index failed")
+        # except Exception as e:
+        #     LOG().error(traceback.format_exc())
+        # return body
+        
+        # 2단계가 필요한 시점에, body 전달 방식 재검토.
+        return ERR_OK
+    
+    
+    ############################################################## private
+    
     # ---------------------------
     # 저장 문서 구성
     # ---------------------------
-    def _make_doc(self, body: Dict[str, Any], user: Optional[dict]) -> Dict[str, Any]:
+    def __makeOpensearchDocument(self, body: Dict[str, Any], user: Optional[dict]) -> Dict[str, Any]:
+        
+        '''
+        '''
         v = self.valves
 
         # 메타/기본 정보
-        meta: Dict[str, Any] = body.get("metadata") or {}
+        # meta: Dict[str, Any] = body.get("metadata") or {}
+        metadata: Dict[str, Any] = body.get(ApiParameterDefine.META_DATA) or {}
         
-        message_id_req = meta.get("message_id") or safe_get(body, "request", "id", default=None)
-        response_id = meta.get("response_id") or safe_get(body, "response", "id", default=None)
+        #TODO: 이값, 정리 필요
+        # message_id_req = metadata.get(ApiParameterDefine.MESSAGE_ID) or safe_get(body, "request", "id", default=None)
+        # response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
+        
+        message_id_req:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
+        response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
 
-        session_id, is_fallback = _get_session_id(body, user)
+        #sessionid, api에서 바로 가져온다.        
+        # session_id, is_fallback = _get_session_id(body, user)
+        # session_id, is_fallback = _get_session_id(body, user)
+        is_fallback = False
 
         # 채널 복구 (없으면 web)
-        channel = _get_channel(body)
+        # channel = _get_channel(body)
+        channel = "web" #TODO: 없는 데이터, web으로 통일
         
         user_id:str = ""
         user_role:str = ""
@@ -275,15 +300,15 @@ class Pipeline(PipelineBase):
             user_id = user.get(ApiParameterDefine.NAME, "")
             user_role = user.get(ApiParameterDefine.ROLE, "")
             user_email = user.get(ApiParameterDefine.EMAIL, "")
-            
+            # pass
 
         # user_id = (user or {}).get("name") if isinstance(user, dict) else None
         # user_role = (user or {}).get("role") if isinstance(user, dict) else None
         # user_email = (user or {}).get("email") if isinstance(user, dict) else None
 
-        # 모델/사용량/지연
-        model_name = safe_get(body, "model", default=None) or safe_get(meta, "model", default=None)
-        latency_ms = safe_get(body, "latency_ms", default=None) or safe_get(meta, "latency_ms", default=None)
+        # 모델/사용량/지연 => 이 값은 무시.
+        model_name = safe_get(body, "model", default=None) or safe_get(metadata, "model", default=None)
+        latency_ms = safe_get(body, "latency_ms", default=None) or safe_get(metadata, "latency_ms", default=None)
         
         usage = body.get("usage") or {}
         prompt_tokens = safe_get(usage, "prompt_tokens", default=None)
@@ -336,33 +361,62 @@ class Pipeline(PipelineBase):
             "filters": filters_meta,
         }
         return doc
+    
+    
+    
+    ########################################################### 지울 코드
+    
+    # # ---------------------------
+    # # OpenSearch 인덱싱
+    # # ---------------------------
+    # def _index_opensearch(self, doc: Dict[str, Any]) -> bool:
+    #     v = self.valves
+    #     if not v.os_enabled:
+    #         return False
 
-    # ---------------------------
-    # outlet 훅
-    # ---------------------------
-    async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None) -> Dict[str, Any]:
-        
-        '''
-        '''
-        
-        if not self.valves.enabled:
-            return body
-        
-        try:
-            sid, _ = _get_session_id(body, user)
-            meta = body.get("metadata") or {}
-            if "__sid" not in meta:
-                meta["__sid"] = sid
-            body["metadata"] = meta
+    #     url = f"{v.os_url.rstrip('/')}/{v.os_index}/_doc"
+    #     payload = json.dumps(doc, ensure_ascii=False).encode("utf-8")
 
-            doc = self._make_doc(body, user)
-            #ok = self._index_opensearch(doc)
-            
-            #TODO: 좀더 개선후 추가
-            self.AddLogData(LOG_INDEX_DEFINE.KEY_OUTPUT_FILTER, doc)
-            
-            #if not ok:
-            #    logger.warning("[response_opensearch] OpenSearch index failed")
-        except Exception as e:
-            LOG().error(traceback.format_exc())
-        return body
+    #     # 1) requests 우선
+    #     try:
+    #         import requests
+    #         auth = (v.os_user, v.os_pass) if v.os_user else None
+    #         verify = not v.os_insecure
+    #         r = requests.post(
+    #             url,
+    #             data=payload,
+    #             headers={"Content-Type": "application/json"},
+    #             auth=auth,
+    #             verify=verify,
+    #             timeout=v.os_timeout,
+    #         )
+    #         ok = r.status_code in (200, 201)
+    #         if not ok:
+    #             logger.warning("[response->OS] status=%s body=%s", r.status_code, r.text[:400])
+    #         return ok
+    #     except Exception as e:
+    #         logger.debug("[response->OS] requests failed: %r -> fallback to urllib", e)
+
+    #     # 2) urllib 폴백
+    #     try:
+    #         from urllib.request import Request, urlopen
+    #         headers = {"Content-Type": "application/json"}
+    #         if v.os_user:
+    #             token = base64.b64encode(f"{v.os_user}:{v.os_pass or ''}".encode()).decode()
+    #             headers["Authorization"] = f"Basic {token}"
+
+    #         req = Request(url, data=payload, headers=headers, method="POST")
+    #         ctx = None
+    #         if url.startswith("https://") and v.os_insecure:
+    #             ctx = ssl._create_unverified_context()
+
+    #         with urlopen(req, timeout=v.os_timeout, context=ctx) as resp:
+    #             status = getattr(resp, "status", 200)
+    #             ok = status in (200, 201)
+    #             if not ok:
+    #                 body = resp.read(512).decode("utf-8", "ignore")
+    #                 logger.warning("[response->OS] urllib bad status=%s body=%s", status, body)
+    #             return ok
+    #     except Exception as e:
+    #         logger.warning("[response->OS] urllib failed: %r", e)
+    #         return False

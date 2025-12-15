@@ -1,6 +1,4 @@
 
-
-
 from lib_include import *
 
 from type_hint import *
@@ -8,22 +6,17 @@ from type_hint import *
 from api_modules.helper.router_custom_helper import RouterCustomHelper
 
 '''
-fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
-기능만 모듈화, async는 구조상 어쩔수 없이 유지.
+pipeline을 통한 filter 요청 기능 관리
+모듈 분리
 '''
 
-class ApiRouterImplCommand:
+class FilterPipelineCommand:
     
     def __init__(self):
-        
-        #helper, static 최소화
-        self.__routerCustomHelper = RouterCustomHelper()
         pass
     
     
-    #api, FastApi Router - 재사용
-    #TODO: 비동기 코드, fast api에서는 비동기로 호출하고, ipc등 동기 상황은 ayncio로 호출 필요
-    async def doFilterApiRouter(self, _mainApp:Any, modelItem: VariantFilterForm, request: Request = None) -> dict:
+    async def doFilterApiRouter(self, _mainApp:Any, modelItem: VariantFilterForm, request: Request, routerCustomHelper:RouterCustomHelper) -> dict:
     
         '''
         '''
@@ -48,25 +41,20 @@ class ApiRouterImplCommand:
         
         #가상의 pipelineid를 가져온다고 가정 => pipeline은 유지하고, 안의 로직을 모듈화 하는 방향으로 접근 + 코드 리펙토링
         
-        #TODO: 기본 Output : ApiResponseHandler를 사용하는 방안.
-        #TODO: api 응답시, 차단 메시지, masked메시지, 이런 값을 전달하는 방안의 검토
-        #차단 메시지와, API 포맷의 메시지를 전달하는 방안으로 고려한다.
-        #http 헤더도 필요하며, 데이터의 크기문제로 allow 시점에는 전달하지 않는다.
-        #helper 모듈의 개발을 검토한다.
-            
         apiResponseHandler:ApiResponseHandlerEX = ApiResponseHandlerEX()
         
         # 기본상태코드, 성공으로 할당.
         apiResponseHandler.attachSuccessCode()
         apiResponseHandler.attachApiCommandCode("pipeline multiple filter")
         
-        #사용자 프롬프트, 프롬프트는 필수로 잡고, 나머지는 부가정보로 전달한다.
-        # strPromptMessage:str = modelItem.prompt    
-        # strPromptMessage:str = RouterCustomHelper.ConvertPromptMessage(modelItem)
+        #사용자 프롬프트, 프롬프트는 필수로 잡고, 나머지는 부가정보로 전달한다.       
+        dictBodyParameter:dict = routerCustomHelper.GenerateInletBodyParameter(modelItem)
         
-        dictBodyParameter:dict = self.__routerCustomHelper.GenerateInletBodyParameter(modelItem)
+        #TODO: 사용자 정보 생성기능 보강
+        # file등 사용자 정보가 수집되지 않을때, email, service가 없을때는 세션id 정보를 통해서 과거 데이터를 수집하도록 개선.
+        #조건, 분기 필요, session_id는 body.metadata로 전달된다.
+        strSessionID:str = modelItem.session_id
         
-        #이건 어쩔수 없다. 매 요청마다 사용자 키를 생성, 이메일과 서비스 조합
         strUserKey:str = f"{modelItem.email}_{modelItem.ai_service}"
         
         #TODO: uuid는 생성해야 한다. userKey로 관리된다. 자료 구조 필요, 계정관리자에서 관리해서, mainApp를 통해서 공유 받자.
@@ -77,7 +65,7 @@ class ApiRouterImplCommand:
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service,
-            ApiParameterDefine.CLIENT_HOST : modelItem.client_host            
+            ApiParameterDefine.CLIENT_HOST : modelItem.client_host,            
         }
         
         dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
@@ -101,7 +89,7 @@ class ApiRouterImplCommand:
             if None == pipeline:
                 #TODO: 에외처리로 가는 방향, raise 처리 공통화는 2차 리펙토링때 개선            
                 strErrorMessage:str = f"invalid pipeline, not exist pipeline, id = {strPipelineFilterName}"            
-                self.__routerCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
+                routerCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
                 continue #TODO: 호출될수 없는 구문
                     
             #예외처리, 다시 작성 필요 => 더 적절항 방법 존재.
@@ -152,7 +140,7 @@ class ApiRouterImplCommand:
         apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)    
             
         #Filer별 요청후, 마지막에 취합
-        self.__routerCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
+        routerCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
         
         #개별 pipeline 결과
         apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
@@ -164,5 +152,3 @@ class ApiRouterImplCommand:
 
         return apiResponseHandler.outResponse()
         # return dictApiOutResponse
-    
-    

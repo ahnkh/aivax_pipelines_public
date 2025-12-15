@@ -7,6 +7,8 @@ from type_hint import *
 from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
 from block_filter_modules.filter_pattern.helper.file_block_filter_pattern import FileBlockFilterPattern
 
+from block_filter_modules.etc_utils.filter_custom_utils import FilterCustomUtils
+
 '''
 file 분석 filter, pipeline 신규 추가
 '''
@@ -26,6 +28,9 @@ class Pipeline(PipelineBase):
         self.name = "file_block_filter"
         
         #TODO: values는 필요하다고 판단되면 추가, 우선 추가하지 않는다.
+        
+        # 공용 helper
+        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
         
         pass
     
@@ -63,6 +68,15 @@ class Pipeline(PipelineBase):
         # 응답 데이터 처리, 우선 개발후 정리
         strAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
         
+        #TODO: 약간의 중복코드, 일단 그대로 사용 (향후 tuple 정도로 정리)
+        #사용자 정보의 수집        
+        user_id:str = ""
+        user_email:str = ""
+        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
+        uuid:str = ""
+        client_host:str = ""
+        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
+        
         # 응답 결과의 전달
         # 차단일때의 응답 정리, file 타입은 우선 차단 메시지를 만들지 않는다. (향후 공통화 + UI 설정 필요)
         if PipelineFilterDefine.ACTION_BLOCK == strAction:
@@ -87,12 +101,15 @@ class Pipeline(PipelineBase):
             "request": {"id": message_id},
             "session": {"id": session_id},
             
+            "user": {"id": user_id, "email": user_email, "uuid" : uuid},
+            
             "stage":   PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             
             # 일단 이 값은 유지, input, output 점검 시점에 다시 정리
             "should_block": (strAction == "block"),
             
             "mode": strAction,
+            "src":     {"ip": client_host},
             
             #regex pattern에 맞춰서.. => 각 파일별 정책, 파일 별로 추가한다.
             # "policy_id" : strPolicyID,
@@ -104,14 +121,6 @@ class Pipeline(PipelineBase):
         dictOpensearchDocument.update(dictOuputResponse)
         
         self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
-        
-        #TODO: 여기 다시 정리
-        # dictOuputResponse[]
-        
-        #TODO: 컨텐츠, 다시 고려
-        
-        
-        # 저장 => 별도 file_filter가 무난하기는 하다.
         
         return ERR_OK
     

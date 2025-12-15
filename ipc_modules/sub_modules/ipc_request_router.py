@@ -7,7 +7,7 @@ from lib_include import *
 from type_hint import *
 
 
-from api_modules.router.api_router_impl_command import ApiRouterImplCommand
+from api_modules.router.sub_modules.api_router_impl_command import ApiRouterImplCommand
 
 
 #이 시점에는 MainApp 참조

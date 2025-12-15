@@ -12,6 +12,7 @@ from type_hint import *
 from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
 from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern import DetectSecretFilterPattern
 
+from block_filter_modules.etc_utils.filter_custom_utils import FilterCustomUtils
 '''
 2025.10.21 pipeline과 pipeliemainapp간 공유
 mainapp와는 양방향 구조로 가져간다.
@@ -37,7 +38,10 @@ class Pipeline(PipelineBase):
         self.valves = self.Valves()
         
         #TODO: 사용하지 않는 필드, 향후 제거
-        self.toggle = True        
+        self.toggle = True
+        
+        # 공용 helper
+        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
         pass
     
     class Valves(BaseModel):
@@ -125,27 +129,27 @@ class Pipeline(PipelineBase):
         
         last:dict = messages[-1]
         content = last.get("content")
-        
-        #탐지시 사용자 이름, 서비스명을 추출후 던져야 한다.
-        #TODO: user_id는 유지하고, uuid 필드를 새로 추가하자.
-        #TODO: 불필요한 연산, 나중에 개선하자.
+
+        #사용자 정보의 수집        
         user_id:str = ""
         user_email:str = ""
         ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
         uuid:str = ""
         client_host:str = ""
         
-        dictUserInfo:dict = __user__
+        # dictUserInfo:dict = __user__
         
-        if None != dictUserInfo:
+        # if None != dictUserInfo:
             
-            user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
-            user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
-            ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+        #     user_id = dictUserInfo.get(ApiParameterDefine.NAME, "")
+        #     user_email = dictUserInfo.get(ApiParameterDefine.EMAIL, "")
+        #     ai_service_type = dictUserInfo.get(ApiParameterDefine.AI_SERVICE, AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
             
-            client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
+        #     client_host = dictUserInfo.get(ApiParameterDefine.CLIENT_HOST, "") #TODO: 2단계만 수집 가능
             
-            uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
+        #     uuid = dictUserInfo.get(ApiParameterDefine.UUID, "")
+            
+        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
         
         #테스트용 로그 추가
         # LOG().debug(f"run detect secret inlet, prompt = {content}")
@@ -179,12 +183,7 @@ class Pipeline(PipelineBase):
             if not isinstance(content, str) or not content.strip():
                 # LOG().error(f"invalid content, {content}")
                 
-                raise Exception(f"invalid content format, id = {self.id}, content = {content}")
-            
-                # raise HTTPException(
-                #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                #     detail=f"invalid content format, id = {self.id}, content = {content}")
-                
+                raise Exception(f"invalid content format, id = {self.id}, content = {content}")                
                 # continue
 
             #TODO: detect span 기능, 통째로 이관
@@ -269,8 +268,6 @@ class Pipeline(PipelineBase):
             std_action = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
             
             meta = body.get("metadata") or {}
-            
-                        
                             
             # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
             # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            

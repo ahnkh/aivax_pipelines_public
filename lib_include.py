@@ -172,6 +172,27 @@ class DBDefine:
     DB_FIELD_SUBJECT_VAL = "subject_val"
     
     pass
+
+# file 분석 define
+class FileDefine:
+    
+    #MIME Type
+    MIME_DOC = "application/msword"
+    MIME_DOCX = "application/octet-stream"
+    MIME_HWP = "application/x-hwp"
+    MIME_PDF = "application/pdf"
+    
+    #File 확장자
+    FILE_EXT = {
+        MIME_DOC : "doc",
+        MIME_DOCX : "docx",
+        MIME_HWP : "hwp",
+        MIME_PDF : "pdf",
+    }
+    
+    FILE_EXT_UNKNOWN = "unknown"
+    
+    pass
     
 
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
