@@ -189,7 +189,9 @@ class Pipeline(PipelineBase):
                 "present": not is_fallback,   
             },
             "user": {"id": user_id, "role": user_role, "email": user_email},
+            "src":     {"ip": client_host}, 
             "channel": channel,
+            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             "filters": filters_meta,
         }
         

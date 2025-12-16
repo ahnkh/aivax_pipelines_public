@@ -165,6 +165,8 @@ class ApiRouterImplCommand:
         # return apiResponseHandler.outResponse()
         # # return dictApiOutResponse
         
+        LOG().info(f"run api block command, prompt = {modelItem.prompt}")
+        
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
         return await self.__filterPipelineCommand.doFilterApiRouter(_mainApp, modelItem, request, routerCustomHelper)
@@ -178,6 +180,8 @@ class ApiRouterImplCommand:
         '''
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
+        
+        LOG().info(f"run api output command, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
     

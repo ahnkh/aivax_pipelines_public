@@ -197,10 +197,14 @@ class Pipeline(PipelineBase):
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")
             strPolicyName:str = dictDetectedRule.get("name", "")
+            strPolicyAction:str = dictDetectedRule.get("action", "")
             
             # LOG().info(f"Masked: {counts}, len = {len(spans)}")
             
-            if spans:
+            # 이제는 span 과 action을 같이 본다.
+            #action, block 과 masking 만 차단이고, 나머지는 아니다.
+            
+            if spans and (strPolicyAction in (PipelineFilterDefine.ACTION_BLOCK, PipelineFilterDefine.ACTION_MASKING)):
                 
                 #TODO: 우선 개발, counts의 필드에 따른 분기, 우선 수정후 2차 리펙토링시 개선한다.                
                 # nAcceptCount = counts.get("accept")
@@ -244,7 +248,8 @@ class Pipeline(PipelineBase):
                 #테스트, LLM으로 변조된 메시지를 보내는게 주요 기능이다.
                 # ★ LLM에게 안내문을 '그대로 출력'하도록 지시
                 # block_notice = "[AIVAX] 민감정보의 유출이 감지되어 차단되었습니다. 개인정보를 제외하고 다시 시도해주세요."
-                last = (body.get("messages") or [])[-1]
+                # 2차 모델이 활성화 되는 시점에 주석 해제.
+                # last = (body.get("messages") or [])[-1]
                 # last["content"] = (
                 #     "다음 문장을 사용자에게 그대로 출력하세요(추가 설명/수정/확장/사과문/이모지 금지):\n"
                 #     f"{strBlockMessage}"
@@ -266,7 +271,7 @@ class Pipeline(PipelineBase):
                 
             # TODO: helper 생성 필요
             # 우선 테스트.
-            std_action = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
+            strFinalAction = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
             
             # meta = body.get("metadata") or {}
             metadata:dict = body.get(ApiParameterDefine.META_DATA)
@@ -284,16 +289,13 @@ class Pipeline(PipelineBase):
             
             #ai service 명 추가
             # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")   
-            
-            #filter명, detect secret이지만, regex로 변경한다. (향후 regex filter로 전체 개편)
-            strFilter:str = "regex_filter"
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDocument:dict = {
                 "@timestamp": ts_isoz(),
                 
-                "filter" : strFilter,
-                "filter_name": strFilter,
+                "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
+                "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
                 "content": content,
                 "message":msg,
                 
@@ -311,8 +313,8 @@ class Pipeline(PipelineBase):
                 # "stage":   "detect_secrets",
                 "stage":   PipelineFilterDefine.FILTER_STAGE_REGEX,
                 # "detection": detection_status,
-                "should_block": (std_action == "block"),
-                "mode": std_action,
+                "should_block": (strFinalAction == "block"),
+                "mode": strPolicyAction, #DB상의 action으로 교체 (should_block과 값이 다르다.)
                 
                 #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
                 "policy_id" : strPolicyID,
@@ -321,8 +323,9 @@ class Pipeline(PipelineBase):
                 
                 "pii": {
                     # type: 정책명 추가
-                    "types": strPolicyName,
-                    "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
+                    "types": strPolicyName, #UI 편의성.
+                    # 잘못된 하드코딩, 제거
+                    # "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
                     "confidence": 1.0
                 },
                 

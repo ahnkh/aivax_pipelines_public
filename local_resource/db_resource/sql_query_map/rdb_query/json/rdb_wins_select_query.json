@@ -41,7 +41,7 @@
             "desc" : "정책 패턴 조회, 모든 유효한 정책의 조회",
             "key": "rdb_select_policy_rule",
 	        "action" : "query_for_list",
-            "query" : "select id, name, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules where status = 'deployed'"
+            "query" : "select id, name, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules where status = 'deployed' order by action desc"
         },
 
         {

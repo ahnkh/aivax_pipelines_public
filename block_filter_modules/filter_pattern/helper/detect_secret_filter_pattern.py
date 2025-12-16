@@ -219,8 +219,11 @@ class DetectSecretFilterPattern (FilterPatternBase):
         for s, e in self.__high_entropy_hits(text, valves):
             self.__add_span(spans, s, e)
             counts["entropy"] = counts.get("entropy", 0) +1
+            
+        #detectRule의 분석, action의 우선순위로, 재 조합한다.        
+        dictFinalRulePolicy:dict = self.__decideFinalPolicyAction(dictDetectRule)
 
-        return (spans, counts, dictDetectRule)
+        return (spans, counts, dictFinalRulePolicy)
     
     def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, 
                                        strUserID:str, strUUID:str, nServiceType:int):
@@ -314,7 +317,6 @@ class DetectSecretFilterPattern (FilterPatternBase):
             self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
                 
         return ERR_OK
-        
 
     #개별 dictionary 별 정책 조회
     def __detectFilterPatternAt(self, text:str, spans:list, dictCount:dict, dictDetectRule:dict, dictDBPattern:dict):
@@ -352,32 +354,68 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 # counts[action] += 1
                 dictCount[action] = dictCount.get(action,0) + 1
 
-                self.__assignFirstDetectedRule(dictDetectRule, id, name)
+                self.__assignFirstDetectedRule(dictDetectRule, id, name, action)
         else:
             for m in regex_pattern.finditer(text):
                 self.__add_span(spans, m.start(), m.end())
                 # counts[action] += 1
                 dictCount[action] = dictCount.get(action,0) + 1
 
-                self.__assignFirstDetectedRule(dictDetectRule, id, name)
+                self.__assignFirstDetectedRule(dictDetectRule, id, name, action)
 
         return ERR_OK
 
     #최초 탐지된 룰 정보 할당.
-    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str):
+    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str):
 
         '''
+        사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
         '''
+        
+        dictEachActionPolicy = dictDetectRule.get(strAction, {})
+        
 
         #최초 탐지되면, 추가 (TODO: 리펙토링)
-        if 0 == len(dictDetectRule):
+        if 0 == len(dictEachActionPolicy):
             #test
             LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
-            dictDetectRule["id"] = strRuleID
-            dictDetectRule["name"] = strRuleName
+            dictEachActionPolicy["id"] = strRuleID
+            dictEachActionPolicy["name"] = strRuleName
+            dictEachActionPolicy["action"] = strAction
+            
+            dictDetectRule[strAction] = dictEachActionPolicy
 
         return ERR_OK
 
+
+    def __decideFinalPolicyAction(self, dictDetectRule:dict) -> dict:
+        
+        '''
+        detect rule에는 action 별로 들어가 있다.
+        block 룰이 최우선, 그다음 mask, 이후 allow 이다.
+        결과를 반환하는 구조로 수정한다.
+        '''
+        
+        #block, 최우선
+        dictRule:dict = dictDetectRule.get(PipelineFilterDefine.ACTION_BLOCK)
+        
+        if None != dictRule:
+            return dictRule
+        
+        dictRule:dict = dictDetectRule.get(PipelineFilterDefine.ACTION_MASKING)
+        
+        if None != dictRule:
+            return dictRule
+        
+        dictRule:dict = dictDetectRule.get(PipelineFilterDefine.ACTION_ACCEPT)
+        
+        if None != dictRule:
+            return dictRule
+        
+        #allow 는 없으면 공백 반환
+        dictRule:dict = dictDetectRule.get(PipelineFilterDefine.ACTION_ALLOW, {})
+        
+        return dictRule
 
     # ---------- 마스킹 유틸 ----------
     def __add_span(self, spans: List[Tuple[int, int]], start: int, end: int):
