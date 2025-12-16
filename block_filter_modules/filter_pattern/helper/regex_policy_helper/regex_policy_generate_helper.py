@@ -134,10 +134,11 @@ class RegexPolicygenerateHelper:
             #정책ID, 이름을 추가, 최초에 걸린 ID와 Name을 추가하여, 반환하도록 개선.
             id:str = dictPolicy.get("id")
             name:str = dictPolicy.get("name")
+            targets:str = dictPolicy.get(DBDefine.DB_FIELD_RULE_TARGET) #targets 추가
 
             rule:str = dictPolicy.get("rule")
 
-            action:str = dictPolicy.get("action")
+            action:str = dictPolicy.get(DBDefine.DB_FIELD_RULE_ACTION)
 
             #수신받은 rule을, 신규의 db filter 패턴에 추가한다.
             #기존과 동일한 패턴으로 관리를 위해서 tuple로 관리, 이름과 rule
@@ -192,6 +193,7 @@ class RegexPolicygenerateHelper:
                 "name" : name,
                 "rule" : rule,
                 "action" : action,
+                DBDefine.DB_FIELD_RULE_TARGET : targets, #targets, 카테고리 추가
                 "regex_pattern" : regexPattern,
                 "regex_flag" : regexFlag,
                 "regex_group" : regexGroup,

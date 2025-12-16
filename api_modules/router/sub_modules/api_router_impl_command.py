@@ -169,7 +169,15 @@ class ApiRouterImplCommand:
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
-        return await self.__filterPipelineCommand.doFilterApiRouter(_mainApp, modelItem, request, routerCustomHelper)
+        #TODO: 응답 데이터 처리, 차단이 발생하면 엔진은 네트워크를 끊는등의 처리를 하고
+        # pipeline에서 응답 데이터를 만들어서 opensearch에 저장한다. 
+        # 향후 차단의 사양이 변경되면, 이 기능을 옵션화
+        dictFilterOutput:dict = await self.__filterPipelineCommand.doFilterApiRouter(_mainApp, modelItem, request, routerCustomHelper)
+        
+        # 차단시점, 차단 메시지 발생.
+        await self.__doCustomOuputResponseAiInBlockCondition(dictFilterOutput, _mainApp, modelItem, request)
+    
+        return dictFilterOutput
     
     
     #api, FastApi Router - 재사용
@@ -184,6 +192,36 @@ class ApiRouterImplCommand:
         LOG().info(f"run api output command, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
+    
+    
+    ################################################### private
+    
+    # 요청, 차단이 발생시 응답 메시지를 저장, custom api 발생
+    async def __doCustomOuputResponseAiInBlockCondition(self, dictFilterOutput:dict, _mainApp:Any, requestModelItem:VariantFilterForm, request: Request):
+        
+        '''
+        '''
+        
+        final_decision:dict = dictFilterOutput.get("final_decision")
+        
+        action:int = final_decision.get("action")
+        
+        if PipelineFilterDefine.CODE_BLOCK == action:
+            
+            strBlockMessage:str = final_decision.get("block_message")
+        
+            responseModelItem:OutputFilterItem = OutputFilterItem(
+                llm_output = strBlockMessage,
+                user_id = requestModelItem.user_id,
+                email = requestModelItem.email,
+                ai_service = requestModelItem.ai_service,
+                session_id = requestModelItem.session_id,
+                message_id = requestModelItem.message_id,            
+            )
+            
+            await self.doOutputApiRouter(_mainApp, responseModelItem, request)
+            
+        return ERR_OK
     
     
     

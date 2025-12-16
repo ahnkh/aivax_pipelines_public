@@ -197,7 +197,8 @@ class Pipeline(PipelineBase):
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")
             strPolicyName:str = dictDetectedRule.get("name", "")
-            strPolicyAction:str = dictDetectedRule.get("action", "")
+            strPolicyAction:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ACTION, "")
+            strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: define 처리 필수
             
             # LOG().info(f"Masked: {counts}, len = {len(spans)}")
             
@@ -323,7 +324,7 @@ class Pipeline(PipelineBase):
                 
                 "pii": {
                     # type: 정책명 추가
-                    "types": strPolicyName, #UI 편의성.
+                    "types": strTarget, # 카테고리
                     # 잘못된 하드코딩, 제거
                     # "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
                     "confidence": 1.0

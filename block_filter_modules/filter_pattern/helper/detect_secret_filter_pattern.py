@@ -120,6 +120,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         dictRegexPattern:dict = {
             "id" : "dummy",
             "name" : "dummy",
+            "targets" : "dummy",
             "rule" : strRegexRule,
             "action" : strAction,
             "regex_pattern" : regexPattern,
@@ -326,9 +327,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         id:str = dictDBPattern.get("id")
         name:str = dictDBPattern.get("name")
+        targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
 
         # rule:str = dictDBPattern.get("rule")
-        action:str = dictDBPattern.get("action")
+        action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
         # regex_flag:int = int(dictDBPattern.get("regex_flag"))
         regex_group:int = (dictDBPattern.get("regex_group"))
         regex_group_val:str = dictDBPattern.get("regex_group_val")
@@ -354,19 +356,19 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 # counts[action] += 1
                 dictCount[action] = dictCount.get(action,0) + 1
 
-                self.__assignFirstDetectedRule(dictDetectRule, id, name, action)
+                self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
         else:
             for m in regex_pattern.finditer(text):
                 self.__add_span(spans, m.start(), m.end())
                 # counts[action] += 1
                 dictCount[action] = dictCount.get(action,0) + 1
 
-                self.__assignFirstDetectedRule(dictDetectRule, id, name, action)
+                self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
 
         return ERR_OK
 
     #최초 탐지된 룰 정보 할당.
-    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str):
+    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str, strTarget:str):
 
         '''
         사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
@@ -381,7 +383,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
             LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
             dictEachActionPolicy["id"] = strRuleID
             dictEachActionPolicy["name"] = strRuleName
-            dictEachActionPolicy["action"] = strAction
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
             
             dictDetectRule[strAction] = dictEachActionPolicy
 

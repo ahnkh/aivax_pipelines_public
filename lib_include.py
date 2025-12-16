@@ -134,11 +134,11 @@ class AI_SERVICE_DEFINE:
     # NAME_SERVICE_CHAT_GPT = "openapi.chatgpt"
     
     #TODO: 이름은 mariadb에 join되어 있으며 ai_services 테이블을 참조
-    NAME_SERVICE_UNDEFINE = "gpt" #미지정이면, 일단 GPT로, 이름은 최종 확정된 버전으로 변경.
+    NAME_SERVICE_UNDEFINE = "unknown" 
     NAME_SERVICE_CHAT_GPT = "gpt"
-    NAME_SERVICE_GEMINI = "goole.gemini"
-    NAME_SERVICE_CLAUDE = "claude.ai"
-    NAME_SERVICE_GROK = "x.grok"
+    NAME_SERVICE_GEMINI = "gemini"
+    NAME_SERVICE_CLAUDE = "claude"
+    NAME_SERVICE_GROK = "grok"
     
     NAME_CODE_ASSIST_COPILOT = "openapi.copilot"
     NAME_CODE_ASSIST_CURSOR = "cursor.ai"
@@ -169,9 +169,14 @@ class DBDefine:
     
     #필드명, subject_id
     DB_FIELD_SUBJECT_ID = "subject_id"
-    DB_FIELD_SUBJECT_VAL = "subject_val"
+    DB_FIELD_SUBJECT_VAL = "subject_val"    
     
-    pass
+    
+    # regex 관련
+    DB_FIELD_RULE_NAME = "name"
+    DB_FIELD_RULE_ACTION = "action"
+    DB_FIELD_RULE_TARGET = "targets"
+    # pass
 
 # file 분석 define
 class FileDefine:
@@ -190,9 +195,8 @@ class FileDefine:
         MIME_PDF : "pdf",
     }
     
-    FILE_EXT_UNKNOWN = "unknown"
-    
-    pass
+    FILE_EXT_UNKNOWN = "unknown"    
+    # pass
     
 
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일

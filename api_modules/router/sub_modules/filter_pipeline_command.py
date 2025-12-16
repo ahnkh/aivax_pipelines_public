@@ -137,7 +137,7 @@ class FilterPipelineCommand:
             ApiParameterDefine.OUT_MASKED_CONTENTS : "",
             ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
         }
-        apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)    
+        apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)
             
         #Filer별 요청후, 마지막에 취합
         routerCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)

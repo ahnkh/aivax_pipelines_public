@@ -147,8 +147,8 @@ def main():
         
         dictOpt = {
             # WEB_HOST : "127.0.0.1",
-            # APP_PARMETER_DEFINE.WEB_HOST : "0.0.0.0",
-            APP_PARMETER_DEFINE.WEB_HOST : "127.0.0.1", #기본 loopback, 로컬 통신
+            APP_PARMETER_DEFINE.WEB_HOST : "0.0.0.0",
+            # APP_PARMETER_DEFINE.WEB_HOST : "127.0.0.1", #기본 loopback, 로컬 통신
             APP_PARMETER_DEFINE.WEB_PORT : 9099,
             APP_PARMETER_DEFINE.CONFIG : CONFIG_FILE_PATH            
         }
