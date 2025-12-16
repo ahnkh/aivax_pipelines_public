@@ -1,31 +1,25 @@
-"""
+
+import os
+
+import uuid
+from datetime import datetime, timezone
+
+from lib_include import *
+
+from type_hint import *
+
+'''
 title: PII Masking Inlet Filter
 author: wins-tech
 version: 1.0.1
 license: MIT
 description: Masks user input via a local FastAPI service before sending to the model.
 requirements: requests
-"""
+'''
 
-import os
-#import requests
-# from typing import Optional, Dict, Any, List
-
-import uuid
-from datetime import datetime, timezone
-# import requests
-
-from lib_include import *
-
-from type_hint import *
-
-
-# --- pydantic v1/v2 호환 레이어 ---
-from pydantic import BaseModel
 
 def _has_model_dump() -> bool:
     return hasattr(BaseModel, "model_dump")
-
 
 class Pipeline(PipelineBase):
     """
@@ -66,8 +60,6 @@ class Pipeline(PipelineBase):
                     return self.dict(*args, **kwargs)
         self.valves = Valves()
         
-        
-        
     # ---------- 파이프라인 엔트리 ----------    
     async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) -> Dict[str, Any]:
         """
@@ -80,24 +72,21 @@ class Pipeline(PipelineBase):
         
         # disabled 시 그대로 통과
         
-        if not getattr(self.valves, "enabled", True):
-            LOG().info("action disabled")
-            return body
-    
-        def ts_isoz() -> str:
-            return datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        # if not getattr(self.valves, "enabled", True):
+        #     LOG().info("action disabled")
+        #     return body
     
         api_url   = self.valves.PII_API_URL
         timeout   = self.valves.TIMEOUT_SECONDS
         log_on    = self.valves.ENABLE_LOG
         fallback  = self.valves.FALLBACK_ON_ERROR
     
-        # OpenSearch 밸브(옵션)
-        enable_os = bool(getattr(self.valves, "ENABLE_OS", False))
-        os_url    = getattr(self.valves, "OS_URL", "")
-        os_index  = getattr(self.valves, "OS_INDEX", "")
-        os_user   = getattr(self.valves, "OS_USER", "")
-        os_pass   = getattr(self.valves, "OS_PASS", "")
+        # # OpenSearch 밸브(옵션)
+        # enable_os = bool(getattr(self.valves, "ENABLE_OS", False))
+        # os_url    = getattr(self.valves, "OS_URL", "")
+        # os_index  = getattr(self.valves, "OS_INDEX", "")
+        # os_user   = getattr(self.valves, "OS_USER", "")
+        # os_pass   = getattr(self.valves, "OS_PASS", "")
     
         # print(f"test ##3")
         try:
@@ -227,7 +216,7 @@ class Pipeline(PipelineBase):
                     }
                     
                     #debug 로그 추가
-                    LOG().info(f"log = {os_doc_final}")
+                    # LOG().info(f"log = {os_doc_final}")
 
                     # print(os_doc_final)
                     # print(f"test ##6-9")
@@ -242,23 +231,24 @@ class Pipeline(PipelineBase):
             # print(f"test ##8")
             body["messages"] = messages
 
-
             #TODO: ssl inspection 에서 호출이 필요할경우, 메시지 구조 개선 필요
             #우선은 현재 구조를 유지한다.
-            if std_action == "block":
-                block_message = f"🚫 보안 정책에 의해 차단되었습니다. 메시지에 민감정보가 포함되어 있으니 해당 정보를 제거한 후 다시 시도해 주세요." 
-                raise Exception(block_message)
+            # if std_action == "block":
+            #     block_message = f"🚫 보안 정책에 의해 차단되었습니다. 메시지에 민감정보가 포함되어 있으니 해당 정보를 제거한 후 다시 시도해 주세요." 
+            #     raise Exception(block_message)
 
-            return body
+            # return body
+            
+            return ERR_OK
     
         except Exception as e:
             
             LOG().error(traceback.format_exc())
             
-            #TODO: fallback, 무슨 기능인지 확인
-            if fallback:
-                # print(f"[PII-MASK][WARN] masking failed: {e}")
-                return body
+            # #TODO: fallback, 무슨 기능인지 확인
+            # if fallback:
+            #     # print(f"[PII-MASK][WARN] masking failed: {e}")
+            #     return body
 
     async def outlet(self, body: Dict[str, Any], user: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return body

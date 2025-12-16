@@ -87,6 +87,13 @@ class IPCPipelineServer:
         ipc_pipeline_server:dict = dictJsonLocalConfigRoot.get("ipc_pipeline_server")
         
         # self.__dictIPCPipelineServerLocalConfig = ipc_pipeline_server
+        
+        # 사용 여부 설정, 기본 미사용
+        use:int = ipc_pipeline_server.get("use")
+        
+        if CONFIG_OPT_DISABLE == use:
+            LOG().info("disable ipc server")
+            return ERR_OK
                         
         thread = threading.Thread(name="ipc socket thread", target=self.ThreadHandlerProc, daemon=True, args=(mainApp, ipc_pipeline_server,))
         thread.start()

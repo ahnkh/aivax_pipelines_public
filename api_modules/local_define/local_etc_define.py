@@ -2,10 +2,10 @@
 from lib_include import *
 
 '''
-Error code 정의
-
+Api module, define 정의
 '''
 
+# Error code 정의
 class ApiErrorDefine:
     
     HTTP_404_NOT_FOUND = status.HTTP_404_NOT_FOUND

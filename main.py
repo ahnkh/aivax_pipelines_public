@@ -3,7 +3,7 @@ import getopt
 import uvicorn
 import uvloop
 
-import orjson
+# import orjson
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

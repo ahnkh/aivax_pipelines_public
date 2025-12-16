@@ -93,7 +93,8 @@
 
     "ipc_pipeline_server":
     {
-        "socket_path" : "/tmp/pipeline.sock"
+        "socket_path" : "/tmp/pipeline.sock",
+        "use" : 0
 
     }
 

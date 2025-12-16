@@ -284,12 +284,16 @@ class Pipeline(PipelineBase):
             
             #ai service 명 추가
             # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")   
+            
+            #filter명, detect secret이지만, regex로 변경한다. (향후 regex filter로 전체 개편)
+            strFilter:str = "regex_filter"
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDocument:dict = {
                 "@timestamp": ts_isoz(),
-                "filter" : self.id,
-                "filter_name": self.name,
+                
+                "filter" : strFilter,
+                "filter_name": strFilter,
                 "content": content,
                 "message":msg,
                 
@@ -316,7 +320,8 @@ class Pipeline(PipelineBase):
                 "src":     {"ip": client_host},
                 
                 "pii": {
-                    "types": "API Key",
+                    # type: 정책명 추가
+                    "types": strPolicyName,
                     "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
                     "confidence": 1.0
                 },

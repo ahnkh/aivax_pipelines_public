@@ -388,8 +388,8 @@ class Pipeline(PipelineBase):
         super().__init__()
         
         self.type = "filter"
-        self.id = "regex_filter"
-        self.name = "Regex Filter"
+        self.id = "regex_filter_v3" # 점진적으로 삭제
+        self.name = "Regex Filter_v3"
         
         class Valves(BaseModel):
             # 공통
