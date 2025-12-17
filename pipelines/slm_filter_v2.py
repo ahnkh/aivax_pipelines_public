@@ -208,7 +208,7 @@ class Pipeline(PipelineBase):
         # strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
         
         #accept로 점진적으로 통일.
-        if PipelineFilterDefine.ACTION_ACCEPT == strSLMAction:
+        if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
             
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK
