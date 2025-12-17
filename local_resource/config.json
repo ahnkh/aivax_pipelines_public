@@ -99,7 +99,7 @@
 
     "slm_pipelie_filter_module":
     {
-        "use_skip" : 1,
+        "use_skip" : 0,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
         "request_timeout" : 60
     }

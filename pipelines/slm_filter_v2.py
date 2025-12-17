@@ -140,13 +140,16 @@ class Pipeline(PipelineBase):
         message_id:str = dictMetaData.get(ApiParameterDefine.MESSAGE_ID)
         session_id:str = dictMetaData.get(ApiParameterDefine.SESSION_ID)
         
+        
+        strFilterName:str = str(PipelineFilterDefine.FILTER_STAGE_SLM)
+        
         # opensearch 저장
         #opensearch 저장 변수, TODO: 리펙토링 필요            
         dictOpensearchDocument:dict = {
             "@timestamp": ts_isoz(),
             
-            "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
-            "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
+            "filter" : strFilterName,
+            "filter_name": strFilterName,
             "content": strContents,
             "message":{},
             

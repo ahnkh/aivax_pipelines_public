@@ -189,7 +189,7 @@ class ApiRouterImplCommand:
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
-        LOG().info(f"run api output command, output = {modelItem.llm_output}")
+        # LOG().info(f"run api output command, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
     

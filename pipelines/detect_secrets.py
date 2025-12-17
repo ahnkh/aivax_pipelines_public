@@ -305,14 +305,16 @@ class Pipeline(PipelineBase):
             # client_ip = ""
             
             #ai service 명 추가
-            # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")   
+            # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")  
+            
+            strFilterName:str = str(PipelineFilterDefine.FILTER_STAGE_REGEX) 
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDocument:dict = {
                 "@timestamp": ts_isoz(),
                 
-                "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
-                "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
+                "filter" : strFilterName,
+                "filter_name": strFilterName,
                 "content": strLocalContents,
                 "message":msg,
                 
