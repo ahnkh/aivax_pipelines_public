@@ -73,6 +73,14 @@ class SLMFilterPattern (FilterPatternBase):
         strURL:str = self.__dictFilterLocalConfig.get("slm_url")
         request_timeout:int = int(self.__dictFilterLocalConfig.get("request_timeout"))
         
+        #SLM 성능이슈, 기본은 비활성이고, 비활성 상태이면 강제로 allow를 반환한다.
+        use_skip:int = int(self.__dictFilterLocalConfig.get("use_skip"))
+        
+        #skip을 설정하고 호출했으면, 로그로 확인이 되어야 한다.
+        if CONFIG_OPT_ENABLE == use_skip:
+            LOG().info("skip slm filter")
+            return ERR_OK
+        
         # 요청 패턴, 일단 개발, 향후 개선 (이정도로는 부족)
         post = {
             "model" : "cipherguard01",

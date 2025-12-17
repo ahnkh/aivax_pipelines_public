@@ -3,7 +3,7 @@
     {
         "db_api_server":
         {
-            "default_server_ip" : "192.168.10.22",
+            "default_server_ip" : "127.0.0.1",
             "default_server_port" : 4000,
             "default_schema" : "http",
 
@@ -20,7 +20,7 @@
 
                 "collection_prefix" : "input_filter",
                 "temp_file_path" : ".TEMP/PIPELINE_LOG/",
-                "bulk_file_path" : "bulk_logs/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
                 "max_limit" : 10000,
 
                 "flush_finish_script" : ""
@@ -31,7 +31,7 @@
 
                 "collection_prefix" : "output_filter",
                 "temp_file_path" : ".TEMP/PIPELINE_LOG/",
-                "bulk_file_path" : "bulk_logs/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
                 "max_limit" : 10000,
 
                 "flush_finish_script" : ""
@@ -42,7 +42,7 @@
 
                 "collection_prefix" : "regex_filter",
                 "temp_file_path" : ".TEMP/PIPELINE_LOG/",
-                "bulk_file_path" : "bulk_logs/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
                 "max_limit" : 10000,
 
                 "flush_finish_script" : ""
@@ -95,7 +95,13 @@
     {
         "socket_path" : "/tmp/pipeline.sock",
         "use" : 0
+    },
 
+    "slm_pipelie_filter_module":
+    {
+        "use_skip" : 1,
+        "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
+        "request_timeout" : 60
     }
 
 

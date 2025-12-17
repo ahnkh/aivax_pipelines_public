@@ -10,6 +10,7 @@ class PipelineFilterDefine:
     ACTION_ACCEPT = "accept" #DB에 accept가 존재한다.
     ACTION_BLOCK = "block"
     ACTION_MASKING = "masking"
+    ACTION_UNDETECTED = "undetected"
     
     #code도 생성한다.
     CODE_ALLOW = 0

@@ -431,8 +431,9 @@ class Pipeline(PipelineBase):
             LOG().info("No secrets detected (regex+entropy).")
             # self.logger.info("No secrets detected (regex+entropy).")
             
+            # 테스트 시점에 탐지되지 않은 정책은 undetected로 변경한다.
             # dictOuputResponse["action"] = "allow"
-            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_UNDETECTED
         
         return ERR_OK 
 
