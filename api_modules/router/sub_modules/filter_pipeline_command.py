@@ -169,9 +169,10 @@ class FilterPipelineCommand:
         '''
         '''
         
-        action_code:int = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION_CODE, PipelineFilterDefine.ACTION_ALLOW)
+        action:str = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_ALLOW)
+        action_code:int = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION_CODE, PipelineFilterDefine.CODE_ALLOW)
         
-        if PipelineFilterDefine.ACTION_BLOCK == action_code:
+        if PipelineFilterDefine.CODE_BLOCK == action_code or PipelineFilterDefine.ACTION_BLOCK == action:
             
             return True
         
