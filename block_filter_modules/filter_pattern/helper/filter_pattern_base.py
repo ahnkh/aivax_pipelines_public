@@ -99,7 +99,9 @@ class FilterPatternBase:
         
         #TODO: 예외처피 필요, 파라미터가 잘못되는 경우가 있다.
         if None == lstNewPolicyData:
-            LOG().error(f"invalid new policy data, skip, scope = {strScope}")
+            
+            #TODO: 잘못된 로그, 사용안하는 scope 이면, 정책이 없을수 있다.
+            # LOG().error(f"invalid new policy data, skip, scope = {strScope}")
             return FilterPatternBase.POLICY_NOT_CHANGED
         
         # lstNewPolicyData:list = dictNewDBFilterPolicy.get("data")
