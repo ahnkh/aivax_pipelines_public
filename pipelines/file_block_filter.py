@@ -30,8 +30,7 @@ class Pipeline(PipelineBase):
         #TODO: values는 필요하다고 판단되면 추가, 우선 추가하지 않는다.
         
         # 공용 helper
-        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
-        
+        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()        
         pass
     
     
@@ -48,7 +47,6 @@ class Pipeline(PipelineBase):
         
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = []
         
-        # TODO: 접속정보, 그대로 가져간다. 공통 코드는 공통화.
         
         fileBlockFilterPattern:FileBlockFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_FILE_BLOCK)
         

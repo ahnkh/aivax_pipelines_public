@@ -51,8 +51,7 @@ class FileBlockFilterPattern(FilterPatternBase):
     def __init__(self):
         
         super().__init__()
-        
-        # DB 정책 패턴, 향후 추가
+                
         '''
         [
             A 정책 타입 => 1개만 필요할것 같다.
@@ -190,6 +189,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
+    # 정책 DB 데이터 수신
     def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
         
         '''

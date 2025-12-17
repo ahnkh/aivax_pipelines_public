@@ -161,6 +161,7 @@ class DBDefine:
     # FILTER_KEY_DETECT_SECRET = "filter-detect-secret"
     FILTER_KEY_REGEX = "filter-regex"
     FILTER_KEY_BLOCK_FILE = "filter-block-file"
+    FILTER_KEY_SLM = "filter-slm"
         
     POLICY_FILTER_SCOPE_USER = "user"
     POLICY_FILTER_SCOPE_SERVICE = "service"
@@ -173,6 +174,7 @@ class DBDefine:
     
     
     # regex 관련
+    DB_FIELD_RULE_ID = "id"
     DB_FIELD_RULE_NAME = "name"
     DB_FIELD_RULE_ACTION = "action"
     DB_FIELD_RULE_TARGET = "targets"

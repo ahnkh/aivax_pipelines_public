@@ -325,8 +325,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
         '''
         '''
 
-        id:str = dictDBPattern.get("id")
-        name:str = dictDBPattern.get("name")
+        id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+        name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
         targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
 
         # rule:str = dictDBPattern.get("rule")

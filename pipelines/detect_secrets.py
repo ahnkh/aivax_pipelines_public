@@ -221,8 +221,10 @@ class Pipeline(PipelineBase):
                 nBlockCount = counts.get("block")
                 nMaskingCount = counts.get("masking")
                 
-                #정책 카테고리, name만 표기                
-                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
+                #정책 카테고리, name만 표기
+                
+                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)                
+                strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
                 
                 #block 먼저 체크
                 if 0 < nBlockCount:

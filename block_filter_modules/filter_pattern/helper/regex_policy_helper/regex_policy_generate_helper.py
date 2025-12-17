@@ -156,37 +156,43 @@ class RegexPolicygenerateHelper:
             strDBSubjectVal:str = dictPolicy.get(DBDefine.DB_FIELD_SUBJECT_VAL, "")
 
             #TODO: 없는 경우에 대한 처리
-
-            #없으면 실행을 제외한다.
-            if None == rule or 0 == len(rule):
-                LOG().error(f"invalid flag, no rule")
-                continue
-
-            #regexFlag, 예외처리
-            if None == regexFlag:
-                regexFlag = re.DOTALL
-
-            if None == regexGroup:
-                regexGroup = 0
-
-            #2025.12.02 정규표현식 오류,
-            #try로 묶어서 임시 테스트
-
+            
+            #TODO: slm 정책, 룰이 없을수 있다. 반대로 예외처리 필요.            
             regexPattern:re.Pattern = None
+                        
+            if None != rule and 0 < len(rule):
 
-            try:
-                regexPattern:re.Pattern = re.compile(rule, regexFlag)
-            except Exception:
-                LOG().error(traceback.format_exc())
+            # #없으면 실행을 제외한다.
+            # if None == rule or 0 == len(rule):
+            #     LOG().error(f"invalid flag, no rule")
+            #     continue
 
-            #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
-            # tupleRulePattern = (name, rule, regexPattern)
+                #regexFlag, 예외처리
+                if None == regexFlag:
+                    regexFlag = re.DOTALL
 
-            # 예외처리, regexPattern이 존재하지 않으면, skip
-            if None == regexPattern:
+                if None == regexGroup:
+                    regexGroup = 0
 
-                LOG().error(f"compile pattern error, skip regex pattern, id = {id}, name = {name}, rule = {rule}")
-                return ERR_FAIL
+                #2025.12.02 정규표현식 오류,
+                #try로 묶어서 임시 테스트
+
+                try:
+                    regexPattern:re.Pattern = re.compile(rule, regexFlag)
+                except Exception:
+                    LOG().error(traceback.format_exc())
+                    
+                #pass
+
+                #rule도 같이 넣는다. TODO: dictionary가 더 직관적일지도.
+                # tupleRulePattern = (name, rule, regexPattern)
+
+                # 예외처리, regexPattern이 존재하지 않으면, skip
+                # 정책을 설정했는데도, 룰 컴파일을 못했으면, 버린다.
+                if None == regexPattern:
+
+                    LOG().error(f"compile pattern error, skip regex pattern, id = {id}, name = {name}, rule = {rule}")
+                    return ERR_FAIL
 
             dictRegexPattern:dict = {
                 "id" : id,
@@ -194,7 +200,7 @@ class RegexPolicygenerateHelper:
                 "rule" : rule,
                 "action" : action,
                 DBDefine.DB_FIELD_RULE_TARGET : targets, #targets, 카테고리 추가
-                "regex_pattern" : regexPattern,
+                "regex_pattern" : regexPattern, #룰을 컴파일 못했으면, 예외처리
                 "regex_flag" : regexFlag,
                 "regex_group" : regexGroup,
                 "regex_group_val" : regexGroupVal,

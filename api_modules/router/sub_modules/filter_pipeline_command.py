@@ -107,7 +107,14 @@ class FilterPipelineCommand:
                 #TODO: 내부 메소드에서 async 처리 되어 있어서, async, await 구조는 유지.
                 #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
                 # asyncio.run(methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request))
-                await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)                
+                await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
+                
+                #응답의 처리, 차단, block이 발생했으면, 종료 처리
+                #masking, accept는 더 수행이 되어야 한다. (25.12 기준 최대 3개의 inlet 제공)
+                if True == self.__isBlockFilter(dictEachFilterOutput):
+                    #여기는 LOG를 남기자.
+                    LOG().info("block inlet filter {strPipelineFilterName}, finish")
+                    break
                 
             else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생
                 
@@ -127,7 +134,7 @@ class FilterPipelineCommand:
         #응답 데이터 가공 좀더 개선 필요     
         #message 형태 데이터, 데몬과 협의 대상, 아직 정리가 되지는 않았다.
         #TODO: 우선 생성한다.
-        dictOutMessage = {            
+        dictFinalOutMessage = {            
             # "action" : 0, #allow = 0, block = 1, masking = 2
             # "masked_contents" : "",
             # "block_message" : "",    
@@ -137,10 +144,10 @@ class FilterPipelineCommand:
             ApiParameterDefine.OUT_MASKED_CONTENTS : "",
             ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
         }
-        apiResponseHandler.attachResponse(f"final_decision", dictOutMessage)
+        apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
             
         #Filer별 요청후, 마지막에 취합
-        routerCustomHelper.GenerateOutputFinalDecision(dictOutMessage, dictFilterResult)
+        routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult)
         
         #개별 pipeline 결과
         apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
@@ -152,3 +159,21 @@ class FilterPipelineCommand:
 
         return apiResponseHandler.outResponse()
         # return dictApiOutResponse
+        
+        
+    ########################################################## private
+    
+    #차단결과, 차단이 발생했으면, 다음 inlet은 동작하지 않고 skip
+    def __isBlockFilter(self, dictEachFilterOutput:dict) -> bool:
+        
+        '''
+        '''
+        
+        action_code:int = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION_CODE, PipelineFilterDefine.ACTION_ALLOW)
+        
+        if PipelineFilterDefine.ACTION_BLOCK == action_code:
+            
+            return True
+        
+        return False
+        

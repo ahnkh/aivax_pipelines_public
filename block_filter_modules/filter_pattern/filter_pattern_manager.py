@@ -12,6 +12,8 @@ from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern imp
 
 from block_filter_modules.filter_pattern.helper.file_block_filter_pattern import FileBlockFilterPattern
 
+from block_filter_modules.filter_pattern.helper.slm_filter_pattern import SLMFilterPattern
+
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
 
@@ -30,10 +32,10 @@ class FilterPatternManager:
     
     #filter 패턴 키, 상수 나중에 공통으로 이동
     PATTERN_FILTER_DETECT_SECRET = "detect_secret"
-    # PATTERN_FILTER_REGEX = "regex"
+    # PATTERN_FILTER_REGEX = "regex" => 제거, 점진적으로 소스 폐기
     PATTERN_FILTER_FILE_BLOCK = "file_block_filter"
     
-    #SLM 기능, 아직 미 개발
+    #SLM filter
     PATTERN_FILTER_SLM = "slm_filter"
     
     def __init__(self):
@@ -44,6 +46,7 @@ class FilterPatternManager:
             FilterPatternManager.PATTERN_FILTER_DETECT_SECRET : None,
             # FilterPatternManager.PATTERN_FILTER_REGEX : None,
             FilterPatternManager.PATTERN_FILTER_FILE_BLOCK : None,
+            FilterPatternManager.PATTERN_FILTER_SLM : None,
         }
         
         pass
@@ -61,6 +64,9 @@ class FilterPatternManager:
         fileFilterPattern = FileBlockFilterPattern()
         fileFilterPattern.Initialize(dictJsonLocalConfigRoot)
         
+        slmFilterPattern = SLMFilterPattern()
+        slmFilterPattern.Initialize(dictJsonLocalConfigRoot)
+        
         #TODO: 기능 제거
         # regexFilterPattern = RegexFilterPattern()
         # regexFilterPattern.Initialize(dictJsonLocalConfigRoot)
@@ -68,6 +74,8 @@ class FilterPatternManager:
         self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_DETECT_SECRET] = detectSecretPattern
         # self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_REGEX] = regexFilterPattern
         self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_FILE_BLOCK] = fileFilterPattern
+        
+        self.__filterPatternMap[FilterPatternManager.PATTERN_FILTER_SLM] = slmFilterPattern
         
         return ERR_OK
     
