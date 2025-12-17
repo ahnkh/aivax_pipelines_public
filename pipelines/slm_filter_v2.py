@@ -90,7 +90,7 @@ class Pipeline(PipelineBase):
         self.__updateApiOutResponse(strSLMAction, strPolicyName, dictOuputResponse)
         
         # 로그의 저장
-        self.__addLogData(dictSLMDetectResult, metadata, dictUser, strLocalContents)
+        self.__addLogData(dictSLMDetectResult, dictSLMPolicyResult, metadata, dictUser, strLocalContents)
         
         return ERR_OK
     
@@ -118,7 +118,7 @@ class Pipeline(PipelineBase):
         return ""
     
     # opensearch로의 저장, 분리해본다.
-    def __addLogData(self, dictSLMDetectResult:dict, dictMetaData:dict, dictUser:dict, strContents:str):
+    def __addLogData(self, dictSLMDetectResult:dict, dictSLMPolicyResult:dict, dictMetaData:dict, dictUser:dict, strContents:str):
         
         '''
         '''
@@ -128,14 +128,16 @@ class Pipeline(PipelineBase):
         strSLMContent:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_SLM_CONTENT)
         
         #TODO: 정책 데이터를 받아온다.
-        strPolicyID:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_ID, "")
-        strPolicyName:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
-        strPolicyAction:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_ACTION, "")
-        strPolicyTarget:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_TARGET, "")
+        strPolicyID:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_ID, "")
+        strPolicyName:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
+        
+        #TODO: 정책의 Action을 바라본다.
+        strPolicyAction:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_ACTION, "")
+        strPolicyTarget:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_TARGET, "")
         
         # 데이터 생성
         # 정책 : slm의 action, 정책ID, 정책명, DB의 action값, 카테고리
-        strAction:str = strSLMAction
+        strAction:str = strPolicyAction
         strMasked:str = "" # 현재 수집이 안되는 값, 공백 처리.
         
         # 로그의 저장
@@ -217,6 +219,10 @@ class Pipeline(PipelineBase):
         '''
         
         # strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
+        
+        #한번더, 명확하게.
+        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
+        dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
         
         #accept로 점진적으로 통일.
         if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
