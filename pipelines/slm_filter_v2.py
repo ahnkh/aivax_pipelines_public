@@ -58,18 +58,29 @@ class Pipeline(PipelineBase):
             ApiParameterDefine.OUT_SLM_CONTENT : ""
             } #버퍼 한개만 추가.
         
+        #TODO: 정책과 결과는 분리해야 한다.
+        dictSLMPolicyResult:dict = {
+            
+            DBDefine.DB_FIELD_RULE_ID : "",
+            DBDefine.DB_FIELD_RULE_NAME : "",
+            DBDefine.DB_FIELD_RULE_ACTION : "",
+            DBDefine.DB_FIELD_RULE_TARGET : "",
+            
+        }
+        
         # 탐지, 우선은 별도 모듈 대한 private 함수로, 개발후 분리 필요. 설계 미흡으로 향후 추가 개발 필요
         slmFilterPattern:SLMFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_SLM)
         
-        slmFilterPattern.DetectPattern(strLocalContents, dictSLMDetectResult)
+        slmFilterPattern.DetectPattern(strLocalContents, dictSLMDetectResult, dictSLMPolicyResult)
         
         #반환값 할당, 중복이지만, 개별로 관리 TODO: 같이 사용하면 안되는데.. 일단 accept => allow로 변환.
-        strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
+        #Block, DB의 정책을 사용한다.
+        strSLMAction:str = dictSLMPolicyResult.get(ApiParameterDefine.OUT_ACTION)
         # strSLMContent:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_CONTENT)
         
         #TODO: 정책 데이터를 받아온다.
         # strPolicyID:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_ID, "")
-        strPolicyName:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
+        strPolicyName:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
         # strPolicyAction:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_ACTION, "")
         # strPolicyTarget:str = dictSLMDetectResult.get(DBDefine.DB_FIELD_RULE_TARGET, "")
         
@@ -217,8 +228,20 @@ class Pipeline(PipelineBase):
             strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
             
             #message
-            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage            
+            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
             #pass
+            
+        elif PipelineFilterDefine.ACTION_MASKING == strSLMAction:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_MASKING
+            
+            # 모호하여 하드코딩
+            dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = f'''[AIVAX] 프롬프트 마스킹
+AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
+❌탐지 유형은 '{strPolicyName}' 입니다.
+세부 지침 사항은 관리자에게 문의해주세요
+        '''
         
         return ERR_OK
     

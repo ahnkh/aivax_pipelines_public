@@ -31,6 +31,7 @@ class ApiParameterDefine:
     
     #TODO: GUI에서 사용하는 필드라, 변경할수 없다. 엔진에서 호출시에만 masked_contents로 변경한다.
     OUT_CONTENT = "content"
+    
     OUT_SLM_CONTENT = "slm_content"
     OUT_MASKED_CONTENTS = "masked_contents"
     OUT_BLOCK_MESSAGE = "block_message"

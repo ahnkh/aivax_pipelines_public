@@ -112,8 +112,10 @@ class FilterPipelineCommand:
                 #응답의 처리, 차단, block이 발생했으면, 종료 처리
                 #masking, accept는 더 수행이 되어야 한다. (25.12 기준 최대 3개의 inlet 제공)
                 if True == self.__isBlockFilter(dictEachFilterOutput):
-                    #여기는 LOG를 남기자.
-                    LOG().info("block inlet filter {strPipelineFilterName}, finish")
+                    # 테스트용 로그
+                    # LOG().info(f"block inlet filter {strPipelineFilterName}, finish")
+                    #추가후 종료
+                    dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
                     break
                 
             else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생

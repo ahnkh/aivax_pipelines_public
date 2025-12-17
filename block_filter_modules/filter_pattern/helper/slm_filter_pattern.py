@@ -58,7 +58,7 @@ class SLMFilterPattern (FilterPatternBase):
         return ERR_OK
     
     # 패턴 탐지
-    def DetectPattern(self, strPrompt:str, dictSLMDetectResult:dict):
+    def DetectPattern(self, strPrompt:str, dictSLMDetectResult:dict, dictSLMPolicyResult:dict):
         
         '''
         slm 정책, 단순 http post 요청
@@ -107,7 +107,7 @@ class SLMFilterPattern (FilterPatternBase):
         #TODO: 정책, 차단이 되면, 처음 탐지되는 정책으로 업데이트 한다.
 
         #응답 문자열 파싱, 결과 데이터 저장        
-        self.__parseSLMReponse(dictSLMHttpResponse, dictSLMDetectResult)
+        self.__parseSLMReponse(dictSLMHttpResponse, dictSLMDetectResult, dictSLMPolicyResult)
         
         return ERR_OK
     
@@ -169,7 +169,7 @@ class SLMFilterPattern (FilterPatternBase):
         return ERR_OK
     
     #데이터 추출, 우선 여기 개발후 리펙토링
-    def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictSLMDetectResult:dict):
+    def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictSLMDetectResult:dict, dictSLMPolicyResult:dict):
         
         '''
         데이터 오류, 또는 반환값이 없으면 allow
@@ -240,6 +240,7 @@ class SLMFilterPattern (FilterPatternBase):
         
         if PipelineFilterDefine.SLM_RESPONSE_UNSAFE in content:
             
+            #TODO: 이값이 필요없을수 있다.
             dictSLMDetectResult[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             
             # 차단이 되면, DB에 저장된 첫번째 정책을 업데이트 한다.
@@ -257,12 +258,12 @@ class SLMFilterPattern (FilterPatternBase):
                 action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
                 
                 #그대로 저장, 향후 추가적인 정보가 필요하면 전체를 업데이트하는 방향으로 변경
-                dictSLMDetectResult[DBDefine.DB_FIELD_RULE_ID] = id
-                dictSLMDetectResult[DBDefine.DB_FIELD_RULE_NAME] = name
-                dictSLMDetectResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
                 
                 #TODO: 이 값이 중복으로 사용.. 분리해서 전달이 되거나, 가공되어야 한다.
-                dictSLMDetectResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
                 # pass
             #pass
             
