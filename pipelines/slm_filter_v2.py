@@ -53,8 +53,9 @@ class Pipeline(PipelineBase):
         # 여기서 탐지
         # 탐지 결과 (block/allow), 원본 메시지를 추출한다. 향후 확장을 위한 응답 구조는 가져간다.
         dictSLMDetectResult:dict = {
-            ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ALLOW,
-            ApiParameterDefine.OUT_CONTENT : ""
+            #TODO: action 값, DB와 중복이다..
+            ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ACCEPT,
+            ApiParameterDefine.OUT_SLM_CONTENT : ""
             } #버퍼 한개만 추가.
         
         # 탐지, 우선은 별도 모듈 대한 private 함수로, 개발후 분리 필요. 설계 미흡으로 향후 추가 개발 필요
@@ -62,7 +63,7 @@ class Pipeline(PipelineBase):
         
         slmFilterPattern.DetectPattern(strLocalContents, dictSLMDetectResult)
         
-        #반환값 할당, 중복이지만, 개별로 관리
+        #반환값 할당, 중복이지만, 개별로 관리 TODO: 같이 사용하면 안되는데.. 일단 accept => allow로 변환.
         strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
         # strSLMContent:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_CONTENT)
         
@@ -206,7 +207,8 @@ class Pipeline(PipelineBase):
         
         # strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
         
-        if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
+        #accept로 점진적으로 통일.
+        if PipelineFilterDefine.ACTION_ACCEPT == strSLMAction:
             
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK

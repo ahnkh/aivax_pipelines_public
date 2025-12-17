@@ -260,6 +260,8 @@ class SLMFilterPattern (FilterPatternBase):
                 dictSLMDetectResult[DBDefine.DB_FIELD_RULE_ID] = id
                 dictSLMDetectResult[DBDefine.DB_FIELD_RULE_NAME] = name
                 dictSLMDetectResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                
+                #TODO: 이 값이 중복으로 사용.. 분리해서 전달이 되거나, 가공되어야 한다.
                 dictSLMDetectResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
                 # pass
             #pass

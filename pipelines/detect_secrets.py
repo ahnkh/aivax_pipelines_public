@@ -211,6 +211,9 @@ class Pipeline(PipelineBase):
             
             # LOG().info(f"Masked: {counts}, len = {len(spans)}")
             
+            #정책 확인용 테스트
+            # LOG().info(f"poilcy id = {strPolicyID}, name = {strPolicyName}, action = {strPolicyAction}")
+            
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
             
@@ -396,13 +399,17 @@ class Pipeline(PipelineBase):
             nBlockCount = counts.get("block")
             nMaskingCount = counts.get("masking")
             
+            #action은 저장한 값 => allow가 추가되었다.
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strAction
+            
             #block 먼저 체크
             if 0 < nBlockCount:
             
                 # masked = self.__maskSpans(content, spans)
                 # msg["content"] = masked
                 
-                dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                # 이걸 지정하면 안된다.
+                # dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 
                 #TODO: maskinig 이든, block 이든 masking 처리 한다.
                 masked = self.__maskSpans(strPrompt, spans)     
@@ -418,7 +425,7 @@ class Pipeline(PipelineBase):
                 
             elif 0 < nMaskingCount:
                 
-                dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+                # dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
                 
                 masked = self.__maskSpans(strPrompt, spans)                
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = masked
