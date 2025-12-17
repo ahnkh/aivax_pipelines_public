@@ -188,7 +188,7 @@ class Pipeline(PipelineBase):
                 "id": session_id,
                 "present": not is_fallback,   
             },
-            "user": {"id": user_id, "role": user_role, "email": user_email},
+            "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},            
             "src":     {"ip": client_host}, 
             "channel": channel,
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),

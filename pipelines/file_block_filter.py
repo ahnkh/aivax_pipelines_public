@@ -111,6 +111,8 @@ class Pipeline(PipelineBase):
             "mode": strAction,
             "src":     {"ip": client_host},
             
+            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+            
             #regex pattern에 맞춰서.. => 각 파일별 정책, 파일 별로 추가한다.
             # "policy_id" : strPolicyID,
             # "policy_name" : strPolicyName,

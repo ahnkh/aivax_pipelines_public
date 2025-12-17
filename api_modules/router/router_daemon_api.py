@@ -31,7 +31,7 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     **filter_list** : 차단 필터 리스트    
     - _secret_filter_ : <u>API 차단 필터</u>
     
-    - llm_filter : AI 필터 (신규 llm/slm 필터로 변경)
+    - slm_filter : AI SLM 필터 
     - input_filter : opensearch 저장 (프롬프트)
     
     - file_block_filter : file에 대한 필터 기능 제공
@@ -55,7 +55,8 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     - id : 사용자 ID
     - email : email
     - client_host : client host ip
-    - session_id : session id
+    - session_id : 세션 ID
+    - message_id : AI 메시지 ID
     
     예제   
     ```bash 
@@ -75,6 +76,7 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
         "ai_service":1,
         "client_host":"127.0.0.1",
         "session_id":"",
+        "message_id":"c_d9b4beb201ac86ac_1765879291",
         "attach_files": [
             "/home1/aivax/data_resource/attach_file/sample.docx"
         ]

@@ -165,7 +165,7 @@ class ApiRouterImplCommand:
         # return apiResponseHandler.outResponse()
         # # return dictApiOutResponse
         
-        LOG().info(f"run api block command, prompt = {modelItem.prompt}")
+        # LOG().info(f"run api block command, id = {modelItem.message_id}, email = {modelItem.email}, client = {modelItem.client_host}, ai.service = {modelItem.ai_service}, prompt = {modelItem.prompt}")
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         

@@ -5,6 +5,8 @@
 #   2) 엔트로피 높은 토큰(완화 임계치)
 # 를 탐지하여 해당 "토큰/값"만 [MASKING]으로 치환
 
+import copy
+
 from lib_include import *
 
 from type_hint import *
@@ -186,13 +188,20 @@ class Pipeline(PipelineBase):
                 
                 raise Exception(f"invalid content format, id = {self.id}, content = {content}")                
                 # continue
+                
+                
+            #TODO: content, 재사용하면 안된다.
+            strLocalContents:str = copy.deepcopy(content)
+            
+            masked:str = ""
+            
 
             #TODO: detect span 기능, 통째로 이관
             # spans, counts = self.__detect_spans(content)
             
             #TODO: 구조 변경 필요, valve 클래스, 참조가 어려운 문제
             valves = self.valves
-            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(content, valves, user_id, uuid, ai_service_type)
+            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(strLocalContents, valves, user_id, uuid, ai_service_type)
                         
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")
@@ -226,8 +235,10 @@ class Pipeline(PipelineBase):
                     dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK
                     
                     #TODO: maskinig 이든, block 이든 masking 처리 한다.
-                    masked = self.__maskSpans(content, spans)
-                    msg["content"] = masked
+                    masked = self.__maskSpans(strLocalContents, spans)
+                    
+                    #TODO: 이건 변경하지 않도록 설정한다. (2단계 모델만 지원)
+                    # msg["content"] = masked
                     dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = masked
                     
                     #strBlockMessage:str = self.__customBlockMessage()
@@ -297,7 +308,7 @@ class Pipeline(PipelineBase):
                 
                 "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
                 "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
-                "content": content,
+                "content": strLocalContents,
                 "message":msg,
                 
                 "request": {"id": message_id},
@@ -334,7 +345,7 @@ class Pipeline(PipelineBase):
                 "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
                 
                 #masked contents 추가
-                "masked_contents" : dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS)
+                "masked_contents" : masked
                 
                 # "final_action": fa_internal,
             }

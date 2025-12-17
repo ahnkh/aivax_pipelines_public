@@ -77,8 +77,15 @@ class OuputPipelineCommand:
         #  직접 호출
         # body:dict = {}
         
+        # 사용자 정보, 요청에 있는 것과 동일하게, 저장만 하지 않는다.
+        strUserKey:str = f"{modelItem.email}_{modelItem.ai_service}"
+        
+        #TODO: uuid는 생성해야 한다. userKey로 관리된다. 자료 구조 필요, 계정관리자에서 관리해서, mainApp를 통해서 공유 받자.
+        strUUID:str = mainApp.GenerateUUID(strUserKey)
+        
         # 사용자 정보, 있으면 전달, 저장은 하지 않는다.
         user:dict = {
+            ApiParameterDefine.UUID : strUUID,
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service,

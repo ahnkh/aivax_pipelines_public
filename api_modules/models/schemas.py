@@ -71,7 +71,7 @@ class VariantFilterForm(BaseModel):
     '''
     
     # filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter"] #차단 필터 리스트, 기본값 secret_filter
-    filter_list: Optional[List[str]] = ["input_filter", "secret_filter"] #테스트
+    filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "slm_filter"] #테스트
     
     # prompt: str = "프롬프트를 입력해주세요" #
     prompt: str = Field(default="", description="입력 프롬프트")
@@ -80,7 +80,7 @@ class VariantFilterForm(BaseModel):
     # prompt:str = "API_key=sk-1234567-0000-abdcdef"
     
     #케이스2, 결과 = 차단 실패, 키 길이 문제, 15~20 으로 유연하게 정규식 변경 필요    
-    # prompt:str = "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"
+    prompt:str = "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"
     
     #케이스4, 결과 = 차단 실패
 #     prompt:str = '''
