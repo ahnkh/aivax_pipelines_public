@@ -306,15 +306,13 @@ class Pipeline(PipelineBase):
             
             #ai service 명 추가
             # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")  
-            
-            strFilterName:str = str(PipelineFilterDefine.FILTER_STAGE_REGEX) 
 
             #opensearch 저장 변수, TODO: 리펙토링 필요            
             dictOpensearchDocument:dict = {
                 "@timestamp": ts_isoz(),
                 
-                "filter" : strFilterName,
-                "filter_name": strFilterName,
+                "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
+                "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
                 "content": strLocalContents,
                 "message":msg,
                 
@@ -330,7 +328,7 @@ class Pipeline(PipelineBase):
                 
                 # stage, regex로 통일
                 # "stage":   "detect_secrets",
-                "stage":   PipelineFilterDefine.FILTER_STAGE_REGEX,
+                "stage":   [PipelineFilterDefine.FILTER_STAGE_REGEX],
                 # "detection": detection_status,
                 "should_block": (strFinalAction == "block"),
                 "mode": strPolicyAction, #DB상의 action으로 교체 (should_block과 값이 다르다.)

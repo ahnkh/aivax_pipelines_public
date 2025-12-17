@@ -89,20 +89,18 @@ class Pipeline(PipelineBase):
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
             # dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = ""
             
-        strFilterName:str = str(PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK) 
-            
         #opensearch 저장, file list 중심의 저장
         dictOpensearchDocument = {
             "@timestamp": ts_isoz(),
-            "filter" : strFilterName,
-            "filter_name": strFilterName,
+            "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
+            "filter_name": PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             
             "request": {"id": message_id},
             "session": {"id": session_id},
             
             "user": {"id": user_id, "email": user_email, "uuid" : uuid},
             
-            "stage":   PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
+            "stage": [PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK],
             
             # 일단 이 값은 유지, input, output 점검 시점에 다시 정리
             "should_block": (strAction == "block"),

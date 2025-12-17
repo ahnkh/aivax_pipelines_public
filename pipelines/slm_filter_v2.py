@@ -140,16 +140,13 @@ class Pipeline(PipelineBase):
         message_id:str = dictMetaData.get(ApiParameterDefine.MESSAGE_ID)
         session_id:str = dictMetaData.get(ApiParameterDefine.SESSION_ID)
         
-        
-        strFilterName:str = str(PipelineFilterDefine.FILTER_STAGE_SLM)
-        
         # opensearch 저장
         #opensearch 저장 변수, TODO: 리펙토링 필요            
         dictOpensearchDocument:dict = {
             "@timestamp": ts_isoz(),
             
-            "filter" : strFilterName,
-            "filter_name": strFilterName,
+            "filter" : PipelineFilterDefine.FILTER_STAGE_SLM,
+            "filter_name": PipelineFilterDefine.FILTER_STAGE_SLM,
             "content": strContents,
             "message":{},
             
@@ -165,7 +162,7 @@ class Pipeline(PipelineBase):
             
             # stage, regex로 통일
             # "stage":   "detect_secrets",
-            "stage":   PipelineFilterDefine.FILTER_STAGE_SLM,
+            "stage":   [PipelineFilterDefine.FILTER_STAGE_SLM],
             # "detection": detection_status,
             "should_block": (strAction == "block"),
             "mode": strPolicyAction, #DB상의 action으로 교체 (should_block과 값이 다르다.)
