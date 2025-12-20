@@ -53,6 +53,8 @@ from libhttprequest.http_request_interface import HttpRequestInterface
 
 from libnetwork.network_util import NetworkUtil
 
+from liboffice.office_document_reader import OfficeDocumentReader
+
 from common_modules.const_define.kshell_global_define import KShellGlobalDefine
 from common_modules.const_define.kshell_parameter_define import KShellParameterDefine
 from common_modules.const_define.factory_instance_define import FactoryInstanceDefine, InstanceModulePathDefine
@@ -187,6 +189,7 @@ class FileDefine:
     MIME_DOC = "application/msword"
     MIME_DOCX = "application/octet-stream"
     MIME_HWP = "application/x-hwp"
+    MIME_HWPX = "application/zip"
     MIME_PDF = "application/pdf"
     
     #File 확장자
