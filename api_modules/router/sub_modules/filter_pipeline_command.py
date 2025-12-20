@@ -117,6 +117,8 @@ class FilterPipelineCommand:
                     #추가후 종료
                     dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
                     break
+                    #pass if
+                #pass if
                 
             else: #TODO: 예외 강화, 존재하지 않는 filter이면 에러 처리 => 로깅만 처리, 예외는 미발생
                 
@@ -131,6 +133,7 @@ class FilterPipelineCommand:
             # dictApiOutResponse["filter_result"][strPipelineFilterName] = dictEachFilterOutput
             
             dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
+            #pass for
             
         #최종 메시지.
         #응답 데이터 가공 좀더 개선 필요     
@@ -148,7 +151,7 @@ class FilterPipelineCommand:
         }
         apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
             
-        #Filer별 요청후, 마지막에 취합
+        #Filter별 요청후, 마지막에 취합
         routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult)
         
         #개별 pipeline 결과
@@ -162,7 +165,6 @@ class FilterPipelineCommand:
         return apiResponseHandler.outResponse()
         # return dictApiOutResponse
         
-        
     ########################################################## private
     
     #차단결과, 차단이 발생했으면, 다음 inlet은 동작하지 않고 skip
@@ -174,8 +176,7 @@ class FilterPipelineCommand:
         action:str = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_ALLOW)
         action_code:int = dictEachFilterOutput.get(ApiParameterDefine.OUT_ACTION_CODE, PipelineFilterDefine.CODE_ALLOW)
         
-        if PipelineFilterDefine.CODE_BLOCK == action_code or PipelineFilterDefine.ACTION_BLOCK == action:
-            
+        if PipelineFilterDefine.CODE_BLOCK == action_code or PipelineFilterDefine.ACTION_BLOCK == action:            
             return True
         
         return False

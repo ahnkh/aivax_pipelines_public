@@ -52,11 +52,12 @@ class Pipeline(PipelineBase):
         
         # 여기서 탐지
         # 탐지 결과 (block/allow), 원본 메시지를 추출한다. 향후 확장을 위한 응답 구조는 가져간다.
-        dictSLMDetectResult:dict = {
-            #TODO: action 값, DB와 중복이다..
-            ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ACCEPT,
-            ApiParameterDefine.OUT_SLM_CONTENT : ""
-            } #버퍼 한개만 추가.
+        # 통합, 정책만 분리한다.
+        # dictSLMDetectResult:dict = {
+        #     #TODO: action 값, DB와 중복이다..
+        #     ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ACCEPT,
+        #     ApiParameterDefine.OUT_SLM_CONTENT : ""
+        #     } #버퍼 한개만 추가.
         
         #TODO: 정책과 결과는 분리해야 한다.
         dictSLMPolicyResult:dict = {
@@ -71,7 +72,7 @@ class Pipeline(PipelineBase):
         # 탐지, 우선은 별도 모듈 대한 private 함수로, 개발후 분리 필요. 설계 미흡으로 향후 추가 개발 필요
         slmFilterPattern:SLMFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_SLM)
         
-        slmFilterPattern.DetectPattern(strLocalContents, dictSLMDetectResult, dictSLMPolicyResult)
+        slmFilterPattern.DetectPattern(strLocalContents, dictOuputResponse, dictSLMPolicyResult)
         
         #반환값 할당, 중복이지만, 개별로 관리 TODO: 같이 사용하면 안되는데.. 일단 accept => allow로 변환.
         #Block, DB의 정책을 사용한다.
@@ -90,7 +91,7 @@ class Pipeline(PipelineBase):
         self.__updateApiOutResponse(strSLMAction, strPolicyName, dictOuputResponse)
         
         # 로그의 저장
-        self.__addLogData(dictSLMDetectResult, dictSLMPolicyResult, metadata, dictUser, strLocalContents)
+        self.__addLogData(dictOuputResponse, dictSLMPolicyResult, metadata, dictUser, strLocalContents)
         
         return ERR_OK
     
@@ -118,14 +119,14 @@ class Pipeline(PipelineBase):
         return ""
     
     # opensearch로의 저장, 분리해본다.
-    def __addLogData(self, dictSLMDetectResult:dict, dictSLMPolicyResult:dict, dictMetaData:dict, dictUser:dict, strContents:str):
+    def __addLogData(self, dictOuputResponse:dict, dictSLMPolicyResult:dict, dictMetaData:dict, dictUser:dict, strContents:str):
         
         '''
         '''
         
-        #반환값 할당, 중복이지만, 개별로 관리
-        strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
-        strSLMContent:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_SLM_CONTENT)
+        # action, db의 action을 따라간다.
+        # strSLMAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
+        strSLMContent:str = dictOuputResponse.get(ApiParameterDefine.OUT_SLM_CONTENT)
         
         #TODO: 정책 데이터를 받아온다.
         strPolicyID:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_ID, "")
@@ -138,7 +139,9 @@ class Pipeline(PipelineBase):
         # 데이터 생성
         # 정책 : slm의 action, 정책ID, 정책명, DB의 action값, 카테고리
         strAction:str = strPolicyAction
-        strMasked:str = "" # 현재 수집이 안되는 값, 공백 처리.
+        
+        #masked 시점에, output으로 생성한 값, 전달
+        strMasked:str = dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "") 
         
         # 로그의 저장
         #TODO: 약간의 중복코드, 일단 그대로 사용 (향후 tuple 정도로 정리)
@@ -220,21 +223,15 @@ class Pipeline(PipelineBase):
         
         # strSLMAction:str = dictSLMDetectResult.get(ApiParameterDefine.OUT_ACTION)
         
-        #한번더, 명확하게.
-        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
-        dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
-        
         #accept로 점진적으로 통일.
+        #TODO: DB의 설정값으로 sslproxy를 제어한다. sslproxy는 block, masking, allow 3가지를 사용한다.
         if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
             
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK
             
-            #정책 카테고리, name만 표기                
-            strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
-            
             #message
-            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
+            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
             #pass
             
         elif PipelineFilterDefine.ACTION_MASKING == strSLMAction:
@@ -243,11 +240,13 @@ class Pipeline(PipelineBase):
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_MASKING
             
             # 모호하여 하드코딩
-            dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = f'''[AIVAX] 프롬프트 마스킹
-AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
-❌탐지 유형은 '{strPolicyName}' 입니다.
-세부 지침 사항은 관리자에게 문의해주세요
-        '''
+            dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = self.__filterCustomUtil.CustomMaskMessageOfSLM(strPolicyName)
+        
+        else: # 여기는 명확하게 가자.
+            
+            # #한번더, 명확하게.
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
         
         return ERR_OK
     

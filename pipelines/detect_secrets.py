@@ -189,17 +189,11 @@ class Pipeline(PipelineBase):
                 raise Exception(f"invalid content format, id = {self.id}, content = {content}")                
                 # continue
                 
-                
             #TODO: content, 재사용하면 안된다.
             strLocalContents:str = copy.deepcopy(content)
             
             masked:str = ""
-            
-
-            #TODO: detect span 기능, 통째로 이관
-            # spans, counts = self.__detect_spans(content)
-            
-            #TODO: 구조 변경 필요, valve 클래스, 참조가 어려운 문제
+                       
             valves = self.valves
             (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(strLocalContents, valves, user_id, uuid, ai_service_type)
                         
@@ -208,11 +202,6 @@ class Pipeline(PipelineBase):
             strPolicyName:str = dictDetectedRule.get("name", "")
             strPolicyAction:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ACTION, "")
             strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: define 처리 필수
-            
-            # LOG().info(f"Masked: {counts}, len = {len(spans)}")
-            
-            #정책 확인용 테스트
-            # LOG().info(f"poilcy id = {strPolicyID}, name = {strPolicyName}, action = {strPolicyAction}")
             
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
@@ -261,7 +250,6 @@ class Pipeline(PipelineBase):
                     #TODO: 여기서부터는 협의 필요                    
                     dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
                     
-                    
                 #테스트, LLM으로 변조된 메시지를 보내는게 주요 기능이다.
                 # ★ LLM에게 안내문을 '그대로 출력'하도록 지시
                 # block_notice = "[AIVAX] 민감정보의 유출이 감지되어 차단되었습니다. 개인정보를 제외하고 다시 시도해주세요."
@@ -271,7 +259,6 @@ class Pipeline(PipelineBase):
                 #     "다음 문장을 사용자에게 그대로 출력하세요(추가 설명/수정/확장/사과문/이모지 금지):\n"
                 #     f"{strBlockMessage}"
                 # )
-                
                 
             else:
                 # LOG().info("No secrets detected (regex+entropy).")
@@ -292,10 +279,6 @@ class Pipeline(PipelineBase):
             
             # meta = body.get("metadata") or {}
             metadata:dict = body.get(ApiParameterDefine.META_DATA)
-                            
-            # user_id = (__user__ or {}).get(ApiParameterDefine.NAME) if isinstance(__user__, dict) else None
-            # user_email = (__user__ or {}).get(ApiParameterDefine.EMAIL) if isinstance(__user__, dict) else None            
-            # ai_service_type = (__user__ or {}).get(ApiParameterDefine.AI_SERVICE) if isinstance(__user__, dict) else None
             
             message_id = metadata.get(ApiParameterDefine.MESSAGE_ID)
             session_id = metadata.get(ApiParameterDefine.SESSION_ID)
@@ -370,7 +353,7 @@ class Pipeline(PipelineBase):
         return ERR_OK
     
     #룰 테스트 메소드 추가
-    async def testRule(self, strPrompt:str, strRule:str, strAction:str, dictOuputResponse:dict, request:Request):
+    async def testRule(self, strPrompt:str, strRule:str, strAction:str, dictOuputResponse:dict):
         
         '''
         TODO: 우선 개발후, 2차 리펙토링 필수

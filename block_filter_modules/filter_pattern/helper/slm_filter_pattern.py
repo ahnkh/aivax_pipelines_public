@@ -58,7 +58,7 @@ class SLMFilterPattern (FilterPatternBase):
         return ERR_OK
     
     # 패턴 탐지
-    def DetectPattern(self, strPrompt:str, dictSLMDetectResult:dict, dictSLMPolicyResult:dict):
+    def DetectPattern(self, strPrompt:str, dictOuputResponse:dict, dictSLMPolicyResult:dict):
         
         '''
         slm 정책, 단순 http post 요청
@@ -107,7 +107,7 @@ class SLMFilterPattern (FilterPatternBase):
         #TODO: 정책, 차단이 되면, 처음 탐지되는 정책으로 업데이트 한다.
 
         #응답 문자열 파싱, 결과 데이터 저장        
-        self.__parseSLMReponse(dictSLMHttpResponse, dictSLMDetectResult, dictSLMPolicyResult)
+        self.__parseSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
         
         return ERR_OK
     
@@ -169,7 +169,7 @@ class SLMFilterPattern (FilterPatternBase):
         return ERR_OK
     
     #데이터 추출, 우선 여기 개발후 리펙토링
-    def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictSLMDetectResult:dict, dictSLMPolicyResult:dict):
+    def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
         
         '''
         데이터 오류, 또는 반환값이 없으면 allow
@@ -234,14 +234,14 @@ class SLMFilterPattern (FilterPatternBase):
         message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
         content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
         
-        dictSLMDetectResult[ApiParameterDefine.OUT_SLM_CONTENT] = content
+        dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
         
         # 차단여부
         
         if PipelineFilterDefine.SLM_RESPONSE_UNSAFE in content:
             
             #TODO: 이값이 필요없을수 있다.
-            dictSLMDetectResult[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             
             # 차단이 되면, DB에 저장된 첫번째 정책을 업데이트 한다.
             lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
@@ -254,6 +254,8 @@ class SLMFilterPattern (FilterPatternBase):
                 name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
                 targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
 
+                #SLM의 응답에 대한 차단 결과와 별개로, 정책의 action이 존재한다.
+                #정책의 action은 UI로 전달되며, 1차는 정책의 action으로 sslproxy의 결과를 제어한다.
                 # rule:str = dictDBPattern.get("rule")
                 action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
                 
@@ -266,8 +268,6 @@ class SLMFilterPattern (FilterPatternBase):
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
                 # pass
             #pass
-            
-            
             
         # else: #차단이 아니면 일단 모두 safe
         
