@@ -112,8 +112,8 @@ class Pipeline(PipelineBase):
             "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             "filter_name": PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             
-            "content": "", #TODOL 없는 데이터
-            "message":"",
+            # "content": "", #TODOL 없는 데이터
+            # "message":"",
             
             "request": {"id": message_id},
             "session": {"id": session_id},
