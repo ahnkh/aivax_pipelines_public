@@ -307,7 +307,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileBlockMaxSize})"
             return (False, strReason)
         
-        return True,
+        return (True,"")
     
     def __detectEachFileAt(self, strFileName:str, dictEachFileOutput:dict, nFileReadTimeout:int):
         
@@ -433,6 +433,7 @@ class FileBlockFilterPattern(FilterPatternBase):
 
         #차단, 마스킹 무시 향후 비활성화면 검토
         action:str = dictDBPattern.get("action")
+        rule:str = dictDBPattern.get("rule")
         
         # regex_flag:int = int(dictDBPattern.get("regex_flag"))
         regex_group:int = (dictDBPattern.get("regex_group"))
@@ -453,16 +454,15 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             #TODO: 단순하게 정책에  포함되면, 차단이다. 테스트 필요.
             for m in regex_pattern.finditer(strPromptText):
-                
-                #테스트 로그
-                rule:str = dictDBPattern.get("rule")
-                
-                LOG().info(f"block file text, id = {id}, name = {name}, rule = {rule}")
+                                
+                # LOG().info(f"block file text, id = {id}, name = {name}, rule = {rule}")
                 
                 # 차단 시점의 정책 추가
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
                 dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+                
+                # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
                 
                 return True
                 
@@ -489,6 +489,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
                 dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+                # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
                 
                 return True
                 # pass

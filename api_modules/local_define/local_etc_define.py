@@ -59,6 +59,7 @@ class ApiParameterDefine:
     
     POLICY_ID = "policy_id"
     POLICY_NAME = "policy_name"
+    POLICY_RULE = "policy_rule"
     
     #TODO: 여기서 부터는 API와 상관없는 항목이다. => API에서 생성되는 항목으로, 여기까지는 같이 관리..
     USER_KEY = "user_key" #사용자 키, 추가

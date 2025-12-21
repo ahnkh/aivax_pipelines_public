@@ -162,7 +162,7 @@ class DBDefine:
     
     # FILTER_KEY_DETECT_SECRET = "filter-detect-secret"
     FILTER_KEY_REGEX = "filter-regex"
-    FILTER_KEY_BLOCK_FILE = "filter-block-file"
+    FILTER_KEY_BLOCK_FILE = "filter-file-block"
     FILTER_KEY_SLM = "filter-slm"
         
     POLICY_FILTER_SCOPE_USER = "user"
