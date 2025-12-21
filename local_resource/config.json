@@ -102,6 +102,12 @@
         "use_skip" : 0,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
         "request_timeout" : 60
+    },
+
+    "file_block_filter_module":
+    {
+        "attach_file_base_dir" : "/home1/aivax/data_resource/attach_file",
+        "file_read_timeout" : 60
     }
 
 

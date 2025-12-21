@@ -313,6 +313,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
         
+        # 수집이 되던, 안되던, chunk 저장, 256 byte
+        strChunk:str = strContents[:256]
+        dictEachFileOutput[ApiParameterDefine.FILE_INFO]["chunk"] = strChunk
+        
         # 여기서 정규식 매칭.
         # 우선 테스트
         nContentsLen:int = len(strContents)
