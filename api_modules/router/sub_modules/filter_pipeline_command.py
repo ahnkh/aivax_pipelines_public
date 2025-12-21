@@ -30,6 +30,8 @@ class FilterPipelineCommand:
         from mainapp.pipeline_main_app import PipeLineMainApp
         mainApp:PipeLineMainApp = _mainApp
         
+        LOG().info(f"model = {modelItem.model_dump()}")
+        
         dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
         
         #테스트, 디버그

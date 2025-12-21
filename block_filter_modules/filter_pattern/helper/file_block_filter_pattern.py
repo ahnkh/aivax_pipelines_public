@@ -172,23 +172,24 @@ class FileBlockFilterPattern(FilterPatternBase):
         # for strFileName in lstAttachFile:
         for dictFileInfo in lstAttachFile:
             
-            dictFileInfo.get("id") #TODO: 의미 모호 => 이게 path이면 테스트 과정에서 사용
+            id:str = dictFileInfo.get("id") #TODO: 의미 모호 => 이게 path이면 테스트 과정에서 사용
             # dictFileInfo.get("size") #TODO: 불필요 => 실제 파일 사이즈
-            strFileName:str = dictFileInfo.get("name") # 파일 경로만 전달된다.
+            strFileName:str = dictFileInfo.get("name") # 실제 파일명을 전달한다.
             # dictFileInfo.get("mime_type") #TODO: 불필요
             
-            strAttachFileRealPath = f"{attach_file_base_dir}/{strFileName}"
+            # 사양변경,id가 실제 파일 경로 이 로직은 불필요
+            #strAttachFileRealPath = f"{attach_file_base_dir}/{strFileName}"
                         
             # 각 파일별 결과, list가 낫겠다. => TODO: UI에서는 ACCEPT로 바라본다.
             dictEachFileOutput:dict = {
                 ApiParameterDefine.OUT_ACTION : "", #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
-                ApiParameterDefine.FILE_NAME : strAttachFileRealPath,
+                ApiParameterDefine.FILE_NAME : strFileName,
                 
                 ApiParameterDefine.POLICY_ID : "",
                 ApiParameterDefine.POLICY_NAME : "",
             }
             
-            self.__detectEachFileAt(strAttachFileRealPath, dictEachFileOutput, file_read_timeout)
+            self.__detectEachFileAt(id, dictEachFileOutput, file_read_timeout)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
@@ -309,7 +310,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return (True,"")
     
-    def __detectEachFileAt(self, strFileName:str, dictEachFileOutput:dict, nFileReadTimeout:int):
+    def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int):
         
         '''
         파일 타입을 읽고, 그 파일에 따라 파일을 읽는 모듈을 분기한다.
@@ -318,14 +319,14 @@ class FileBlockFilterPattern(FilterPatternBase):
         이후 regex 정책으로 테스트 한다. 정책은 default만 지원, uuid, servicetype을 알수 없다.
         '''
         
-        strMimeType:str = magic.from_file(strFileName, mime=True)
+        strMimeType:str = magic.from_file(strFilePath, mime=True)
         
         #file 유형, 파일 확장자가 아닌, mimetype으로 분기, dict
         
         #TODO: 기타 정보 수집
         #TODO: 리펙토링은 나중, 우선 만들어 보자.
         
-        stat = os.stat(strFileName)
+        stat = os.stat(strFilePath)
         
         strFileExt:str = FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN)
         nFileSize:int = stat.st_size
@@ -334,7 +335,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             "mime_type" : strMimeType,
             "file_ext" : strFileExt,
             "size" : nFileSize,
-            "hash" : hashlib.sha256(open(strFileName,'rb').read()).hexdigest()
+            "hash" : hashlib.sha256(open(strFilePath,'rb').read()).hexdigest()
         }
         
         #TODO: 여기 지저분, 나중에 개선, 분리는 필요.
@@ -361,21 +362,21 @@ class FileBlockFilterPattern(FilterPatternBase):
         
             # 텍스트 추출, 테스트,word 만 테스트
             # strContents = docx2txt.process(strFileName)            
-            strContents = self.__officeReader.ReadDocxToText(strFileName)
+            strContents = self.__officeReader.ReadDocxToText(strFilePath)
             
         elif FileDefine.MIME_DOC == strMimeType:            
-            strContents = self.__officeReader.ReadDocToText(strFileName, nFileReadTimeout)
+            strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
             
         elif FileDefine.MIME_HWP == strMimeType:
-            strContents = self.__officeReader.ReadHwpToText(strFileName, nFileReadTimeout)
+            strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
             # pass
         
         elif FileDefine.MIME_HWPX == strMimeType:
-            strContents = self.__officeReader.ReadHwpxToText(strFileName)
+            strContents = self.__officeReader.ReadHwpxToText(strFilePath)
             # pass
             
         elif FileDefine.MIME_PDF == strMimeType:
-            strContents = self.__officeReader.ReadPdfToText(strFileName)
+            strContents = self.__officeReader.ReadPdfToText(strFilePath)
         
         else:
             raise Exception (f"unsupported file type {strMimeType}")

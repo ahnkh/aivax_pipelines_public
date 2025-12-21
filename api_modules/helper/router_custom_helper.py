@@ -222,9 +222,9 @@ class RouterCustomHelper:
         FileAttachItem
         '''
         
-        lstFiltAttachItem:List[FileAttachItem] = modelItem.attach_files
+        # lstFiltAttachItem:List[FileAttachItem] = modelItem.attachments
         
-        for fileAttachItem in modelItem.attach_files:
+        for fileAttachItem in modelItem.attachments:
             
             id:str = fileAttachItem.id
             size:int = fileAttachItem.size

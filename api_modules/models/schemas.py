@@ -160,7 +160,8 @@ class VariantFilterForm(BaseModel):
     # file 분석 기능 추가, 옵션, 다수의 리스트를 전달
     # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.
     # attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
-    attach_files: Optional[List[FileAttachItem]] = Field(default_factory=list, description="첨부 파일 리스트")
+    # attach_files: Optional[List[FileAttachItem]] = Field(default_factory=list, description="첨부 파일 리스트")
+    attachments: Optional[List[FileAttachItem]] = Field(default_factory=list, description="첨부 파일 리스트")
     
     # attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
     

@@ -204,9 +204,9 @@ class ApiRouterImplCommand:
         
         final_decision:dict = dictFilterOutput.get("final_decision")
         
-        action:int = final_decision.get("action")
+        action_code:int = final_decision.get(ApiParameterDefine.OUT_ACTION_CODE)
         
-        if PipelineFilterDefine.CODE_BLOCK == action:
+        if PipelineFilterDefine.CODE_BLOCK == action_code:
             
             strBlockMessage:str = final_decision.get("block_message")
         
