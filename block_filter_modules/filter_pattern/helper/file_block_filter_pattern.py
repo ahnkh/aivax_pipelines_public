@@ -302,8 +302,11 @@ class FileBlockFilterPattern(FilterPatternBase):
             # pass
         
         elif FileDefine.MIME_HWPX == strMimeType:
-            strContents = self.__officeReader.RreadHwpxToText(strFileName)
+            strContents = self.__officeReader.ReadHwpxToText(strFileName)
             # pass
+            
+        elif FileDefine.MIME_PDF == strMimeType:
+            strContents = self.__officeReader.ReadPdfToText(strFileName)
         
         else:
             raise Exception (f"unsupported file type {strMimeType}")
