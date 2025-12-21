@@ -80,6 +80,9 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # local 설정값.
         self.__dictFileBlockInfoLocalConfig:dict = None
+        
+        # file 설정, 제한값, DB에서 가져온다. local 설정의 업데이트는 하지 않는다. (참조만)
+        self.__dictFileBlockDBConfig:dict = None
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -96,12 +99,17 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         self.__dictFileBlockInfoLocalConfig:dict = {}
         
+        #file 설정, 제한값
+        self.__dictFileBlockDBConfig = {}
+        
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
         
         self.__officeReader:OfficeDocumentReaderEx = OfficeDocumentReaderEx()
         
         #local 설정 정보, 읽어온다.
-        self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig)
+        self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
+        
+        
         
         return ERR_OK
     
@@ -256,7 +264,52 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
+    # 파일 정보, 확장자 사이즈등 제한값, 이것도 notify로, customize
+    def notifyCustomUpdateFileBlockInfo(self, dictFileBlockPolicy:dict):
+        
+        '''
+        '''
+        
+        lstFileBlockAllowExt:list = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
+        nFileBlockMaxSize:int = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
+        
+        # 기본 예외처리만, 아무것도 허용 안할수도 있다.
+        if None == lstFileBlockAllowExt or 0 > nFileBlockMaxSize:
+            LOG().error(f"invalid file block policy, no allow ext and max size, skip")
+            return ERR_OK
+        
+        # 확장자, 제한값, 기본값 추가, 설정이 잘못되면, 모두 차단이다.
+        self.__dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstFileBlockAllowExt
+        self.__dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = nFileBlockMaxSize
+        
+        return ERR_OK
+    
     ####################################### private
+    
+    def __isAllowFileExtAndSize(self, strFileExt:str, nFileSize:int):
+        
+        '''
+        '''
+        
+        # 사이즈, 확장자 체크 => 일단 메모리 연산이니, 가독성 차원에서 이정도 비용은 감수한다.
+        lstFileBlockAllowExt:list = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
+        nFileBlockMaxSize:int = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
+        
+        bBlock:bool = False
+        strReason:str = "" #사유, 일단 임의의 문자열
+        
+        # File 확장자 제한
+        if not (strFileExt in lstFileBlockAllowExt):
+            strExtension = ",".join(lstFileBlockAllowExt)
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} (f{strExtension})"
+            return (False, strReason)
+        
+        # file size 제한
+        if nFileBlockMaxSize < nFileSize:
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} (f{nFileBlockMaxSize})"
+            return (False, strReason)
+        
+        return True,
     
     def __detectEachFileAt(self, strFileName:str, dictEachFileOutput:dict, nFileReadTimeout:int):
         
@@ -276,12 +329,30 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         stat = os.stat(strFileName)
         
+        strFileExt:str = FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN)
+        nFileSize:int = stat.st_size
+        
         dictEachFileOutput[ApiParameterDefine.FILE_INFO] = {
             "mime_type" : strMimeType,
-            "file_ext" : FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN),
-            "size" : stat.st_size,
+            "file_ext" : strFileExt,
+            "size" : nFileSize,
             "hash" : hashlib.sha256(open(strFileName,'rb').read()).hexdigest()
         }
+        
+        #TODO: 여기 지저분, 나중에 개선, 분리는 필요.
+        bAllowFileExt:bool = True
+        strReason:str = ""
+        
+        (bAllowFileExt,strReason) = self.__isAllowFileExtAndSize(strFileExt, nFileSize)
+        
+        if False == bAllowFileExt:
+        
+            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
+            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
+            
+            return ERR_OK
+        
         
         # self.__detectGetFileType(strFileName)
         
@@ -319,9 +390,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # 여기서 정규식 매칭.
         # 우선 테스트
-        nContentsLen:int = len(strContents)
-        
-        LOG().info(f"read document contents, len = {nContentsLen}")
+        # nContentsLen:int = len(strContents)        
+        # LOG().info(f"read document contents, len = {nContentsLen}")
         
         #이걸 프롬프트로, regex 필터에 요청하고, 결과로 차단/탐지, 정책명을 수집한다.
         # filterid만 바꾸면, 재활용 가능하다.
@@ -346,7 +416,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             if True == bBlockContent:
                 
                 #테스트
-                LOG().info(f"block contents")
+                # LOG().info(f"block contents")
                 return True
         
         return ERR_OK
@@ -429,7 +499,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         return False
     
     # 과거 자원정보, 저장이 되어야 한다.
-    def __readLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFileBlockInfoLocalConfig:dict):
+    def __readLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFileBlockInfoLocalConfig:dict, dictFileBlockDBConfig:dict):
         
         '''
         '''
@@ -438,6 +508,13 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # 그대로 저장한다. local config는 불변이다.
         dictFileBlockInfoLocalConfig.update(file_block_filter_module)
+        
+        file_allow_ext:list = file_block_filter_module.get("file_allow_ext", [])
+        file_max_size:list = file_block_filter_module.get("file_max_size", 0)
+        
+        # 확장자, 제한값, 기본값 추가, 설정이 잘못되면, 모두 차단이다.
+        dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = file_allow_ext
+        dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = file_max_size
         
         return ERR_OK
     

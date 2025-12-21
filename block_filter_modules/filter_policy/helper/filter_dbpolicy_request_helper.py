@@ -20,7 +20,7 @@ class FilterDBPolicyRequestHelper:
     def __init__(self):
         pass
       
-    #DB 데이터 조회
+    #DB 정책 데이터 조회
     def RequestFilterDBPolicyGroup(self, filterPolicyGroupData:FilterPolicyGroupData):
       
       '''
@@ -109,6 +109,37 @@ class FilterDBPolicyRequestHelper:
         #filterid 별 정책 추가.
         filterPolicyGroupData.AddPolicyRule(strFilterID, dictPolicyRuleScopeMap)                
         # pass
+      
+      return ERR_OK
+    
+    # 파일명 정보, DB 조회
+    def RequestFileBlockPolicy(self, dictFileBlockPolicy:dict):
+    
+      '''
+      시간상, 우선 빠르게 개발, 향후 2차 리펙토링
+      TODO: 중복값이면 설정 안되게 해야 한다. 필요시 최초 로딩시에만 가져오도록 한다.
+      '''
+      
+      dictDBUserResult = {}
+      sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_file_name_block_policy", {}, dictDBUserResult)
+        
+      lstFileBlockInfo:list = dictDBUserResult.get(DBSQLDefine.QUERY_DATA)
+      
+      for dictFileBlockInfo in lstFileBlockInfo:
+
+          skey:str = dictFileBlockInfo.get("skey")
+          svalue:str = dictFileBlockInfo.get("svalue")
+          
+          # 허용되는 확장자 - , 로 구분한다.
+          if "fileControlAllowedExtensions" == skey:
+            lstExtension:list = svalue.split(",")
+            
+            dictFileBlockPolicy[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstExtension
+            # pass
+          # 최대 크기
+          elif "fileControlMaxSize" == skey:
+            dictFileBlockPolicy[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = int(svalue)
+            pass
       
       return ERR_OK
     

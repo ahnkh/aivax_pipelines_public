@@ -56,6 +56,13 @@
             "key": "rdb_select_policy_rule_filters",
 	        "action" : "query_for_list",
             "query" : "select id, filter_id, scope, policy_rule_id, subject_id from app.policy_rule_filters where filter_id = '{filter_id}'"
+        },
+
+        {
+            "desc" : "파일 사이즈, 이름 제한 정보 조회, key, value 이름 주의",
+            "key": "rdb_select_file_name_block_policy",
+	        "action" : "query_for_list",
+            "query" : "select `key` as skey, `value` as svalue from settings where category = 'file-control'"
         }
 
     ]

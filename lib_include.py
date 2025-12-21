@@ -174,12 +174,11 @@ class DBDefine:
     DB_FIELD_SUBJECT_ID = "subject_id"
     DB_FIELD_SUBJECT_VAL = "subject_val"    
     
-    
     # regex 관련
     DB_FIELD_RULE_ID = "id"
     DB_FIELD_RULE_NAME = "name"
     DB_FIELD_RULE_ACTION = "action"
-    DB_FIELD_RULE_TARGET = "targets"
+    DB_FIELD_RULE_TARGET = "targets"    
     # pass
 
 # file 분석 define
@@ -202,7 +201,14 @@ class FileDefine:
         MIME_PDF : "pdf",
     }
     
-    FILE_EXT_UNKNOWN = "unknown"    
+    FILE_EXT_UNKNOWN = "unknown"
+    
+    # file 차단 관련 (별도 생성)
+    DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext" #구분자, 여러개
+    DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size" #최대 크기
+    
+    BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
+    BLOCK_REASON_FILE_SIZE_LIMIT = "fize size exceeds limit"
     # pass
     
 

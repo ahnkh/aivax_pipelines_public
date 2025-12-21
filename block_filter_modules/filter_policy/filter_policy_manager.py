@@ -88,12 +88,20 @@ class FilterPolicyManager:
                 # 2차, 그룹별 2 depth조회
                 filterDBPolicyRequestHelper.RequestFilterDBPolicyGroup(filterPolicyGroupData)
                 
+                # 파일 차단정보, 이것도 전달 필요
+                dictFileBlockPolicy:dict = {}
+                filterDBPolicyRequestHelper.RequestFileBlockPolicy(dictFileBlockPolicy)
+                
                 #정책의 가공이 필요하면, 이시점에서 가공 (미구현 상태에서 인수인계)
                 # self.__generateFilterPolicy()
                 
                 #패턴 관리자로 업데이트된 정책을 전달, 2차 filterPolicyGroupData 전달 구조로 변경
                 # filterPatternManager.notifyDBPolicyUpdateSignal(dictFilterPolicy)
                 filterPatternManager.notifyDBPolicyUpdateSignal(filterPolicyGroupData)
+                
+                #복사 없이, notify
+                
+                
                 
                 time.sleep(nThreadCycle)
                 

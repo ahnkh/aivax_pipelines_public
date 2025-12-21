@@ -99,6 +99,25 @@ class FilterPatternManager:
         
         return ERR_OK
     
+    # File 차단, 확장자 및 사이즈 - customize, 직접 전달
+    def customUpdateFileBlockInfo(self, dictFileBlockPolicy:dict):
+        
+        '''
+        file 차단 정보 업데이트
+        '''
+        
+        fileFilterPattern:FileBlockFilterPattern = self.__filterPatternMap.get(FilterPatternManager.PATTERN_FILTER_FILE_BLOCK)
+        
+        if None != fileFilterPattern:
+            
+            #TODO: 정책의 변경여부는 filterpattern에서 체크
+            fileFilterPattern.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
+            # pass
+            
+        #TODO: 여기에 대한 예외처리는 하지 않는다.
+        
+        return ERR_OK
+    
     #Filter 반환, 타입별 저장
     def GetFilterPattern(self, strFilterKey:str) -> Any:
         
