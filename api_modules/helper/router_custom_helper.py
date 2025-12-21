@@ -67,12 +67,16 @@ class RouterCustomHelper:
         '''
         
         strPromptMessage:str = self.ConvertPromptMessage(modelItem)
+                
+        # #TODO: file 분석시 다시 확인, prompt가 없을 수 있다. => modelItem에서 예외처리 된다. 없을경우 공백 상태로 그대로 동작한다.
+        # if None == strPromptMessage or 0 == len(strPromptMessage):
+        #     strErrorMessage:str = f"invalid prompt, no data"            
+        #     self.GenerateHttpException(ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR, ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR_MSG, strErrorMessage, None)            
+        #     return None
         
-        #TODO: file 분석시 다시 확인, prompt가 없을 수 있다.
-        if None == strPromptMessage or 0 == len(strPromptMessage):
-            strErrorMessage:str = f"invalid prompt, no data"            
-            self.GenerateHttpException(ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR, ApiErrorDefine.HTTP_500_INTERNAL_SERVER_ERROR_MSG, strErrorMessage, apiResponseHandler)            
-            return None
+        #TODO: file 정보 list를 list<dict>로 변환한다. model_dump는 호환성 문제로 가급적 사용 안한다.
+        lstAttachFile:list = []
+        self.__generateAttachFile(lstAttachFile, modelItem)
                 
         dictBody = {
             
@@ -86,7 +90,8 @@ class RouterCustomHelper:
             ],
             
             #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.
-            ApiParameterDefine.ATTACH_FILE : modelItem.attach_files
+            # ApiParameterDefine.ATTACH_FILE : modelItem.attach_files
+            ApiParameterDefine.ATTACH_FILE : lstAttachFile
         }
         
         return dictBody
@@ -196,6 +201,9 @@ class RouterCustomHelper:
         '''
         '''
         
+        if None == apiResponseHandler:
+            apiResponseHandler = ApiResponseHandlerEX()
+        
         #TODO: 생성하자 마자. api code 성공 상태로 추가
         apiResponseHandler.attachFailCode(nErrorCode, strMsgCode, strErrorMessage)
 
@@ -205,6 +213,35 @@ class RouterCustomHelper:
         # pass
     
     ############################################################# private
+    
+    # file 정보, list로 생성
+    def __generateAttachFile(self, lstAttachFile:list, modelItem: VariantFilterForm):
+        
+        '''
+        TODO: request로 넘어온 정보만, 파일 경로등 부가정보는 사용하는 곳에서 가공
+        FileAttachItem
+        '''
+        
+        lstFiltAttachItem:List[FileAttachItem] = modelItem.attach_files
+        
+        for fileAttachItem in modelItem.attach_files:
+            
+            id:str = fileAttachItem.id
+            size:int = fileAttachItem.size
+            name:str = fileAttachItem.name
+            mime_type:str = fileAttachItem.mime_type
+            
+            dictFileItem:dict = {
+                "id" : id,
+                "size" : size,
+                "name" : name,
+                "mime_type" : mime_type
+            }
+            
+            lstAttachFile.append(dictFileItem)
+            # pass
+        
+        return ERR_OK
     
     #Output 결과 업데이트, 모듈 재활용    
     def __updateOutputContents(self, dictFinalResult:dict, dictFilterOutput:dict):

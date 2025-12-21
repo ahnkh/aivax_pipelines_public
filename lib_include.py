@@ -188,6 +188,7 @@ class FileDefine:
     #MIME Type
     MIME_DOC = "application/msword"
     MIME_DOCX = "application/octet-stream"
+    MIME_DOCX_V2 = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     MIME_HWP = "application/x-hwp"
     MIME_HWPX = "application/zip"
     MIME_PDF = "application/pdf"
@@ -196,6 +197,7 @@ class FileDefine:
     FILE_EXT = {
         MIME_DOC : "doc",
         MIME_DOCX : "docx",
+        MIME_DOCX_V2 : "docx",
         MIME_HWP : "hwp",
         MIME_PDF : "pdf",
     }

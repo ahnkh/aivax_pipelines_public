@@ -146,15 +146,17 @@ class FilterPipelineCommand:
             
             #기본값을 먼저 채운다.
             ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ALLOW,
+            ApiParameterDefine.OUT_ACTION_CODE : PipelineFilterDefine.CODE_ALLOW,
             ApiParameterDefine.OUT_MASKED_CONTENTS : "",
             ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
         }
-        apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
             
         #Filter별 요청후, 마지막에 취합
         routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult)
         
-        #개별 pipeline 결과
+        apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
+        
+        #개별 pipeline 결과, 취합된 결과의 저장
         apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
         
         #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출

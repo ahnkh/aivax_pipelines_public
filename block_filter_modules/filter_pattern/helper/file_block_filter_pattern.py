@@ -30,6 +30,8 @@ from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data imp
 # 별도 helper
 from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy_generate_helper import RegexPolicygenerateHelper
 
+from block_filter_modules.local_define.office_document_reader_ex import OfficeDocumentReaderEx
+
 
 '''
 file filter 패턴, 
@@ -71,7 +73,13 @@ class FileBlockFilterPattern(FilterPatternBase):
         self.__dictDBScopeRegexPattern:dict = None
         
         #helper 추가
-        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None        
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None    
+        
+        #file Filter
+        self.__officeReader:OfficeDocumentReaderEx = None
+        
+        # local 설정값.
+        self.__dictFileBlockInfoLocalConfig:dict = None
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -86,12 +94,19 @@ class FileBlockFilterPattern(FilterPatternBase):
             DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
         }
         
+        self.__dictFileBlockInfoLocalConfig:dict = {}
+        
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
+        
+        self.__officeReader:OfficeDocumentReaderEx = OfficeDocumentReaderEx()
+        
+        #local 설정 정보, 읽어온다.
+        self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig)
         
         return ERR_OK
     
     # 패턴 탐지, 이름은 동일, 파라미터, 전달 인자는 상이.
-    def DetectPattern(self, lstFileName:list, dictOuputResponse:dict):
+    def DetectPattern(self, lstAttachFile:list, dictOuputResponse:dict):
         
         '''
         다수의 파일을 요청받는다. 각 파일에 대해서 각 정책 조건을 확인한다.
@@ -142,18 +157,32 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         lstFileStatus:list = []
         
-        for strFileName in lstFileName:
+        #파일의 실제 경로, 설정 정보와 조합한다.
+        strAttachFileRealPath:str = ""
+        
+        attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
+        file_read_timeout:int = self.__dictFileBlockInfoLocalConfig.get("file_read_timeout")
+        
+        # for strFileName in lstAttachFile:
+        for dictFileInfo in lstAttachFile:
             
-            # 각 파일별 결과, list가 낫겠다.
+            dictFileInfo.get("id") #TODO: 의미 모호 => 이게 path이면 테스트 과정에서 사용
+            # dictFileInfo.get("size") #TODO: 불필요 => 실제 파일 사이즈
+            strFileName:str = dictFileInfo.get("name") # 파일 경로만 전달된다.
+            # dictFileInfo.get("mime_type") #TODO: 불필요
+            
+            strAttachFileRealPath = f"{attach_file_base_dir}/{strFileName}"
+                        
+            # 각 파일별 결과, list가 낫겠다. => TODO: UI에서는 ACCEPT로 바라본다.
             dictEachFileOutput:dict = {
-                ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_ALLOW,
-                ApiParameterDefine.FILE_NAME : strFileName,
+                ApiParameterDefine.OUT_ACTION : "", #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
+                ApiParameterDefine.FILE_NAME : strAttachFileRealPath,
                 
                 ApiParameterDefine.POLICY_ID : "",
                 ApiParameterDefine.POLICY_NAME : "",
             }
             
-            self.__detectEachFileAt(strFileName, dictEachFileOutput)
+            self.__detectEachFileAt(strAttachFileRealPath, dictEachFileOutput, file_read_timeout)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
@@ -186,6 +215,9 @@ class FileBlockFilterPattern(FilterPatternBase):
             # pass
             
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = lstFileStatus
+        
+        #TODO: 최종 정책 판단, block, masking 두가지 패턴으로 탐지가 되어야 하나, masking은 있을수 없다.
+        #현재 코드대로, block이 걸리면 무조건 block으로.
         
         return ERR_OK
     
@@ -226,7 +258,7 @@ class FileBlockFilterPattern(FilterPatternBase):
     
     ####################################### private
     
-    def __detectEachFileAt(self, strFileName:str, dictEachFileOutput:dict):
+    def __detectEachFileAt(self, strFileName:str, dictEachFileOutput:dict, nFileReadTimeout:int):
         
         '''
         파일 타입을 읽고, 그 파일에 따라 파일을 읽는 모듈을 분기한다.
@@ -256,13 +288,22 @@ class FileBlockFilterPattern(FilterPatternBase):
         #TODO: size가 방대하여, 정규식을 사용할수 없는지 확인 필요. 1차는 미확인
         strContents:str = ""
         
-        if FileDefine.MIME_DOCX == strMimeType:
+        if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
         
             # 텍스트 추출, 테스트,word 만 테스트
-            strContents = docx2txt.process(strFileName)
+            # strContents = docx2txt.process(strFileName)            
+            strContents = self.__officeReader.ReadDocxToText(strFileName)
+            
+        elif FileDefine.MIME_DOC == strMimeType:            
+            strContents = self.__officeReader.ReadDocToText(strFileName, nFileReadTimeout)
             
         elif FileDefine.MIME_HWP == strMimeType:
-            pass
+            strContents = self.__officeReader.ReadHwpToText(strFileName, nFileReadTimeout)
+            # pass
+        
+        elif FileDefine.MIME_HWPX == strMimeType:
+            strContents = self.__officeReader.RreadHwpxToText(strFileName)
+            # pass
         
         else:
             raise Exception (f"unsupported file type {strMimeType}")
@@ -316,7 +357,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         name:str = dictDBPattern.get("name")
 
         #차단, 마스킹 무시 향후 비활성화면 검토
-        # action:str = dictDBPattern.get("action")
+        action:str = dictDBPattern.get("action")
         
         # regex_flag:int = int(dictDBPattern.get("regex_flag"))
         regex_group:int = (dictDBPattern.get("regex_group"))
@@ -344,7 +385,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 LOG().info(f"block file text, id = {id}, name = {name}, rule = {rule}")
                 
                 # 차단 시점의 정책 추가
-                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
                 dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
                 
@@ -370,7 +411,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name)
                 
                 # 차단 시점의 정책 추가
-                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
                 dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
                 
@@ -380,13 +421,18 @@ class FileBlockFilterPattern(FilterPatternBase):
         #안걸렸으면, 다음 정규식
         return False
     
-    # file 확장 타입, 분기
-    def __getFileExt(self, strMimeType:str) -> str:
+    # 과거 자원정보, 저장이 되어야 한다.
+    def __readLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFileBlockInfoLocalConfig:dict):
         
         '''
         '''
         
-        return ""
+        file_block_filter_module:dict = dictJsonLocalConfigRoot.get("file_block_filter_module")
+        
+        # 그대로 저장한다. local config는 불변이다.
+        dictFileBlockInfoLocalConfig.update(file_block_filter_module)
+        
+        return ERR_OK
     
     # # 파일을 읽는 로직 분리,mimetype에 따른 분기
     # # string 반환은, 감당하자. string을 저장하는건 메모리 부담이 크다.
@@ -394,7 +440,6 @@ class FileBlockFilterPattern(FilterPatternBase):
         
     #     '''
     #     '''
-        
         
     #     return strContents
     

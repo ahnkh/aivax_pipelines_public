@@ -40,6 +40,16 @@ class FilterForm(BaseModel):
 #     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
 #     session_id : Optional[str] = Field(default="", description="session id") 
 
+# 차단정보, 별도의 form으로 전달한다. => 변환하되, 부가정보는 불필요
+# 파일명만 넘어온다. 경로는 설정에 의해.
+class FileAttachItem(BaseModel):
+    
+    id : Optional[str] = Field(default="", description="file id")
+    size : Optional[int] = Field(default=0, description="file size")
+    name : Optional[str] = Field(default="", description="file name")
+    mime_type : Optional[str] = Field(default="", description="mime type")
+    # pass
+
 #엔진등, 다중 차단을 위한 API 데이터
 class VariantFilterForm(BaseModel):
     
@@ -148,8 +158,9 @@ class VariantFilterForm(BaseModel):
     session_id : Optional[str] = Field(default="", description="session id")
     
     # file 분석 기능 추가, 옵션, 다수의 리스트를 전달
-    # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.    
-    attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
+    # TODO: 파일명으로, 파일 사이즈, 헤더, 파일 속성등을 알아야 할수도 있다.
+    # attach_files: Optional[List[str]] = Field(default_factory=list, description="첨부 파일 리스트")
+    attach_files: Optional[List[FileAttachItem]] = Field(default_factory=list, description="첨부 파일 리스트")
     
     # attach_files: Optional[List[str]] = ["/home1/aivax/data_resource/attach_file/sample.docx"]
     

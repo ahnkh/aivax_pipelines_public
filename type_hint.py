@@ -8,7 +8,7 @@ from api_modules.models.schemas import (
     OpenAIChatMessage, OpenAIChatCompletionForm, 
     FilterForm, AddPipelineForm, 
     DeletePipelineForm, VariantFilterForm,OutputFilterItem,
-    FilterRuleTestItem
+    FilterRuleTestItem, FileAttachItem
 )
      
 # #TODO: typehint 제공
