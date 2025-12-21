@@ -100,7 +100,7 @@ class FilterPatternManager:
         return ERR_OK
     
     # File 차단, 확장자 및 사이즈 - customize, 직접 전달
-    def customUpdateFileBlockInfo(self, dictFileBlockPolicy:dict):
+    def notifyCustomUpdateFileBlockInfo(self, dictFileBlockPolicy:dict):
         
         '''
         file 차단 정보 업데이트

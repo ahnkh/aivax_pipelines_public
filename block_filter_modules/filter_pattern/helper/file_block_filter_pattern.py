@@ -109,8 +109,6 @@ class FileBlockFilterPattern(FilterPatternBase):
         #local 설정 정보, 읽어온다.
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
         
-        
-        
         return ERR_OK
     
     # 패턴 탐지, 이름은 동일, 파라미터, 전달 인자는 상이.
@@ -301,12 +299,12 @@ class FileBlockFilterPattern(FilterPatternBase):
         # File 확장자 제한
         if not (strFileExt in lstFileBlockAllowExt):
             strExtension = ",".join(lstFileBlockAllowExt)
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} (f{strExtension})"
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strExtension})"
             return (False, strReason)
         
         # file size 제한
         if nFileBlockMaxSize < nFileSize:
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} (f{nFileBlockMaxSize})"
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileBlockMaxSize})"
             return (False, strReason)
         
         return True,

@@ -100,8 +100,7 @@ class FilterPolicyManager:
                 filterPatternManager.notifyDBPolicyUpdateSignal(filterPolicyGroupData)
                 
                 #복사 없이, notify
-                
-                
+                filterPatternManager.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
                 
                 time.sleep(nThreadCycle)
                 
