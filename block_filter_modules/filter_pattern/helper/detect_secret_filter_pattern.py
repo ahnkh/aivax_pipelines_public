@@ -1,5 +1,5 @@
 
-import copy
+# import copy
 import re
 import math
 

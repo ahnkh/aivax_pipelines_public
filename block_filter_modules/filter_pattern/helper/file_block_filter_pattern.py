@@ -2,18 +2,18 @@
 import hashlib
 import re
 # docx 파싱, 빠른 속도
-import docx2txt
+# import docx2txt
 
 import magic
 
 # import os
-import fitz  # PyMuPDF
+# import fitz  # PyMuPDF
 
 # 느린 속도, 제거
 # from docx import Document
 from pptx import Presentation
 from openpyxl import load_workbook
-import olefile
+# import olefile
 
 from multiprocessing import Pool, cpu_count
 
@@ -164,17 +164,18 @@ class FileBlockFilterPattern(FilterPatternBase):
         lstFileStatus:list = []
         
         #파일의 실제 경로, 설정 정보와 조합한다.
-        strAttachFileRealPath:str = ""
+        # strAttachFileRealPath:str = ""
         
-        attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
+        # attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
         file_read_timeout:int = self.__dictFileBlockInfoLocalConfig.get("file_read_timeout")
+        content_chunk_size:int = self.__dictFileBlockInfoLocalConfig.get("content_chunk_size")
         
         # for strFileName in lstAttachFile:
         for dictFileInfo in lstAttachFile:
             
-            id:str = dictFileInfo.get("id") #TODO: 의미 모호 => 이게 path이면 테스트 과정에서 사용
+            id:str = dictFileInfo.get("id") #TODO: 실제 파일 경로
             # dictFileInfo.get("size") #TODO: 불필요 => 실제 파일 사이즈
-            strFileName:str = dictFileInfo.get("name") # 실제 파일명을 전달한다.
+            strFileName:str = dictFileInfo.get("name") # File Alias
             # dictFileInfo.get("mime_type") #TODO: 불필요
             
             # 사양변경,id가 실제 파일 경로 이 로직은 불필요
@@ -189,7 +190,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 ApiParameterDefine.POLICY_NAME : "",
             }
             
-            self.__detectEachFileAt(id, dictEachFileOutput, file_read_timeout)
+            self.__detectEachFileAt(id, dictEachFileOutput, file_read_timeout, content_chunk_size)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
@@ -201,7 +202,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             if PipelineFilterDefine.ACTION_BLOCK == strAction:
                 
                 #이건 이상태로, BLOCK이면 계속 업데이트
-                dictOuputResponse[ApiParameterDefine.OUT_ACTION] = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
+                dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strAction
                 
                 # # 반드시 존재하는 값
                 # dictFileSummary:dict = dictFileDetectResult.get(ApiParameterDefine.FILE_SUMMARY)
@@ -310,7 +311,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return (True,"")
     
-    def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int):
+    def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int):
         
         '''
         파일 타입을 읽고, 그 파일에 따라 파일을 읽는 모듈을 분기한다.
@@ -384,7 +385,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
         
         # 수집이 되던, 안되던, chunk 저장, 256 byte
-        strChunk:str = strContents[:256]
+        strChunk:str = strContents[:nContentChunkSize]
         dictEachFileOutput[ApiParameterDefine.FILE_INFO]["chunk"] = strChunk
         
         # 여기서 정규식 매칭.

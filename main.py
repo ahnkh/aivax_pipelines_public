@@ -3,8 +3,6 @@ import getopt
 import uvicorn
 import uvloop
 
-# import orjson
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
@@ -23,9 +21,6 @@ from mainapp.pipeline_global_load_functions import *
 from api_modules.router.router_daemon_api import app as daemon_api_router
 from api_modules.router.router_pipeline import app as pipeline_router
 
-# #config.py
-# from config import *
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await on_startup()
@@ -42,18 +37,18 @@ uvloop.install()
 #Loggin, TODO: 리펙토링. => 기존에 사용하던 logger는 우선 유지.
 # Add GLOBAL_LOG_LEVEL for Pipeplines
 
-# Define log levels dictionary
-LOG_LEVELS = {
-    'DEBUG': logging.DEBUG,
-    'INFO': logging.INFO,
-    'WARNING': logging.WARNING,
-    'ERROR': logging.ERROR,
-    'CRITICAL': logging.CRITICAL
-}
+# # Define log levels dictionary
+# LOG_LEVELS = {
+#     'DEBUG': logging.DEBUG,
+#     'INFO': logging.INFO,
+#     'WARNING': logging.WARNING,
+#     'ERROR': logging.ERROR,
+#     'CRITICAL': logging.CRITICAL
+# }
 
-#TODO: 불필요 코드, 리펙토링시 제거
-log_level = os.getenv("GLOBAL_LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=LOG_LEVELS[log_level])
+# #TODO: 불필요 코드, 리펙토링시 제거
+# log_level = os.getenv("GLOBAL_LOG_LEVEL", "INFO").upper()
+# logging.basicConfig(level=LOG_LEVELS[log_level])
 
 #TODO: 사용할수 없는 변수, 우선 소스 유지
 app.state.PIPELINES = PIPELINES

@@ -110,7 +110,9 @@
         "file_read_timeout" : 60,
 
         "file_allow_ext" : ["doc","docx","hwp","hwpx","pdf"],
-        "file_max_size" : 10000000
+        "file_max_size" : 10000000,
+
+        "content_chunk_size" : 256
     }
 
 

@@ -208,8 +208,7 @@ async def doRouterFunction(strMethodName:str, *args, **kwargs) -> dict:
     '''
     
     try:
-        
-        # 현재 모듈 참조
+                
         module = sys.modules[__name__]  
         
         #TODO: 인자 주의
@@ -243,18 +242,7 @@ async def doFilterApiRouter(modelItem: VariantFilterForm, request: Request) -> d
     
     '''
     '''
-    
-    #TODO: 기존 함수는 그대로 유지하고, 신규 API를 추가한다.
-    #TODO: pipeline과 pipeline_module이 같은 개념같다. 다시 확인 필요.
-    #TODO: 이시점에 업데이트가 안되어 있다. 방안 => mainApp를 활용.
-    # dictPipelineMap:dict = app.GetState(ApiRouterEx.STATE_KEY_PIPELINE_MAP)
-    
-    #순환참조 주의 => 향후 리펙토링시 구조 변경
-    # from mainapp.pipeline_main_app import PipeLineMainApp
-
-    # mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
-    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
-    
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)    
     return await command.doFilterApiRouter(mainApp, modelItem, request)
 
 #output 응답 전달 본체

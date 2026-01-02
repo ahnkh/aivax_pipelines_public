@@ -203,8 +203,7 @@ class RouterCustomHelper:
         
         if None == apiResponseHandler:
             apiResponseHandler = ApiResponseHandlerEX()
-        
-        #TODO: 생성하자 마자. api code 성공 상태로 추가
+                
         apiResponseHandler.attachFailCode(nErrorCode, strMsgCode, strErrorMessage)
 
         dictOutput = apiResponseHandler.outResponse()
@@ -250,13 +249,16 @@ class RouterCustomHelper:
         '''
         
         nActionCode:int = dictFilterOutput.get(ApiParameterDefine.OUT_ACTION_CODE, PipelineFilterDefine.CODE_ALLOW)
+        strAction:str = dictFilterOutput.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_ALLOW)
         
         strMaskedContents:str = dictFilterOutput.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "")
             
         # #block message
         strBlockContents:str = dictFilterOutput.get(ApiParameterDefine.OUT_BLOCK_MESSAGE, "")
         
-        dictFinalResult[ApiParameterDefine.OUT_ACTION] = nActionCode
+        dictFinalResult[ApiParameterDefine.OUT_ACTION_CODE] = nActionCode
+        dictFinalResult[ApiParameterDefine.OUT_ACTION] = strAction
+        
         dictFinalResult[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockContents
         dictFinalResult[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedContents
         

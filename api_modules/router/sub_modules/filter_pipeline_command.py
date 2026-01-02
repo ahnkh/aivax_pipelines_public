@@ -21,21 +21,12 @@ class FilterPipelineCommand:
         '''
         '''
         
-        #TODO: 기존 함수는 그대로 유지하고, 신규 API를 추가한다.
-        #TODO: pipeline과 pipeline_module이 같은 개념같다. 다시 확인 필요.
-        #TODO: 이시점에 업데이트가 안되어 있다. 방안 => mainApp를 활용.
-        # dictPipelineMap:dict = app.GetState(ApiRouterEx.STATE_KEY_PIPELINE_MAP)
-        
-        #순환참조 주의 => 향후 리펙토링시 구조 변경
         from mainapp.pipeline_main_app import PipeLineMainApp
         mainApp:PipeLineMainApp = _mainApp
         
-        LOG().info(f"model = {modelItem.model_dump()}")
+        # LOG().info(f"model = {modelItem.model_dump()}")
         
         dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
-        
-        #테스트, 디버그
-        # LOG().debug(f"call pipeline map info = {dictPipelineMap}")
         
         #시나리오, pipeline 리스트를 여러개 가져온다.
         #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과
