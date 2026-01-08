@@ -120,7 +120,7 @@ class RouterCustomHelper:
     
         
     #응답 데이터 가공, 판정 기능의 개발, 일단 하나의 모듈에서 개발, 향후 분리한다.\    
-    def GenerateOutputFinalDecision(self, dictFinalResult:dict, dictEachFilterOutput:dict):
+    def GenerateOutputFinalDecision(self, dictFinalResult:dict, dictEachFilterOutput:dict, nSSLProxyBypassBitMask:int):
         
         '''
         개별 output을 순회한다.
@@ -140,6 +140,7 @@ class RouterCustomHelper:
         #최초 수집 데이터 저장용 History buffer
         # dictBlockHitHistory = {} => block은 걸리면 바로 전달, 종료
         dictMaskHitHistory = {}
+        
         
         for strFilterKey in dictEachFilterOutput.keys():
             
@@ -166,21 +167,31 @@ class RouterCustomHelper:
             #Block, 찾으면 바로 업데이트 후 Skip
             if PipelineFilterDefine.CODE_BLOCK == nActionCode:
                 
-                # # #masked contents
-                # #TODO: 중복, 함수화
-                # strMaskedContents:str = dictFilterOutput.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "")
-            
-                # # #block message
-                # strBlockContents:str = dictFilterOutput.get(ApiParameterDefine.OUT_BLOCK_MESSAGE, "")
-                
-                # dictFinalResult[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockContents
-                # dictFinalResult[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedContents
+                if nSSLProxyBypassBitMask & FilterDefile.SSL_PROXY_BYPASS_BLOCK:
+                    
+                    # 일단 LOG
+                    LOG().info(f"skip block by proxy bypass bitmask, mask = {nSSLProxyBypassBitMask}")
+                    break
                 
                 self.__updateOutputContents(dictFinalResult, dictFilterOutput)
                 return ERR_OK
             
             #masking, 최초 masking 만 저장한다.
+            #TODO: 한화 시스템 요구사항 - masking이 되면, 네트워크 트래픽은 유지하고, aivax에만 기록을 남기도록 처리
+            # 옵션화 필요 => 옵션 정보를 별도로 받는다. 현재 db등 정책이 없어서 local 설정으로 받아온다.
             elif PipelineFilterDefine.CODE_MASKING == nActionCode:
+                
+                #ssl proxy bypass 모드 추가 
+                # bypass 옵션에 block, masking => code가 들어있으면 bypass
+                # 성능 보다는 가독성 중심으로 수정
+                # 0b0001 block
+                # 0b0002 masking
+                # 0b0100 allow
+                if nSSLProxyBypassBitMask & FilterDefile.SSL_PROXY_BYPASS_MASKING:
+                    
+                    # 일단 LOG
+                    LOG().info(f"skip masking by proxy bypass bitmask, mask = {nSSLProxyBypassBitMask}")
+                    break
                 
                 if 0 == len(dictMaskHitHistory):
                     

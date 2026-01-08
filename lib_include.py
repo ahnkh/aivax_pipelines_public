@@ -157,6 +157,19 @@ AI_SERVICE_NAME_MAP = {
    
 }
 
+# filter 관련 define
+class FilterDefile:
+    
+    #ssl proxy bypass, bitbask
+    SSL_PROXY_BYPASS_ALLOW = 0b0000
+    SSL_PROXY_BYPASS_BLOCK = 0b0001
+    SSL_PROXY_BYPASS_MASKING = 0b0010
+    
+    # 필드명 - ssl proxy bypass 설정
+    FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK = "ssl_proxy_bypass_bitmask"
+    
+    pass
+
 # DB 관련 Define
 class DBDefine:
     

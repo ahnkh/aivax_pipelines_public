@@ -99,7 +99,7 @@
 
     "slm_pipelie_filter_module":
     {
-        "use_skip" : 0,
+        "use_skip" : 1,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
         "request_timeout" : 60
     },
@@ -113,6 +113,14 @@
         "file_max_size" : 10000000,
 
         "content_chunk_size" : 256
+    },
+
+    "pipe_filter_custom_config":
+    {
+        "filter_output_config":
+        {            
+            "ssl_proxy_bypass_bitmask" : 2
+        }
     }
 
 

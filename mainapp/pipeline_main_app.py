@@ -14,6 +14,7 @@ from mainapp.helper.main_app_env_loader import MainAppEnvLoader
 
 #정책관리 모듈 추가
 from block_filter_modules.filter_policy.filter_policy_manager import FilterPolicyManager
+from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
 
 #Filter 별 패턴 탐지 기능 관리
 from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
@@ -196,6 +197,10 @@ class PipeLineMainApp:
         '''
         
         return self.__filterPatternManager.GetFilterPattern(strFilterPatternKey)
+    
+    def GetFilterCustomConfig(self) -> FilterCustomConfig:
+        
+        return self.__filterPolicyManager.GetFilterCustomConfig()
     
     
     #테스트 함수, 추가

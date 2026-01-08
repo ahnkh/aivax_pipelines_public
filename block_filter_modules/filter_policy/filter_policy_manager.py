@@ -13,6 +13,9 @@ from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPat
 #http 요청
 from block_filter_modules.filter_policy.helper.filter_dbpolicy_request_helper import FilterDBPolicyRequestHelper
 
+# filter config
+from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
+
 '''
 차단등 정책 관리 모듈, db를 조회하여 dictionary등 
 활용이 편한 정보로 정규화 한다.
@@ -20,8 +23,22 @@ from block_filter_modules.filter_policy.helper.filter_dbpolicy_request_helper im
 
 class FilterPolicyManager:
     
-    def __init__(self):        
+    def __init__(self):
+        
+        # TODO: custom policy, 향후 DB에서 가져오고, 우선 local config로 구현한다.
+        # local config 로 최초 설정, 이후 api, cli로 변경가능하도록 구조 고려
+        
+        self.__filterCustomConfig:FilterCustomConfig = None
+        
         pass
+    
+    ##################################################### getter/setter
+    
+    def GetFilterCustomConfig(self) -> FilterCustomConfig:
+        
+        return self.__filterCustomConfig
+    
+    ##################################################### public
     
     #초기화, db에 대한 조회 모듈이 필요하다. (웹서비스, http_request 활용 여부)
     def Initialize(self, dictJsonLocalConfigRoot:dict, filterPatternManager:FilterPatternManager):
@@ -49,7 +66,13 @@ class FilterPolicyManager:
             LOCAL_CONFIG_DEFINE.KEY_DB_POLL_CYCLE_SECOND : LOCAL_CONFIG_DEFINE.VAL_DB_POLL_CYCLE_SECOND,
         }
         
+        #filter, custom config 추가
+        self.__filterCustomConfig:FilterCustomConfig = FilterCustomConfig()
+        
         self.__initializeLocalPolicyConfig(dictJsonLocalConfigRoot, dictPolicyLocalConfig)
+        
+        # filter custom config, local config에서 추출하여, 초기화 한다. (기본은 여기서 관리)
+        self.__initializeCustomFilterConfig(self.__filterCustomConfig, dictJsonLocalConfigRoot)
         
         LOG().info(f"initialize thread, initial value = {dictPolicyLocalConfig}")
         
@@ -147,6 +170,27 @@ class FilterPolicyManager:
         dictPolicyLocalConfig[LOCAL_CONFIG_DEFINE.KEY_DB_SERVER_DEFAULT_SCHEME] = strDBServerScheme
         
         return ERR_OK
+    
+    def __initializeCustomFilterConfig(self, filterCustomConfig:FilterCustomConfig, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        '''
+        
+        pipe_filter_custom_config:dict = dictJsonLocalConfigRoot.get("pipe_filter_custom_config")
+        
+        filter_output_config:dict = pipe_filter_custom_config.get("filter_output_config")
+        
+        ssl_proxy_bypass_bitmask:int = filter_output_config.get("ssl_proxy_bypass_bitmask")
+        
+        dictFilterCustomConfig:dict = {
+            FilterDefile.FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK : ssl_proxy_bypass_bitmask
+        }
+        
+        filterCustomConfig.Initialize(dictFilterCustomConfig)
+        
+        return ERR_OK
+    
+    
     
     # #Filter 정책의 생성, 각 Policy 관리 모듈을 가진다. 향후 고려
     # def __generateFilterPolicy(self, ):

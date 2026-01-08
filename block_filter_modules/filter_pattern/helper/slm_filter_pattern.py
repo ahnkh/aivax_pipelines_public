@@ -106,7 +106,7 @@ class SLMFilterPattern (FilterPatternBase):
         #TODO: 정책의 개입, 업데이트
         #TODO: 정책, 차단이 되면, 처음 탐지되는 정책으로 업데이트 한다.
 
-        #응답 문자열 파싱, 결과 데이터 저장        
+        #응답 문자열 파싱, 결과 데이터 저장
         self.__parseSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
         
         return ERR_OK

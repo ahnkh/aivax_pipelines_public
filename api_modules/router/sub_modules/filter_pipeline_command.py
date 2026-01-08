@@ -145,7 +145,13 @@ class FilterPipelineCommand:
         }
             
         #Filter별 요청후, 마지막에 취합
-        routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult)
+        
+        from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
+        filterCustomConfig:FilterCustomConfig = mainApp.GetFilterCustomConfig()
+        
+        nSSLProxyBypassBitMask:int = filterCustomConfig.GetSSlProxyBypassMask()
+        
+        routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult, nSSLProxyBypassBitMask)
         
         apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
         
