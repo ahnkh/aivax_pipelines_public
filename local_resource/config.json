@@ -109,7 +109,7 @@
         "attach_file_base_dir" : "/home1/aivax/data_resource/attach_file",
         "file_read_timeout" : 60,
 
-        "file_allow_ext" : ["doc","docx","hwp","hwpx","pdf"],
+        "file_allow_ext" : ["doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx"],
         "file_max_size" : 10000000,
 
         "content_chunk_size" : 256
@@ -119,10 +119,9 @@
     {
         "filter_output_config":
         {            
-            "ssl_proxy_bypass_bitmask" : 2
+            "desc" : "0: allow, 1: block, 2: masking, 3: block+masking",
+            "ssl_proxy_bypass_bitmask" : 0
         }
     }
-
-
     
 }

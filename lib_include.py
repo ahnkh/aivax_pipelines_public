@@ -204,6 +204,10 @@ class FileDefine:
     MIME_HWP = "application/x-hwp"
     MIME_HWPX = "application/zip"
     MIME_PDF = "application/pdf"
+    MIME_PPT = "application/vnd.ms-powerpoint"
+    MIME_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    MIME_XLS = "application/vnd.ms-excel"
+    MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     
     #File 확장자
     FILE_EXT = {
@@ -211,7 +215,12 @@ class FileDefine:
         MIME_DOCX : "docx",
         MIME_DOCX_V2 : "docx",
         MIME_HWP : "hwp",
+        MIME_HWPX : "hwpx",
         MIME_PDF : "pdf",
+        MIME_PPT : "ppt",
+        MIME_PPTX : "pptx",
+        MIME_XLS : "xls",
+        MIME_XLSX : "xlsx",
     }
     
     FILE_EXT_UNKNOWN = "unknown"

@@ -77,8 +77,13 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
         "client_host":"127.0.0.1",
         "session_id":"",
         "message_id":"c_d9b4beb201ac86ac_1765879291",
-        "attach_files": [
-            "/home1/aivax/data_resource/attach_file/sample.docx"
+        "attachments": [
+            {
+                "id":"/home1/aivax/data_resource/attach_file/sample.docx",
+                "size: " 13892,
+                "name": "sample.docx",
+                "mime_type":"application/vnd.openxmlformats.."
+            }            
         ]
         
     }'    

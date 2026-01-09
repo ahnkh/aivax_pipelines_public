@@ -353,34 +353,13 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             return ERR_OK
         
-        
         # self.__detectGetFileType(strFileName)
         
         #TODO: size가 방대하여, 정규식을 사용할수 없는지 확인 필요. 1차는 미확인
-        strContents:str = ""
+        # strContents:str = ""
         
-        if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
-        
-            # 텍스트 추출, 테스트,word 만 테스트
-            # strContents = docx2txt.process(strFileName)            
-            strContents = self.__officeReader.ReadDocxToText(strFilePath)
-            
-        elif FileDefine.MIME_DOC == strMimeType:            
-            strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
-            
-        elif FileDefine.MIME_HWP == strMimeType:
-            strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
-            # pass
-        
-        elif FileDefine.MIME_HWPX == strMimeType:
-            strContents = self.__officeReader.ReadHwpxToText(strFilePath)
-            # pass
-            
-        elif FileDefine.MIME_PDF == strMimeType:
-            strContents = self.__officeReader.ReadPdfToText(strFilePath)
-        
-        else:
-            raise Exception (f"unsupported file type {strMimeType}")
+        #TODO: 함수 분리.
+        strContents:str = self.__readDocument(strMimeType, strFilePath, nFileReadTimeout)
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
         
@@ -519,14 +498,52 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
-    # # 파일을 읽는 로직 분리,mimetype에 따른 분기
-    # # string 반환은, 감당하자. string을 저장하는건 메모리 부담이 크다.
-    # def __readDocument(self, strFileName) -> str:
+    
+    # # 파일을 읽는 로직 분리,mimetype에 따른 분기, string 참조의 전달은.. 감수하자.
+    def __readDocument(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
         
-    #     '''
-    #     '''
+        '''
+        '''
         
-    #     return strContents
+        if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
+        
+            # 텍스트 추출, 테스트,word 만 테스트
+            # strContents = docx2txt.process(strFileName)            
+            strContents = self.__officeReader.ReadDocxToText(strFilePath)
+            
+        elif FileDefine.MIME_DOC == strMimeType:            
+            strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
+            
+        elif FileDefine.MIME_HWP == strMimeType:
+            strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
+            # pass
+        
+        elif FileDefine.MIME_HWPX == strMimeType:
+            strContents = self.__officeReader.ReadHwpxToText(strFilePath)
+            # pass
+            
+        elif FileDefine.MIME_PDF == strMimeType:
+            strContents = self.__officeReader.ReadPdfToText(strFilePath)
+            
+        elif FileDefine.MIME_PPT == strMimeType:
+            strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
+            
+        elif FileDefine.MIME_PPTX == strMimeType:
+            strContents = self.__officeReader.ReadPPTXToText(strFilePath)
+            
+        elif FileDefine.MIME_XLS == strMimeType:
+            strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
+            
+        elif FileDefine.MIME_XLSX == strMimeType:
+            strContents = self.__officeReader.ReadXlsxToText(strFilePath)
+        
+        else:
+            #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
+            # raise Exception (f"unsupported file type {strMimeType}")
+            LOG().error(f"unsupported file type {strMimeType}")
+            return ""
+        
+        return strContents
     
     # # 파일 유형의 감지, 우선 개발
     # def __detectGetFileType(self, strFileName:str):
