@@ -67,19 +67,39 @@ class OfficeFileAnalyzeHelper:
         # 우선 하나 추가.
         dictEachFileOutput["detail_reason"] = lstDetailReason
         
-        bValidMimeType:bool = self.__checkAvailableMimeType(strMimeType)
-        
-        if False == bValidMimeType:
-            
-            return ERR_OK
-        
         # pdf 변환과정 -> 로직별 분기 필요, 우선 테스트.
         
         # 한글 문서 => pdf 변환도 다시 고려
         
-        #TODO: refactoring
+        # 여기는 분기 필요
         
-        self.__extractToPdfAndDetectFileInfo(parameterItem, lstDetailReason)
+        if strMimeType in (FileDefine.MIME_XLS,
+            FileDefine.MIME_XLSX,):
+            
+            #xls, skip 한다.
+            pass
+        
+        elif strMimeType in (FileDefine.MIME_PDF):
+            
+            #pdf, 그대로 분석
+            self.__readPdfAndDetectFileInfo(parameterItem, lstDetailReason)
+            # pass     
+                   
+        elif strMimeType in (FileDefine.MIME_DOC,
+            FileDefine.MIME_DOCX,
+            FileDefine.MIME_DOCX_V2,
+            FileDefine.MIME_HWP,
+            FileDefine.MIME_DOCX_V2,
+            FileDefine.MIME_HWPX,
+            FileDefine.MIME_PPT,
+            FileDefine.MIME_PPTX
+            ):
+            
+            self.__extractToPdfAndDetectFileInfo(parameterItem, lstDetailReason)
+            
+        else:
+            #TODO: 감사로그 추가 필요
+            LOG().error(f"unsupport mime type {strMimeType}")
             
         # 한번더 업데이트
         dictEachFileOutput["detail_reason"] = lstDetailReason
@@ -91,20 +111,19 @@ class OfficeFileAnalyzeHelper:
     
     ############################################### private
     
-    # 유효한 mime type, 체크
-    def __checkAvailableMimeType(self, strMimeType:str) -> bool:
+    def __readPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
         
         '''
-        우선 Excel은 1제외한다. (향후 정책, 설정으로.)
         '''
         
-        if strMimeType in (
-            FileDefine.MIME_XLS,
-            FileDefine.MIME_XLSX,
-        ):
-            return False
+        # office 파일 경로, pdf 이다.
+        strOfficeFile:str = parameterItem.file_path
         
-        return True
+        officePath:Path = Path(strOfficeFile).resolve()
+        
+        self.__detectFileInfoFromPattern(officePath, parameterItem, lstDetailReason)
+        
+        return ERR_OK
     
     def __extractToPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
         
@@ -121,11 +140,6 @@ class OfficeFileAnalyzeHelper:
         
         # libreoffce, timeout
         nReadTimeOut:int = parameterItem.read_timeout
-        
-        dictRegexPattern:dict = parameterItem.regex_pattern
-        
-        regex_pattern:re.Pattern = dictRegexPattern.get("regex_pattern")
-        rule:str = dictRegexPattern.get("rule")
 
         officePath:Path = Path(strOfficeFile).resolve()
 
@@ -158,15 +172,20 @@ class OfficeFileAnalyzeHelper:
                 timeout=nReadTimeOut,
             )
             
-            self.__detectFileInfoFromPattern(pdfFilePath, regex_pattern, rule, lstDetailReason)
+            self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, lstDetailReason)
         
         return ERR_OK
     
     # 텍스트, 정규표현식 분석 및 이력 저장
-    def __detectFileInfoFromPattern(self, pdfFilePath:Path, regexPattern:re.Pattern, strRule:str, lstDetailReason: list):
+    def __detectFileInfoFromPattern(self, pdfFilePath:Path, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
         
         '''
         '''
+        
+        dictRegexPattern:dict = parameterItem.regex_pattern
+        
+        regexPattern:re.Pattern = dictRegexPattern.get("regex_pattern")
+        strRule:str = dictRegexPattern.get("rule")
         
         with pdfplumber.open(pdfFilePath) as pdf:
             
