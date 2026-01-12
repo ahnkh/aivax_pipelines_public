@@ -21,7 +21,7 @@ class OfficeFileAnalyzeHelper:
     
     
     # file 분석 - 상세 분석 결과, 페이지, 라인번호등의 반환
-    def AnalyzeFileBlockDetailReason(self, parameterItem: OfficeFileAnalysisParameterItem):
+    def AnalyzeFileBlockDetailReason(self, parameterItem: OfficeFileAnalysisParameterItem, dictEachFileOutput:dict):
         
         '''
         정규 표현식, 정책 번호등 상세 정보의 수집이 필요하다.

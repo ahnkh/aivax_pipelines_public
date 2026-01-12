@@ -384,29 +384,22 @@ class FileBlockFilterPattern(FilterPatternBase):
         # 중복된 코드이나, 약간 다른 부분이 많아서, 두번 작성한다.
         listDefaultPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
         
-        # 정규 표현식, TODO: 차단, 탐지만 확인하면 된다.        
-        bDetetectPattern:bool = self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput)
-        
         # 차단, masking이 되었으면, 2차 상세 분석을 진행한다. 
         # 내부에서 MimeType으로 가능한 컨텐츠를 식별한다. (doc, docx, 등등)
         # pdf 분석단계가 있어 세부 조정이 필요하다. => 별도의 helper
         
-        if True == bDetetectPattern:
-            
-            LOG().debug(f"detect file block pattern, analyze detail block pattern, file = {strFilePath}, mime_type = {strMimeType}")
-            
-            parameterItem = OfficeFileAnalysisParameterItem(
+        parameterItem = OfficeFileAnalysisParameterItem(
                 file_path = strFilePath,
                 mime_type = strMimeType,
                 read_timeout = nFileReadTimeout
             )
-            
-            self.__analyzeFileBlockDetailReason(parameterItem)
         
+        # 정규 표현식, TODO: 차단, 탐지만 확인하면 된다.        
+        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput, parameterItem)
         
         return ERR_OK
     
-    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, dictEachFileOutput: dict):
+    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, dictEachFileOutput: dict, parameterItem: OfficeFileAnalysisParameterItem):
         
         '''
         '''
@@ -415,10 +408,14 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             bBlockContent:bool = self.__detectFilterPatternAt(strPromptText, dictEachFileOutput, dictDBPattern)
             
+            # 정책에 걸렸으면, 그 DB 정책을 patareterItem에 추가해서 상세 분석 요청
             if True == bBlockContent:
                 
                 #테스트
                 # LOG().info(f"block contents")
+                parameterItem.regex_pattern = dictDBPattern
+                
+                self.__analyzeFileBlockDetailReason(parameterItem, dictEachFileOutput)
                 return True
         
         return False
@@ -586,14 +583,14 @@ class FileBlockFilterPattern(FilterPatternBase):
         return strContents
     
     # 파일 - 2차 분석, 차단이 발생했으면, 차단 사유에 대해서도 분석 결과를 수집한다.
-    def __analyzeFileBlockDetailReason(self, parameterItem):
+    def __analyzeFileBlockDetailReason(self, parameterItem: OfficeFileAnalysisParameterItem, dictEachFileOutput:dict):
         
         '''
         파일에 대해서, pdf를 변환후, 분석된 컨텐츠 위치를 찾는다.
-        최초 확인된 정책, 정규식을 다시 적용한다.
+        최초 확인된 정책, 정규식을 다시 적용한다.        
         '''
         
-        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(parameterItem)
+        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(parameterItem, dictEachFileOutput)
         
         return ERR_OK
     

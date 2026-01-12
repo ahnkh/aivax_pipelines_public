@@ -206,6 +206,8 @@ class OfficeFileAnalysisParameterItem(BaseModel):
     
     mime_type:str = Field(default=FileDefine.FILE_EXT_UNKNOWN, description="office 파일 Mime type")
     
-    read_timeout:int = Field(default=60, description=" 파일 read timeout")
+    read_timeout : Optional[int] = Field(default=60, description=" 파일 read timeout")
+    
+    regex_pattern:dict = Field(default={}, description="정책 패턴") 
     
     pass
