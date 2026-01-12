@@ -198,3 +198,14 @@ class FilterRuleTestItem(BaseModel):
     action:str = Field(default="", description="action (block/masking)")    
     pass
 
+
+# file 분석, parameterItem
+class OfficeFileAnalysisParameterItem(BaseModel):
+    
+    file_path:str = Field(default="", description="office 파일 경로")
+    
+    mime_type:str = Field(default=FileDefine.FILE_EXT_UNKNOWN, description="office 파일 Mime type")
+    
+    read_timeout:int = Field(default=60, description=" 파일 read timeout")
+    
+    pass

@@ -32,6 +32,7 @@ from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy
 
 from block_filter_modules.local_define.office_document_reader_ex import OfficeDocumentReaderEx
 
+from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_file_analyze_helper import OfficeFileAnalyzeHelper
 
 '''
 file filter 패턴, 
@@ -83,6 +84,9 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # file 설정, 제한값, DB에서 가져온다. local 설정의 업데이트는 하지 않는다. (참조만)
         self.__dictFileBlockDBConfig:dict = None
+        
+        # office file - 상세 분석 모듈
+        self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = None
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -105,6 +109,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
         
         self.__officeReader:OfficeDocumentReaderEx = OfficeDocumentReaderEx()
+        
+        self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = OfficeFileAnalyzeHelper()
         
         #local 설정 정보, 읽어온다.
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
@@ -379,7 +385,24 @@ class FileBlockFilterPattern(FilterPatternBase):
         listDefaultPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
         
         # 정규 표현식, TODO: 차단, 탐지만 확인하면 된다.        
-        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput)
+        bDetetectPattern:bool = self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput)
+        
+        # 차단, masking이 되었으면, 2차 상세 분석을 진행한다. 
+        # 내부에서 MimeType으로 가능한 컨텐츠를 식별한다. (doc, docx, 등등)
+        # pdf 분석단계가 있어 세부 조정이 필요하다. => 별도의 helper
+        
+        if True == bDetetectPattern:
+            
+            LOG().debug(f"detect file block pattern, analyze detail block pattern, file = {strFilePath}, mime_type = {strMimeType}")
+            
+            parameterItem = OfficeFileAnalysisParameterItem(
+                file_path = strFilePath,
+                mime_type = strMimeType,
+                read_timeout = nFileReadTimeout
+            )
+            
+            self.__analyzeFileBlockDetailReason(parameterItem)
+        
         
         return ERR_OK
     
@@ -398,7 +421,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 # LOG().info(f"block contents")
                 return True
         
-        return ERR_OK
+        return False
     
     #개별 dictionary 별 정책 조회
     def __detectFilterPatternAt(self, strPromptText:str, dictEachFileOutput:dict, dictDBPattern:dict) -> bool:
@@ -431,49 +454,66 @@ class FileBlockFilterPattern(FilterPatternBase):
             return ERR_FAIL
 
         #그룹정책, TODO: 현재 UI에서 개발되어져 있지 않다.
-        if CONFIG_OPT_ENABLE == regex_group:
+        #TODO: 그룹 분기는, 우선 제외한다. (개발이 필요한 건이나, 현재 미 개발된 건이다.)
+        
+        # if CONFIG_OPT_ENABLE == regex_group:
             
-            #TODO: 단순하게 정책에  포함되면, 차단이다. 테스트 필요.
-            for m in regex_pattern.finditer(strPromptText):
+        #     #TODO: 단순하게 정책에  포함되면, 차단이다. 테스트 필요.
+        #     for m in regex_pattern.finditer(strPromptText):
                                 
-                # LOG().info(f"block file text, id = {id}, name = {name}, rule = {rule}")
+        #         # LOG().info(f"block file text, id = {id}, name = {name}, rule = {rule}")
                 
-                # 차단 시점의 정책 추가
-                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
-                dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
-                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+        #         # 차단 시점의 정책 추가
+        #         dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
+        #         dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
+        #         dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
                 
-                # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
+        #         # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
                 
-                return True
+        #         return True
                 
-                # if regex_group_val and regex_group_val in m.groupdict():
-                #     s, e = m.span(regex_group_val)
-                # else:
-                #     s, e = m.span(0)
+        #         # if regex_group_val and regex_group_val in m.groupdict():
+        #         #     s, e = m.span(regex_group_val)
+        #         # else:
+        #         #     s, e = m.span(0)
 
-                # self.__add_span(spans, s, e)
-                # counts[action] += 1
-                # dictCount[action] = dictCount.get(action,0) + 1
+        #         # self.__add_span(spans, s, e)
+        #         # counts[action] += 1
+        #         # dictCount[action] = dictCount.get(action,0) + 1
 
-                # self.__assignFirstDetectedRule(dictDetectRule, id, name)
-        else:
+        #         # self.__assignFirstDetectedRule(dictDetectRule, id, name)
+        # else:
             
-            for m in regex_pattern.finditer(strPromptText):
-                # self.__add_span(spans, m.start(), m.end())
-                # counts[action] += 1
-                # dictCount[action] = dictCount.get(action,0) + 1
+        #     for m in regex_pattern.finditer(strPromptText):
+        #         # self.__add_span(spans, m.start(), m.end())
+        #         # counts[action] += 1
+        #         # dictCount[action] = dictCount.get(action,0) + 1
 
-                # self.__assignFirstDetectedRule(dictDetectRule, id, name)
+        #         # self.__assignFirstDetectedRule(dictDetectRule, id, name)
                 
-                # 차단 시점의 정책 추가
-                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
-                dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
-                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
-                # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
+        #         # 차단 시점의 정책 추가
+        #         dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
+        #         dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
+        #         dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+        #         # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
                 
-                return True
-                # pass
+        #         return True
+        #         # pass
+                
+        for m in regex_pattern.finditer(strPromptText):
+            # self.__add_span(spans, m.start(), m.end())
+            # counts[action] += 1
+            # dictCount[action] = dictCount.get(action,0) + 1
+
+            # self.__assignFirstDetectedRule(dictDetectRule, id, name)
+            
+            # 차단 시점의 정책 추가
+            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
+            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
+            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+            # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
+            
+            return True
 
         #안걸렸으면, 다음 정규식
         return False
@@ -544,6 +584,18 @@ class FileBlockFilterPattern(FilterPatternBase):
             return ""
         
         return strContents
+    
+    # 파일 - 2차 분석, 차단이 발생했으면, 차단 사유에 대해서도 분석 결과를 수집한다.
+    def __analyzeFileBlockDetailReason(self, parameterItem):
+        
+        '''
+        파일에 대해서, pdf를 변환후, 분석된 컨텐츠 위치를 찾는다.
+        최초 확인된 정책, 정규식을 다시 적용한다.
+        '''
+        
+        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(parameterItem)
+        
+        return ERR_OK
     
     # # 파일 유형의 감지, 우선 개발
     # def __detectGetFileType(self, strFileName:str):
