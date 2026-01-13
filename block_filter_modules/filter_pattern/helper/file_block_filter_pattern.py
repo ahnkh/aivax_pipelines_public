@@ -281,7 +281,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # 기본 예외처리만, 아무것도 허용 안할수도 있다.
         if None == lstFileBlockAllowExt or 0 > nFileBlockMaxSize:
-            LOG().error(f"invalid file block policy, no allow ext and max size, skip")
+            # TODO: Log Queue, 한번만 출력하는 로거 추가, 이후 로그 정리.
+            # LOG().error(f"invalid file block policy, no allow ext and max size, skip")
             return ERR_OK
         
         # 확장자, 제한값, 기본값 추가, 설정이 잘못되면, 모두 차단이다.
