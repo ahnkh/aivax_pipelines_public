@@ -189,9 +189,13 @@ class DBDefine:
     
     # regex 관련
     DB_FIELD_RULE_ID = "id"
+    DB_FIELD_RULE_REGEX_PATTERN = "regex_pattern"
+    DB_FIELD_RULE_REGEX_FLAG = "regex_flag"
     DB_FIELD_RULE_NAME = "name"
+    DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"
-    DB_FIELD_RULE_TARGET = "targets"    
+    DB_FIELD_RULE_REGEX_FLAG = "action"
+    DB_FIELD_RULE_TARGET = "targets"
     # pass
 
 # file 분석 define

@@ -40,6 +40,15 @@ class OfficeFileAnalyzeHelper:
         # file mimetype
         strMimeType:str = parameterItem.mime_type
         
+        dictRegexPattern:dict = parameterItem.regex_pattern
+        
+        # regexPattern:re.Pattern = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_REGEX_PATTERN)
+        
+        # id:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_ID)
+        rule:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE)
+        name:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+        # action:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+        regex_flag:int = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_REGEX_FLAG)
         
         # 전단계, mimetype으로 구분 => pdf로 변환하기에, 우선 pdf 안됨
         # excel, pdf는 건너뛴다.
@@ -61,11 +70,20 @@ class OfficeFileAnalyzeHelper:
         ]
         '''
         
-        lstDetailReason:list = [            
-        ]
-        
+        dictDetailReason:dict = {
+            "policy_detail" : { 
+                # DBDefine.DB_FIELD_RULE_ID : id,
+                DBDefine.DB_FIELD_RULE_NAME : name,
+                DBDefine.DB_FIELD_RULE : rule,
+                # DBDefine.DB_FIELD_RULE_ACTION : action,
+                DBDefine.DB_FIELD_RULE_REGEX_FLAG : regex_flag
+            },
+            
+            "evidence": []
+        }
+
         # 우선 하나 추가.
-        dictEachFileOutput["detail_reason"] = lstDetailReason
+        dictEachFileOutput["detail_reason"] = dictDetailReason
         
         # pdf 변환과정 -> 로직별 분기 필요, 우선 테스트.
         
@@ -82,7 +100,7 @@ class OfficeFileAnalyzeHelper:
         elif strMimeType in (FileDefine.MIME_PDF):
             
             #pdf, 그대로 분석
-            self.__readPdfAndDetectFileInfo(parameterItem, lstDetailReason)
+            self.__readPdfAndDetectFileInfo(parameterItem, dictDetailReason)
             # pass     
                    
         elif strMimeType in (FileDefine.MIME_DOC,
@@ -95,14 +113,13 @@ class OfficeFileAnalyzeHelper:
             FileDefine.MIME_PPTX
             ):
             
-            self.__extractToPdfAndDetectFileInfo(parameterItem, lstDetailReason)
+            self.__extractToPdfAndDetectFileInfo(parameterItem, dictDetailReason)
             
         else:
             #TODO: 감사로그 추가 필요
             LOG().error(f"unsupport mime type {strMimeType}")
-            
-        # 한번더 업데이트
-        dictEachFileOutput["detail_reason"] = lstDetailReason
+                    
+        dictEachFileOutput["detail_reason"] = dictDetailReason
                                 
         # return results            
         # LOG().debug(f"read office {strOfficeFile}, page and line = {results}")
@@ -111,7 +128,7 @@ class OfficeFileAnalyzeHelper:
     
     ############################################### private
     
-    def __readPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
+    def __readPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
         
         '''
         '''
@@ -121,11 +138,11 @@ class OfficeFileAnalyzeHelper:
         
         officePath:Path = Path(strOfficeFile).resolve()
         
-        self.__detectFileInfoFromPattern(officePath, parameterItem, lstDetailReason)
+        self.__detectFileInfoFromPattern(officePath, parameterItem, dictDetailReason)
         
         return ERR_OK
     
-    def __extractToPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
+    def __extractToPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
         
         '''
         # 정규 표현식 외.
@@ -172,12 +189,12 @@ class OfficeFileAnalyzeHelper:
                 timeout=nReadTimeOut,
             )
             
-            self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, lstDetailReason)
+            self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, dictDetailReason)
         
         return ERR_OK
     
     # 텍스트, 정규표현식 분석 및 이력 저장
-    def __detectFileInfoFromPattern(self, pdfFilePath:Path, parameterItem: OfficeFileAnalysisParameterItem, lstDetailReason: list):
+    def __detectFileInfoFromPattern(self, pdfFilePath:Path, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
         
         '''
         '''
@@ -185,7 +202,9 @@ class OfficeFileAnalyzeHelper:
         dictRegexPattern:dict = parameterItem.regex_pattern
         
         regexPattern:re.Pattern = dictRegexPattern.get("regex_pattern")
-        strRule:str = dictRegexPattern.get("rule")
+        # strRule:str = dictRegexPattern.get("rule")
+        
+        lstDetailReason:list = dictDetailReason.get("evidence")
         
         with pdfplumber.open(pdfFilePath) as pdf:
             
@@ -213,11 +232,11 @@ class OfficeFileAnalyzeHelper:
                         # 탐지된 컨텐츠는 모두 추가.
                         nDetectNo += 1
                         lstDetailReason.append({
-                            "detect" : nDetectNo,
-                            "pattern": strRule,
+                            "no" : nDetectNo,
+                            # "pattern": strRule,
                             "page_no": nPageIndex,
                             "line_no": line_no,
-                            "y_position": y, #TODO: 필요한지.
+                            # "y_position": y, #TODO: 필요한지.
                             "context": line_text.strip()
                         })        
         return ERR_OK
