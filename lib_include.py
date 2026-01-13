@@ -193,8 +193,7 @@ class DBDefine:
     DB_FIELD_RULE_REGEX_FLAG = "regex_flag"
     DB_FIELD_RULE_NAME = "name"
     DB_FIELD_RULE = "rule"
-    DB_FIELD_RULE_ACTION = "action"
-    DB_FIELD_RULE_REGEX_FLAG = "action"
+    DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
     # pass
 

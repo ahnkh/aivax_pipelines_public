@@ -277,7 +277,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         '''
         
         lstFileBlockAllowExt:list = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
-        nFileBlockMaxSize:int = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
+        nFileBlockMaxSize:int = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE, -1)
         
         # 기본 예외처리만, 아무것도 허용 안할수도 있다.
         if None == lstFileBlockAllowExt or 0 > nFileBlockMaxSize:
