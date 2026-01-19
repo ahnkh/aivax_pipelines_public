@@ -189,7 +189,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                         
             # 각 파일별 결과, list가 낫겠다. => TODO: UI에서는 ACCEPT로 바라본다.
             dictEachFileOutput:dict = {
-                ApiParameterDefine.OUT_ACTION : "", #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
+                ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_BLANK, #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
                 ApiParameterDefine.FILE_NAME : strFileName,
                 
                 ApiParameterDefine.POLICY_ID : "",
@@ -202,36 +202,47 @@ class FileBlockFilterPattern(FilterPatternBase):
             lstFileStatus.append(dictEachFileOutput)
             
             #최종 결과, 하나라도 차단이 되었으면, 차단이다.
-            strAction:str = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
+            # strAction:str = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
             
-            #TODO: 응답, 하나라도 걸리면 차단
-            if PipelineFilterDefine.ACTION_BLOCK == strAction:
+            # #TODO: 응답, 하나라도 걸리면 차단
+            # if PipelineFilterDefine.ACTION_BLOCK == strAction:
                 
-                #이건 이상태로, BLOCK이면 계속 업데이트
-                dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strAction
+            #     #이건 이상태로, BLOCK이면 계속 업데이트
+            #     dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strAction
                 
-                # # 반드시 존재하는 값
-                # dictFileSummary:dict = dictFileDetectResult.get(ApiParameterDefine.FILE_SUMMARY)
+            #     # # 반드시 존재하는 값
+            #     # dictFileSummary:dict = dictFileDetectResult.get(ApiParameterDefine.FILE_SUMMARY)
                 
-                # #TODO: 이름 나중에 정리
-                # strAction:str = dictFileSummary.get(ApiParameterDefine.OUT_ACTION)
+            #     # #TODO: 이름 나중에 정리
+            #     # strAction:str = dictFileSummary.get(ApiParameterDefine.OUT_ACTION)
                 
-                # if PipelineFilterDefine.ACTION_ALLOW == strAction:
+            #     # if PipelineFilterDefine.ACTION_ALLOW == strAction:
                     
-                #     #TODO: 더 좋은 방법을 찾을것.
-                #     dictFileSummary[ApiParameterDefine.OUT_ACTION] = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
+            #     #     #TODO: 더 좋은 방법을 찾을것.
+            #     #     dictFileSummary[ApiParameterDefine.OUT_ACTION] = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
                     
-                #     #TODO: file 별로 저장, 이건 불필요.
-                #     # dictFileSummary[ApiParameterDefine.POLICY_ID] = dictEachFileOutput.get(ApiParameterDefine.POLICY_ID)
-                #     # dictFileSummary[ApiParameterDefine.POLICY_NAME] = dictEachFileOutput.get(ApiParameterDefine.POLICY_NAME)
+            #     #     #TODO: file 별로 저장, 이건 불필요.
+            #     #     # dictFileSummary[ApiParameterDefine.POLICY_ID] = dictEachFileOutput.get(ApiParameterDefine.POLICY_ID)
+            #     #     # dictFileSummary[ApiParameterDefine.POLICY_NAME] = dictEachFileOutput.get(ApiParameterDefine.POLICY_NAME)
                     
-                # pass
-            # pass
+            #     # pass
+            # # pass
             
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = lstFileStatus
         
-        #TODO: 최종 정책 판단, block, masking 두가지 패턴으로 탐지가 되어야 하나, masking은 있을수 없다.
+        #TODO: 최종 정책 판단, 정책의 code를 mode에 넣어준다. regex, file 모두 같은 로직을 제공한다.
         #현재 코드대로, block이 걸리면 무조건 block으로.
+        #TODO: 우선 최종 mode, action 값만 추출한다. 
+        dictDetectPolicy:dict = self.__decideFinalPolicyAction(lstFileStatus)
+        
+        # 일단 PolicyAction을 반영한다.
+        strPolicyAction:str = dictDetectPolicy.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        strPolicyID:str = dictDetectPolicy.get(ApiParameterDefine.POLICY_ID, "")
+        strPolicyName:str = dictDetectPolicy.get(ApiParameterDefine.POLICY_NAME, "")
+        
+        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strPolicyAction
+        dictOuputResponse[ApiParameterDefine.POLICY_ID] = strPolicyID
+        dictOuputResponse[ApiParameterDefine.POLICY_NAME] = strPolicyName
         
         return ERR_OK
     
@@ -317,6 +328,49 @@ class FileBlockFilterPattern(FilterPatternBase):
             return (False, strReason)
         
         return (True,"")
+    
+    
+    # 최종 정책의 반영, UI 용도, sslproxy도 동일 연산으로 제공
+    def __decideFinalPolicyAction(self, lstFileStatus:list):
+        
+        '''
+        '''
+        
+        #TODO: 집계쪽이 낫겠다.
+        dictDetectPolicy:dict = {}
+        
+        for dictEachFileOutput in lstFileStatus:
+            
+            strPolicyAction:str = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
+            
+            # 향후를 위해 추가, 일단 케이스가 많지 않다.
+            dictDetectPolicy[strPolicyAction] = dictEachFileOutput
+            #pass
+            
+        #일단 이렇게 작성.. 향후 개선
+        dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_BLOCK)
+        
+        if None != dictRule:
+            return dictRule
+        
+        dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_MASKING)
+        
+        if None != dictRule:
+            return dictRule
+        
+        dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_ACCEPT)
+        
+        if None != dictRule:
+            return dictRule
+        
+        # 기존 regex 패턴과 동일한 방식, 다만 재사용을 고려할 코드는 아니다.
+        #allow 는 없으면 공백 반환
+        dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_ALLOW, {})
+        
+        return dictRule
+        
+        # return ERR_OK
+    
     
     def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int):
         
@@ -506,7 +560,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             # self.__assignFirstDetectedRule(dictDetectRule, id, name)
             
             # 차단 시점의 정책 추가
-            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action
+            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action #DB에 저장된 action
             dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
             dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
             # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule

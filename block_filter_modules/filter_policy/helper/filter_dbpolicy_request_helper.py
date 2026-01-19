@@ -44,10 +44,16 @@ class FilterDBPolicyRequestHelper:
       lstDBPolicyRule:list = dictDBPolicyRuleResult.get(DBSQLDefine.QUERY_DATA)
       
       dictPolicyRuleIDMap:dict = {}      
+      
       self.__generatePolicyRuleMap(lstDBPolicyRule, dictPolicyRuleIDMap)
       
       # 계정 정보를 조회한다. 서비스 정보는 우선 상수로 관리
       # 사용성을 위해서, ID기준으로 map을 생성
+      '''
+      SELECT 
+          CONCAT(email, '_', ai_service_id) AS user_key, id, email, user_group_id, ai_service_id, created_at, updated_at
+      FROM app.users {where}
+      '''
       dictDBUserResult = {}
       sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_ai_user_account", {"where" : ""}, dictDBUserResult)
         
@@ -57,6 +63,9 @@ class FilterDBPolicyRequestHelper:
       self.__generateUserInfoMap(lstDBUserInfo, dictUserIDMap)
       
       #filter 를 조회한다.
+      '''
+      select id from app.filters
+      '''
       dictDBFilterResult = {}
       sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_filters", {}, dictDBFilterResult)
       
@@ -74,12 +83,11 @@ class FilterDBPolicyRequestHelper:
         # operator:str = dictPattern.get("operator")
         strFilterID:str = dictFilterID.get("id")
         
-        
         #각 filter id별로, policy group을 조회한다. 이름은 DB테이블명을 따라간다.
         dictPolicyRuleFilterResult = {}
-        # '''
-        # select id, filter_id, scope, policy_rule_id, subject_id from app.policy_rule_filters where filter_id = '{filter_id}'
-        # '''
+        '''
+        select id, filter_id, scope, policy_rule_id, subject_id from app.policy_rule_filters where filter_id = '{filter_id}'
+        '''
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule_filters", {"filter_id" : strFilterID}, dictPolicyRuleFilterResult)
         
         #1단계 - 2depth의 자료 구조로 저장

@@ -80,7 +80,7 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
         "attachments": [
             {
                 "id":"/home1/aivax/data_resource/attach_file/sample.docx",
-                "size: " 13892,
+                "size": 13892,
                 "name": "sample.docx",
                 "mime_type":"application/vnd.openxmlformats.."
             }            
@@ -334,7 +334,7 @@ async def doTestFilterRule(modelItem: FilterRuleTestItem, request: Request) -> d
     
     #일단 테스트
     dictOutputResponse = {}
-    await pipeline.testRule(strPrompt, strRule, strAction, dictOutputResponse, request = request)
+    await pipeline.testRule(strPrompt, strRule, strAction, dictOutputResponse)
     
     return GetApiOutResponse("rule filter test", "filter_result", dictOutputResponse)
 

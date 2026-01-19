@@ -42,7 +42,7 @@ class Pipeline(PipelineBase):
         '''
         
         # 응답처리
-        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
+        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLANK
         
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = []        
         
@@ -60,19 +60,15 @@ class Pipeline(PipelineBase):
         session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
         
         #TODO: 정책상의 policy action등, 별도로 분리한다.
-        #TODO: file은 여러개라는 가정으로, 각 파일 list별 정책이 들어간다.
-        # dictSLMPolicyResult:dict = {
-            
-        #     DBDefine.DB_FIELD_RULE_ID : "",
-        #     DBDefine.DB_FIELD_RULE_NAME : "",
-        #     DBDefine.DB_FIELD_RULE_ACTION : "",
-        #     DBDefine.DB_FIELD_RULE_TARGET : "",            
-        # }
-        
+        #TODO: file은 여러개라는 가정으로, 각 파일 list별 정책이 들어간다.        
         fileBlockFilterPattern.DetectPattern(attach_file, dictOuputResponse)
         
         # 응답 데이터 처리, 우선 개발후 정리
-        strAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
+        # strAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        
+        strPolicyAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        # strPolicyID:str = dictOuputResponse.get(ApiParameterDefine.POLICY_ID, "")
+        # strPolicyName:str = dictOuputResponse.get(ApiParameterDefine.POLICY_NAME, "")
         
         #TODO: opensearch 저장은 모델 분리.
         #TODO: 약간의 중복코드, 일단 그대로 사용 (향후 tuple 정도로 정리)
@@ -86,18 +82,7 @@ class Pipeline(PipelineBase):
         
         # 응답 결과의 전달
         # 차단일때의 응답 정리, file 타입은 우선 차단 메시지를 만들지 않는다. (향후 공통화 + UI 설정 필요)
-        if PipelineFilterDefine.ACTION_BLOCK == strAction:
-            
-            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK
-            
-            # 불필요, 최종 메시지 생성 시점에 예외처리
-            # dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = ""
-            
-        else:
-            
-            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
-            # dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = ""
-            
+        self.__generateSSLProxyMessage(dictOuputResponse)
             
         # strPolicyID:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_ID, "")                    
         # strPolicyName:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
@@ -123,10 +108,10 @@ class Pipeline(PipelineBase):
             "stage": [PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK],
             
             # 일단 이 값은 유지, input, output 점검 시점에 다시 정리
-            "should_block": (strAction == "block"),
+            "should_block": (strPolicyAction == PipelineFilterDefine.ACTION_BLOCK),
             
             # 최종 Action
-            "mode": strAction,
+            "mode": strPolicyAction,
             
             # TODO: file이 구조상 여러개이다. 각 파일별 정책이 들어간다.
             # #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
@@ -135,26 +120,52 @@ class Pipeline(PipelineBase):
                 
             "src":     {"ip": client_host},
             
-            # "pii": {
-            #     # type: 정책명 추가
-            #     "types": strPolicyTarget, # 카테고리
-            #     # 잘못된 하드코딩, 제거
-            #     # "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
-            #     "confidence": 1.0
-            # },
-            
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             
             #regex pattern에 맞춰서.. => 각 파일별 정책, 파일 별로 추가한다.
             # "policy_id" : strPolicyID,
             # "policy_name" : strPolicyName,
             
+            ApiParameterDefine.FILE_SUMMARY : dictOuputResponse.get(ApiParameterDefine.FILE_SUMMARY)            
         }
         
-        #file 요약, 그대로 저장
-        dictOpensearchDocument.update(dictOuputResponse)
+        #file 요약, 그대로 저장 => summary만 저장
+        # dictOpensearchDocument.update(dictOuputResponse)
         
         self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
+        
+        return ERR_OK
+    
+    
+    #sslproxy로 전달할 메시지, 코드 생성
+    def __generateSSLProxyMessage(self, dictOuputResponse:dict):
+        '''
+        '''
+        
+        #중복이라도 2번, 격리
+        strPolicyAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        # strPolicyID:str = dictOuputResponse.get(ApiParameterDefine.POLICY_ID, "")
+        strPolicyName:str = dictOuputResponse.get(ApiParameterDefine.POLICY_NAME, "")
+        
+        strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
+        
+        if PipelineFilterDefine.ACTION_BLOCK == strPolicyAction:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_BLOCK
+                        
+            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
+            
+        elif PipelineFilterDefine.ACTION_MASKING == strPolicyAction:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_MASKING
+            
+            #masking, 같이 사용한다.
+            dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
+            
+        else:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
+            # dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = ""
         
         return ERR_OK
     

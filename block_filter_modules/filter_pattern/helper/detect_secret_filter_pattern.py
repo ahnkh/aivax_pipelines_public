@@ -376,7 +376,6 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         dictEachActionPolicy = dictDetectRule.get(strAction, {})
         
-
         #최초 탐지되면, 추가 (TODO: 리펙토링)
         if 0 == len(dictEachActionPolicy):
             #test

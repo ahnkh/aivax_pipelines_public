@@ -7,6 +7,7 @@ class PipelineFilterDefine:
     
     #filter 옵션 탐지 및 차단
     ACTION_ALLOW = "allow"
+    ACTION_BLANK = "" #26.01.19 기본값, blank로 변경
     ACTION_ACCEPT = "accept" #DB에 accept가 존재한다.
     ACTION_BLOCK = "block"
     ACTION_MASKING = "masking"
