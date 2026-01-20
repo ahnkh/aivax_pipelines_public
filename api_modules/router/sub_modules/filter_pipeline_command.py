@@ -24,8 +24,6 @@ class FilterPipelineCommand:
         from mainapp.pipeline_main_app import PipeLineMainApp
         mainApp:PipeLineMainApp = _mainApp
         
-        # LOG().info(f"model = {modelItem.model_dump()}")
-        
         dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
         
         #시나리오, pipeline 리스트를 여러개 가져온다.
@@ -162,9 +160,12 @@ class FilterPipelineCommand:
         
         # 사용자 정보의 저장, user 정보를 전달한다.
         mainApp.AddUserAccount(strUserKey, user)
+        
+        # TODO: sslproxy 전달 프롬프트
+        dictApiOutResponse:dict = apiResponseHandler.outResponse()
 
-        return apiResponseHandler.outResponse()
-        # return dictApiOutResponse
+        # return apiResponseHandler.outResponse()
+        return dictApiOutResponse
         
     ########################################################## private
     
