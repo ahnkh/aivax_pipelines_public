@@ -235,8 +235,8 @@ class FileDefine:
     # 차단 사유, 상수화 향후 UI로 메시지 관리 기능 추가
     BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension" #허용되지 않는 파일 유형
     BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit" # 파일 사이즈 허용
-    BLOCK_REASON_WATER_MARK_HEADER_DETECT = "contain watermark text in header" # watermark, header 탐지
-    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive text detect" # watermark, ocr text 탐지
+    BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header" # watermark, header 탐지
+    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text" # watermark, ocr text 탐지
     # pass
     
 

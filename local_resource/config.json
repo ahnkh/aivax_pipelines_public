@@ -134,7 +134,7 @@
                 "(외부|사외).{0,20}(반출|배포)"
             ],
             "ocr_pattern_flag" : 18,
-            "ocr_match_hitcount" : 2,
+            "ocr_max_hitcount" : 2,
             "ocr_page_list" : [0]
         }
     },

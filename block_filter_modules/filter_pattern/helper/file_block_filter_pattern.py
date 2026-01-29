@@ -210,15 +210,19 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             #TODO: watermark가 포함되어 있으면 해당 파일은 탐지 하지 않는다. 
             #TODO: 향후 정책 제어, 나머지를 전부 탐지할지, 차단할지 결정. sslproxy와 같이 검토 필요 (정리후 리펙토링)
+            #TODO: 마지막에 summary에 저장하는 것으로 관리하자. 나중에 로그에 대해서는 다시 정리
+            # 여기서는 분기문으로 처리한다.
             if True == bBlockWaterMark:
                 
                 # 결과 데이터 수집은 함수 내부에서 처리하고, 여기에서는 분기 처리.
                 
                 # 향후 UI의 표현력 개선을 위해서 reson외 부가 정보를 전달한다.
                 # 지금은 성능을 위해서, watermark가 포함되면 종료한다. (평균적으로 파일은 1개 남짓으로 업로드 할것으로 예상된다.)
-                return ERR_OK
+                #return ERR_OK
+                pass
+            else: #watermark가 아닌 파일만 탐지, 여기는 나중에 다시 개선
             
-            self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size)
+                self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
