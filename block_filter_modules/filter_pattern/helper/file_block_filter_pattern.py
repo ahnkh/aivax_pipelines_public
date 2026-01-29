@@ -34,6 +34,8 @@ from block_filter_modules.local_define.office_document_reader_ex import OfficeDo
 
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_file_analyze_helper import OfficeFileAnalyzeHelper
 
+from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_watermark_detect_helper import OfficeWaterMarkDetectHelper
+
 '''
 file filter 패턴, 
 TODO: 기존 pipeline 패턴과 동일 패턴으로, 신규 추가
@@ -87,6 +89,9 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # office file - 상세 분석 모듈
         self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = None
+        
+        # office file - watermark 처리 모듈
+        self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = None
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -111,9 +116,18 @@ class FileBlockFilterPattern(FilterPatternBase):
         self.__officeReader:OfficeDocumentReaderEx = OfficeDocumentReaderEx()
         
         self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = OfficeFileAnalyzeHelper()
+        self.__officeFileAnalyzeHelper.Initialize()
+        
+        self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = OfficeWaterMarkDetectHelper()
+        self.__officeWaterMarkDetectHelper.Initialize()
         
         #local 설정 정보, 읽어온다.
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
+        
+        # watermark 탐지 heper, 
+        # 우선 local 정책으로 만든다.
+        self.__readWatermarkLocalConfig(dictJsonLocalConfigRoot, self.__officeWaterMarkDetectHelper)
+        
         
         return ERR_OK
     
@@ -131,9 +145,6 @@ class FileBlockFilterPattern(FilterPatternBase):
         파일의 동시 분석개수 제한도 설정한다.        
         TODO: 파일이 추출되었으면, hash및 history 정보는 수집한다. 단, 메모리에서만 보관한다. (오탐시 재기동 대응)
         '''
-        
-        #1차 테스트, 임의로 테스트, 경로는 절대 경로를 가정한다.
-        #테스트, 로그로 확인한다.
         
         #응답 데이터 설계
         #최종 차단/실패 필요
@@ -155,13 +166,6 @@ class FileBlockFilterPattern(FilterPatternBase):
             ]
         }
         '''
-        
-        #TODO: 우선 테스트, 한번에 읽어 보자.
-        # nCPUCount = int(cpu_count() * 0.5)
-
-        # 단일, 또는 소수의 파일일때는, 멀티 프로세스가 더 느릴수 있다.        
-        # with Pool(processes=nCPUCount) as pool:
-        #     results = pool.map(self.read_file_worker, lstFileName)
         
         # file 별로, 추출하고 정규식을 반영해 본다.
         # TODO: 정책의 구조는 기존과 동일하되, 파일 분석 시점에는 uuid, service type을 알수 없어서
@@ -196,37 +200,28 @@ class FileBlockFilterPattern(FilterPatternBase):
                 ApiParameterDefine.POLICY_NAME : "",
             }
             
-            self.__detectEachFileAt(id, dictEachFileOutput, file_read_timeout, content_chunk_size)
+            strRealOfficeFilePath:str = id #변수 가독성, 별도 변수로 선언
+            
+            #TODO: watermark가 포함된 파일은 일반적인 파일 분석으로는 안된다.
+            #여기서 분기 필요., 결과처리는 최종 합치는 시점에 고려, 
+            # 결과 데이터는, EachOutput, ACTION 과 POLICY_NAME으로 처리 (향후 추가적인 분기, 분석 데이터 수집 필요)
+            # TODO: opensearch 3개의 로그에 모든걸 담으려니 복잡도가 너무 늘어났다.
+            bBlockWaterMark:bool = self.__detectOfficeFileIncludeWaterMark(strRealOfficeFilePath, dictEachFileOutput)
+            
+            #TODO: watermark가 포함되어 있으면 해당 파일은 탐지 하지 않는다. 
+            #TODO: 향후 정책 제어, 나머지를 전부 탐지할지, 차단할지 결정. sslproxy와 같이 검토 필요 (정리후 리펙토링)
+            if True == bBlockWaterMark:
+                
+                # 결과 데이터 수집은 함수 내부에서 처리하고, 여기에서는 분기 처리.
+                
+                # 향후 UI의 표현력 개선을 위해서 reson외 부가 정보를 전달한다.
+                # 지금은 성능을 위해서, watermark가 포함되면 종료한다. (평균적으로 파일은 1개 남짓으로 업로드 할것으로 예상된다.)
+                return ERR_OK
+            
+            self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
-            
-            #최종 결과, 하나라도 차단이 되었으면, 차단이다.
-            # strAction:str = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
-            
-            # #TODO: 응답, 하나라도 걸리면 차단
-            # if PipelineFilterDefine.ACTION_BLOCK == strAction:
-                
-            #     #이건 이상태로, BLOCK이면 계속 업데이트
-            #     dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strAction
-                
-            #     # # 반드시 존재하는 값
-            #     # dictFileSummary:dict = dictFileDetectResult.get(ApiParameterDefine.FILE_SUMMARY)
-                
-            #     # #TODO: 이름 나중에 정리
-            #     # strAction:str = dictFileSummary.get(ApiParameterDefine.OUT_ACTION)
-                
-            #     # if PipelineFilterDefine.ACTION_ALLOW == strAction:
-                    
-            #     #     #TODO: 더 좋은 방법을 찾을것.
-            #     #     dictFileSummary[ApiParameterDefine.OUT_ACTION] = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
-                    
-            #     #     #TODO: file 별로 저장, 이건 불필요.
-            #     #     # dictFileSummary[ApiParameterDefine.POLICY_ID] = dictEachFileOutput.get(ApiParameterDefine.POLICY_ID)
-            #     #     # dictFileSummary[ApiParameterDefine.POLICY_NAME] = dictEachFileOutput.get(ApiParameterDefine.POLICY_NAME)
-                    
-            #     # pass
-            # # pass
             
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = lstFileStatus
         
@@ -304,32 +299,6 @@ class FileBlockFilterPattern(FilterPatternBase):
     
     ####################################### private
     
-    def __isAllowFileExtAndSize(self, strFileExt:str, nFileSize:int):
-        
-        '''
-        '''
-        
-        # 사이즈, 확장자 체크 => 일단 메모리 연산이니, 가독성 차원에서 이정도 비용은 감수한다.
-        lstFileBlockAllowExt:list = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
-        nFileBlockMaxSize:int = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
-        
-        bBlock:bool = False
-        strReason:str = "" #사유, 일단 임의의 문자열
-        
-        # File 확장자 제한
-        if not (strFileExt in lstFileBlockAllowExt):
-            strExtension = ",".join(lstFileBlockAllowExt)
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strExtension})"
-            return (False, strReason)
-        
-        # file size 제한
-        if nFileBlockMaxSize < nFileSize:
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileBlockMaxSize})"
-            return (False, strReason)
-        
-        return (True,"")
-    
-    
     # 최종 정책의 반영, UI 용도, sslproxy도 동일 연산으로 제공
     def __decideFinalPolicyAction(self, lstFileStatus:list):
         
@@ -370,7 +339,6 @@ class FileBlockFilterPattern(FilterPatternBase):
         return dictRule
         
         # return ERR_OK
-    
     
     def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int):
         
@@ -418,9 +386,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         #TODO: size가 방대하여, 정규식을 사용할수 없는지 확인 필요. 1차는 미확인
         # strContents:str = ""
-        
-        #TODO: 함수 분리.
-        strContents:str = self.__readDocument(strMimeType, strFilePath, nFileReadTimeout)
+                
+        strContents:str = self.__readOfficeFileContents(strMimeType, strFilePath, nFileReadTimeout)
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
         
@@ -435,8 +402,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         #이걸 프롬프트로, regex 필터에 요청하고, 결과로 차단/탐지, 정책명을 수집한다.
         # filterid만 바꾸면, 재활용 가능하다.
-        
-        # 중복된 코드이나, 약간 다른 부분이 많아서, 두번 작성한다.
+                
         listDefaultPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
         
         # 차단, masking이 되었으면, 2차 상세 분석을 진행한다. 
@@ -570,6 +536,47 @@ class FileBlockFilterPattern(FilterPatternBase):
         #안걸렸으면, 다음 정규식
         return False
     
+    #watermak 파일의 포함여부 탐지
+    def __detectOfficeFileIncludeWaterMark(self, strRealOfficeFilePath:str, dictEachFileOutput:dict) -> bool:
+        
+        '''
+        watermark가 식별되었으면 차단이다.
+        watermark로직은 회사마다 상이할수 있어 옵션화가 필요하다.
+        우선 개발후 분기
+        '''
+        
+        bDetectWaterMark:bool = self.__officeWaterMarkDetectHelper.DetectOfficeFileWithWaterMark(strRealOfficeFilePath, dictEachFileOutput)
+        
+        #TODO: 응답에 따른 분기, watermark가 존재하는 파일이면, 해당 파일은 탐지를 중단한다.
+        #결과 데이터, 저장 로직 존재, 추가 고려
+        
+        return bDetectWaterMark
+    
+    def __isAllowFileExtAndSize(self, strFileExt:str, nFileSize:int):
+        
+        '''
+        '''
+        
+        # 사이즈, 확장자 체크 => 일단 메모리 연산이니, 가독성 차원에서 이정도 비용은 감수한다.
+        lstFileBlockAllowExt:list = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
+        nFileBlockMaxSize:int = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
+        
+        # bBlock:bool = False
+        strReason:str = "" #사유, 일단 임의의 문자열
+        
+        # File 확장자 제한
+        if not (strFileExt in lstFileBlockAllowExt):
+            strExtension = ",".join(lstFileBlockAllowExt)
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strExtension})"
+            return (False, strReason)
+        
+        # file size 제한
+        if nFileBlockMaxSize < nFileSize:
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileBlockMaxSize})"
+            return (False, strReason)
+        
+        return (True,"")
+    
     # 과거 자원정보, 저장이 되어야 한다.
     def __readLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFileBlockInfoLocalConfig:dict, dictFileBlockDBConfig:dict):
         
@@ -590,9 +597,24 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
+    # watermark에 대한 정책,우선 local로 설정하고, 향후 DB, UI 정책으로 만든다.
+    def __readWatermarkLocalConfig(self, dictJsonLocalConfigRoot:dict, officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper):
+        
+        '''
+        '''
+        
+        file_block_filter_module:dict = dictJsonLocalConfigRoot.get("file_block_filter_module")
+        
+        #TODO: 가공하지 않고, 그대로 전달한다.
+        office_watermark_filter:dict = file_block_filter_module.get("office_watermark_filter")
+        
+        officeWaterMarkDetectHelper.UpdateWatermarkPolicy(office_watermark_filter)
+        
+        return ERR_OK
+    
     
     # # 파일을 읽는 로직 분리,mimetype에 따른 분기, string 참조의 전달은.. 감수하자.
-    def __readDocument(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
+    def __readOfficeFileContents(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
         
         '''
         '''
@@ -649,30 +671,5 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
-    # # 파일 유형의 감지, 우선 개발
-    # def __detectGetFileType(self, strFileName:str):
-    #     '''
-    #     '''
-        
-    #     mime = magic.from_file(strFileName, mime=True)
-        
-    #     LOG().info(f"mime = {mime}")
-        
-    #     return ERR_OK
-    
-    
-    # def read_file_worker(self, path: str):
-        
-    #     try:
-    #         return path, self.read_docx(path)
-        
-    #     #TODO: 예외처리는 나중.
-    #     except Exception as e:
-    #         return path, f"[ERROR] {e}"
-        
-        
-    # def read_docx(self, path: str) -> str:
-    #     doc = Document(path)
-    #     return "\n".join(paragraph.text for paragraph in doc.paragraphs)
 
 

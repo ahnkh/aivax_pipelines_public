@@ -170,7 +170,7 @@ class ApiRouterImplCommand:
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
         # 입력 프롬프트 출력
-        # LOG().info(f"input promt, model = {modelItem.model_dump()}")
+        # LOG().info(f"run input promt, model = {modelItem.model_dump()}")
         
         #TODO: 응답 데이터 처리, 차단이 발생하면 엔진은 네트워크를 끊는등의 처리를 하고
         # pipeline에서 응답 데이터를 만들어서 opensearch에 저장한다. 
@@ -178,7 +178,7 @@ class ApiRouterImplCommand:
         dictFilterOutput:dict = await self.__filterPipelineCommand.doFilterApiRouter(_mainApp, modelItem, request, routerCustomHelper)
         
         # pipeline result 출력
-        # LOG().info(f"pipeline filter result {dictFilterOutput}")
+        # LOG().info(f"pipeline filter, result = {dictFilterOutput}")
         
         # 차단시점, 차단 메시지 발생.
         await self.__doCustomOuputResponseAiInBlockCondition(dictFilterOutput, _mainApp, modelItem, request)

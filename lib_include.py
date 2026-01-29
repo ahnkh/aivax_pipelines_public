@@ -232,8 +232,11 @@ class FileDefine:
     DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext" #구분자, 여러개
     DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size" #최대 크기
     
-    BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
-    BLOCK_REASON_FILE_SIZE_LIMIT = "fize size exceeds limit"
+    # 차단 사유, 상수화 향후 UI로 메시지 관리 기능 추가
+    BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension" #허용되지 않는 파일 유형
+    BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit" # 파일 사이즈 허용
+    BLOCK_REASON_WATER_MARK_HEADER_DETECT = "contain watermark text in header" # watermark, header 탐지
+    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive text detect" # watermark, ocr text 탐지
     # pass
     
 

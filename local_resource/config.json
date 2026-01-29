@@ -112,7 +112,31 @@
         "file_allow_ext" : ["doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx"],
         "file_max_size" : 10000000,
 
-        "content_chunk_size" : 256
+        "content_chunk_size" : 256,
+
+        "office_watermark_filter":
+        {
+            "desc":[
+                "DRMONE[\\s\\x00]+.{0,256}Fasoo[\\s\\x00]+DRM flag:18 (IGNORE + ALL)"
+            ],
+            "use_regex_base_drm" : 1,
+            "use_ocr_base_watermark" : 1,
+
+            "drm_detect_pattern" : "DRMONE\\s+This\\s+Document\\s+is\\s+encrypted\\s+and\\s+protected\\s+by\\s+Fasoo\\s+DRM",
+            "drm_pattern_flag" : 18,
+            "drm_file_header_limit" : 8096,
+
+            "ocr_pattern_list" : [
+                "(미\\s*공\\s*개)",
+                "(특\\s*허)",
+                "(외\\s*부)",
+                "(반\\s*출)",
+                "(외부|사외).{0,20}(반출|배포)"
+            ],
+            "ocr_pattern_flag" : 18,
+            "ocr_match_hitcount" : 2,
+            "ocr_page_list" : [0]
+        }
     },
 
     "pipe_filter_custom_config":

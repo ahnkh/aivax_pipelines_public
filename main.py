@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     await on_shutdown()
 
 #이것만 전역에 추가.
-app = FastAPI(docs_url="/docs", redoc_url=None, root_path="/openapi", openapi_url="/openapi.json", lifespan=lifespan, default_response_class=ORJSONResponse)
+app = FastAPI(docs_url="/docs", redoc_url=None, root_path="", openapi_url="/openapi.json", lifespan=lifespan, default_response_class=ORJSONResponse)
 
 # uvloop 설치 (기본 asyncio 루프 대신 uvloop 사용)
 uvloop.install()
