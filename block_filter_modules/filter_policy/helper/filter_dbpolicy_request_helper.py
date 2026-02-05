@@ -289,6 +289,10 @@ class FilterDBPolicyRequestHelper:
         # action:str = dictPattern.get("action")
         # status:str = dictPattern.get("status")
         
+        if None == rule or 0 == len(rule):
+          LOG().error(f"invalid rule, skip, rule = {dictDBFilterRule}")
+          return ERR_FAIL
+        
         regex_flag:int = dictDBFilterRule.get("regex_flag")
         regex_group:int = dictDBFilterRule.get("regex_group")
         regex_group_val:str = dictDBFilterRule.get("regex_group_val")
@@ -316,6 +320,7 @@ class FilterDBPolicyRequestHelper:
         
       except Exception as err:
         
+        LOG().error(f"rule error {dictDBFilterRule}")
         LOG().error(traceback.format_exc())
         
         #TODO: 연산이 실패한 룰은, 무시한다.
