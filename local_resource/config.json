@@ -7,7 +7,7 @@
             "default_server_port" : 4000,
             "default_schema" : "http",
 
-            "db_poll_cycle_second" : 60
+            "db_poll_cycle_second" : 10
         }
     },
 
