@@ -233,6 +233,7 @@ class Pipeline(PipelineBase):
                     
                     #TODO: 이건 변경하지 않도록 설정한다. (2단계 모델만 지원)
                     # msg["content"] = masked
+                    
                     dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = masked
                     
                     #strBlockMessage:str = self.__customBlockMessage()
@@ -245,7 +246,17 @@ class Pipeline(PipelineBase):
                     
                     masked = self.__maskSpans(content, spans)
                     # msg["content"] = masked
-                    dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = masked
+                    
+                    # mask일때 식별할수 있게 추가.
+                    #❌탐지 유형은 '{strPolicyCategory}'
+                    # masked = masked + f"\n(❌탐지 유형 = {strPolicyName})"
+                    
+                    strMaskedMessage:str = f'''{masked}
+[AIVAX] 프롬프트 마스킹
+다음 정책에 의해 [AIVAX MASKING] 처리되었습니다.
+- 탐지 유형 : {strPolicyName}'''
+                    
+                    dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedMessage
 
                     #TODO: 여기서부터는 협의 필요                    
                     dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
