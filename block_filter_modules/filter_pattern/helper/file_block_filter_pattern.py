@@ -570,13 +570,13 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # File 확장자 제한
         if not (strFileExt in lstFileBlockAllowExt):
-            strExtension = ",".join(lstFileBlockAllowExt)
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strExtension})"
+            # strExtension = ",".join(lstFileBlockAllowExt)
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strFileExt})"
             return (False, strReason)
         
         # file size 제한
         if nFileBlockMaxSize < nFileSize:
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileBlockMaxSize})"
+            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileSize} / {nFileBlockMaxSize})"
             return (False, strReason)
         
         return (True,"")
