@@ -1,5 +1,4 @@
 
-# router_user.py
 from fastapi import APIRouter
 
 #동기, 비동기 선택 옵션 추가 (향후를 위해서 구현)
@@ -8,9 +7,6 @@ import inspect
 from lib_include import *
 
 from type_hint import *
-
-#TODO: 매번 호출해야 하는 문제. 이건 static으로 하자...
-# from api_modules.helper.router_custom_helper import RouterCustomHelper
 
 from api_modules.router.sub_modules.api_router_impl_command import ApiRouterImplCommand
 

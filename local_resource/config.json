@@ -145,7 +145,12 @@
         {            
             "desc" : "0: allow, 1: block, 2: masking, 3: block+masking",
             "ssl_proxy_bypass_bitmask" : 0
-        }
+        },
+
+        "regex_full_scan_flag" : false,
+
+        "next_detect_after_block" : false
+
     }
     
 }

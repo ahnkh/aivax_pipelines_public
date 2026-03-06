@@ -26,6 +26,20 @@ class FilterPipelineCommand:
         
         dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
         
+        from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
+        filterCustomConfig:FilterCustomConfig = mainApp.GetFilterCustomConfig()
+        
+        customFilterConfigItem: PipelineCustomFilterConfigItem = filterCustomConfig.filterConfig
+        
+        #sslproxy, 응답결과 제어
+        nSSLProxyBypassBitMask:int = filterCustomConfig.GetSSLProxyBypassMask()
+        
+        # pipeline 호출 제어, true 설정되면 차단이 발생해도 무시하고 계속 수행한다.
+        # bAllPipelineFilterDetect:bool = filterCustomConfig.IsAllPipelineFilterDetect()
+        
+        #pipeline 호출 제어, true 설정되면 차단이 발생해도 무시하고 계속 수행한다.
+        bNextDetectAfterBlock:bool = customFilterConfigItem.next_detect_after_block
+        
         #시나리오, pipeline 리스트를 여러개 가져온다.
         #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과
         #호출후 결과를 모아서 전달하는 응답이 중요하다.
@@ -44,7 +58,7 @@ class FilterPipelineCommand:
         #TODO: 사용자 정보 생성기능 보강
         # file등 사용자 정보가 수집되지 않을때, email, service가 없을때는 세션id 정보를 통해서 과거 데이터를 수집하도록 개선.
         #조건, 분기 필요, session_id는 body.metadata로 전달된다.
-        strSessionID:str = modelItem.session_id
+        # strSessionID:str = modelItem.session_id
         
         strUserKey:str = f"{modelItem.email}_{modelItem.ai_service}"
         
@@ -59,7 +73,8 @@ class FilterPipelineCommand:
             ApiParameterDefine.CLIENT_HOST : modelItem.client_host,            
         }
         
-        dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
+        #customFilterConfigItem 를 전달하도록 사양 변경
+        # dictExtParameter:dict = None #부가정보 확장 parameter, 우선 무시
         
         # #부가정보에 대해서는 향후 formdata를 model_dict로 변환하거나, dictionary로 직접 변환한다.
         # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
@@ -73,6 +88,7 @@ class FilterPipelineCommand:
         #TODO: regex 패턴의 inlet 범위는 사실상 한개로 압축되며, input filter 포함 2개이다.
         lstPipeFilterName:list = modelItem.filter_list
         
+        #모든 pipeline에 대한 순회
         for strPipelineFilterName in lstPipeFilterName:
             
             pipeline = dictPipelineMap.get(strPipelineFilterName, None)
@@ -82,13 +98,15 @@ class FilterPipelineCommand:
                 strErrorMessage:str = f"invalid pipeline, not exist pipeline, id = {strPipelineFilterName}"            
                 routerCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)            
                 continue #TODO: 호출될수 없는 구문
-                    
-            #예외처리, 다시 작성 필요 => 더 적절항 방법 존재.
+                                
             #TODO: async 처리에 대한 대응, await의 적절한 시점 또는 concurrent.future 처리도 고려        
             #TODO: 신규 함수로 추가하는 방안으로 검토, 우선 regex_filter, async도 제외, 대신 병렬처리 (향후)
             
+            #개별 filter에 대한 ouput 응답
             dictEachFilterOutput = {}
             
+            # 이전 코드
+            '''
             if hasattr(pipeline, strFilterMethodName):
                 
                 #TODO: 메소드 동적 호출 처리, no async
@@ -98,7 +116,12 @@ class FilterPipelineCommand:
                 #TODO: 내부 메소드에서 async 처리 되어 있어서, async, await 구조는 유지.
                 #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
                 # asyncio.run(methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request))
+                
+                #TODO: 너무 많은 인자. 최초 pipeline 구조로 인한 어쩔수 없는.. next 버전에서는 리펙토링 필요.
                 await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
+                
+                #TODO: 26.03.03 분기 옵션화, 제어, 차단이 발생했을때, 흐름 제어 필요 
+                #모든 패턴에 대해서 탐지/차단 수행옵션을 제공하고, 기본은 차단후 종료이다.
                 
                 #응답의 처리, 차단, block이 발생했으면, 종료 처리
                 #masking, accept는 더 수행이 되어야 한다. (25.12 기준 최대 3개의 inlet 제공)
@@ -117,6 +140,33 @@ class FilterPipelineCommand:
                 # RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
                 LOG().error(strErrorMessage)
                 continue
+            '''
+            
+            #예외처리 => 있어서는 안되는 구문, 종료시킨다.
+            if False == hasattr(pipeline, strFilterMethodName):
+                
+                strErrorMessage:str = f"invalid filter, not exist filter, filter = {strFilterMethodName}"
+                RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
+                # LOG().error(strErrorMessage)
+            
+            methodFunction = getattr(pipeline, strFilterMethodName)
+                
+            #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
+            # asyncio.run(methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request))
+            
+            #TODO: 너무 많은 인자. 최초 pipeline 구조로 인한 어쩔수 없는.. next 버전에서는 리펙토링 필요. 
+            # await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
+            await methodFunction(dictBodyParameter, user, customFilterConfigItem, dictEachFilterOutput, __request__ = request)
+            
+            # 조건문 좀더 정확하게 검증.
+            if False == bNextDetectAfterBlock:
+                
+                if True == self.__isBlockFilter(dictEachFilterOutput):
+                    dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
+                    
+                    #차단 수행후, loop 종료
+                    # LOG().info(f"block inlet filter {strPipelineFilterName}, finish")
+                    break
                 
             #TODO: 응답 처리, TODO: 메시지를 만드는 부분은 재고려 필요, 우선 각 함수의 응답 결과를 저장한다.
             #함수의 존재 여부와 상관없이, 응답은 만든다. error 또는 응답
@@ -144,10 +194,6 @@ class FilterPipelineCommand:
             
         #Filter별 요청후, 마지막에 취합
         
-        from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
-        filterCustomConfig:FilterCustomConfig = mainApp.GetFilterCustomConfig()
-        
-        nSSLProxyBypassBitMask:int = filterCustomConfig.GetSSlProxyBypassMask()
         
         routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult, nSSLProxyBypassBitMask)
         

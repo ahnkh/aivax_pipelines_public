@@ -179,13 +179,6 @@ def main():
         pipeLineMainApp = PipeLineMainApp()
         pipeLineMainApp.Initialize(dictOpt)
         
-        #테스트 기능 추가, 가장 먼저 실행 TODO: 개선 필요
-        TEST = dictOpt.get(APP_PARMETER_DEFINE.TEST)
-        
-        if None != TEST:            
-            test()
-            sys.exit()
-        
         #TODO: api 부분은 비동기로 호출되어야 하는 문제가 있다.        
         setup_fast_api(app, pipeLineMainApp, daemon_api_router, pipeline_router)
 
@@ -198,8 +191,7 @@ def main():
         # strFastApiHost = "127.0.0.1"
         strFastApiHost = dictOpt.get(APP_PARMETER_DEFINE.WEB_HOST)
         nFastApiPort = int(dictOpt.get(APP_PARMETER_DEFINE.WEB_PORT))
-        
-        #실행 파라미터 추가.        
+                    
         run_uvicorn(app, strFastApiHost, nFastApiPort)
         
     except Exception as err:

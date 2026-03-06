@@ -34,7 +34,7 @@ class Pipeline(PipelineBase):
     
     
     #pipeline, inlet, outlet 중 inlet 만 가져간다.
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
         '''
         TODO: 이 기능은 multiple filter 에서만 호출한다.

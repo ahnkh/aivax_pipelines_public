@@ -4,6 +4,8 @@
 
 from typing import Union
 
+from dataclasses import dataclass, field
+
 from lib_include import *
 from type_hint import *
 
@@ -209,5 +211,127 @@ class OfficeFileAnalysisParameterItem(BaseModel):
     read_timeout : Optional[int] = Field(default=60, description=" 파일 read timeout")
     
     regex_pattern:dict = Field(default={}, description="정책 패턴") 
+    
+    pass
+
+
+#FilterConfig, Pipeline별 세부 정책
+class RegexFilterConfigItem(BaseModel):
+    
+    enable_filter: Optional[bool] = Field(default=False, description="Regex filter, 사용여부")
+    full_scan_flag: Optional[bool] = Field(default=False, description="Regex filter, fulll 스캔 설정, 기본 비활성")
+    pass
+
+class FileFilterConfigItem(BaseModel):
+    enable_filter: Optional[bool] = Field(default=False, description="file filter, 사용여부")
+    pass
+
+class SLMFilterConfigItem(BaseModel):
+    enable_filter: Optional[bool] = Field(default=False, description="SLM filter, 사용여부")
+    pass
+
+# pipeline filter, 세부 config item
+class PipelineCustomFilterConfigItem(BaseModel):
+    '''
+    '''
+    
+    # TODO: 정책 filter 흐름제어, ssl proxy로 전달 결과 제어 flag, bitmask
+    # 0: allow, 1: block, 2: masking, 3: block+masking
+    ssl_proxy_bypass_bitmask : Optional[int] = Field(default=FilterDefine.SSL_PROXY_BYPASS_ALLOW, description="ssl proxy bypass 설정")
+    
+    # 차단후 다음 차단을 수행할지 여부 => 이름 다시. 이름과는 별개로, 이게 가장 쉽다.
+    next_detect_after_block : Optional[bool] = Field(default=False, description="전체 pipeline filter의 탐지 여부")
+    
+    # masking, 차단 문구, template
+    
+    # filter 동작 제어, 차단으로 탐지후에도 다음 filter를 수행 여부, 기본값 OFF
+    
+    regex_filter_config: Optional[RegexFilterConfigItem] = Field(default_factory=RegexFilterConfigItem, description="regx filter에 개별 config")
+    file_filter_config: Optional[RegexFilterConfigItem] = Field(default_factory=FileFilterConfigItem, description="file filter에 개별 config")
+    slm_filter_config: Optional[RegexFilterConfigItem] = Field(default_factory=SLMFilterConfigItem, description="slm filter에 개별 config")
+    
+    pass
+
+#Regex Filter 탐지 요청 (detect secret)
+# class RegexPatternDetectFilterParameterItem:
+    
+#     '''
+#     Regex 패턴 요청, Filter로 요청
+#     '''
+    
+#     # contents, 반드시 존재해야 한다.
+#     contents:str = Field(default="", description="AI 프롬프트")
+    
+#     user_id:str = Field(default="", )
+#     uuid:str = Field(default="", )
+    
+#     ai_service_type : Optional[int] = Field(default=AI_SERVICE_DEFINE.SERVICE_UNDEFINE)
+    
+#     valves:Any = Field(default=None, )
+    
+#     #regex, 전체 scan옵션
+#     regex_fullscan_flag:Optional[bool] = Field(default=False, description="regex 패턴, 전체 scan flag")
+#     # pass
+
+@dataclass(slots=True)
+class RegexPatternDetectFilterParameterItem:
+    
+    '''
+    Regex 패턴 요청, Filter로 요청
+    '''
+
+    contents:str
+    
+    user_id:str
+    uuid:str
+    
+    ai_service_type : Optional[int]    
+    valves:Any
+    
+    #regex, 전체 scan옵션
+    regex_fullscan_flag:Optional[bool]    
+    # regex_fullscan_flag: bool | None = False
+    # pass
+    
+#Regex Filter 탐지 결과
+# class RegexPaternDetectFilterResultItem(BaseModel):
+    
+#     '''
+#     Regex 패턴 응답 결과
+#     '''
+    
+#     #일단 기존것 추가, 그대로 동작하도록 처리
+    
+#     counts:dict = {"block": 0, "masking": 0, "accept": 0}
+#     spans: List[Tuple[int, int]] = []
+#     dictDetectRule: dict = {}
+    
+#     #탐지된 룰 정보
+#     detect_rule_list:list = []
+    
+#     pass
+
+@dataclass(slots=True)
+class RegexPaternDetectFilterResultItem:
+    
+    '''
+    Regex 패턴 응답 결과
+    '''
+    
+    #일단 기존것 추가, 그대로 동작하도록 처리
+    
+    # counts:dict = field(default_factory=dict, description="regx filter에 개별 config")
+    counts:dict = field(default_factory=lambda:{"block": 0, "masking": 0, "accept": 0})
+    spans: List[Tuple[int, int]] = field(default_factory=list)
+    
+    dictDetectRule: dict = field(default_factory=dict)
+    
+    # counts:dict = {"block": 0, "masking": 0, "accept": 0}
+    # spans: List[Tuple[int, int]] = []
+    # dictDetectRule: dict = {}
+    
+    #탐지된 룰 정보
+    # detect_rule_list:list = []
+    detect_rule_list: List = field(default_factory=list)
     
     pass

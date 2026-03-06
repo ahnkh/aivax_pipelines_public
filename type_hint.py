@@ -8,7 +8,8 @@ from api_modules.models.schemas import (
     OpenAIChatMessage, OpenAIChatCompletionForm, 
     FilterForm, AddPipelineForm, 
     DeletePipelineForm, VariantFilterForm,OutputFilterItem,
-    FilterRuleTestItem, FileAttachItem, OfficeFileAnalysisParameterItem
+    FilterRuleTestItem, FileAttachItem, OfficeFileAnalysisParameterItem,
+    PipelineCustomFilterConfigItem, RegexPatternDetectFilterParameterItem, RegexPaternDetectFilterResultItem
 )
      
 # #TODO: typehint 제공

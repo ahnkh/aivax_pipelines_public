@@ -1,5 +1,4 @@
 
-# import copy
 import re
 import math
 
@@ -86,28 +85,40 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
 
     #기본 모듈, 그대로 이동 (기존 detect_spans)
-    def DetectPattern(self, strContents:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int): #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+    # def DetectPattern(self, strContents:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int): #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
+    def DetectPattern(self, filterPatternItem:RegexPatternDetectFilterParameterItem) -> RegexPaternDetectFilterResultItem: #-> Tuple[List[Tuple[int, int]], Dict[str, int]]:
 
         '''
         기존 코드, 그대로 이관
         '''
+        
+        # strContents:str = filterPatternItem.contents
+        # valves:Any = filterPatternItem.valves
+        # strUserID:str = filterPatternItem.user_id
+        # strUUID:str = filterPatternItem.uuid
+        # nServiceType:int = filterPatternItem.ai_service_type
+        
+        # #regex 패턴, full scan 여부
+        # regex_fullscan_flag:bool = filterPatternItem.regex_fullscan_flag
 
         #TODO: span, count를 반환하는데, 호출측에서 count를 사용하지 않는다.. 추가 분석 필요..
         # return self.__detectDefaultBaseFilter(strContents, valves)
         # return ERR_OK
 
         #TODO: 반환값이 변경되었다. typing 구문 제외
-        return self.__detectFilterFromDB(strContents, valves, strUserID, strUUID, nServiceType)
+        # return self.__detectFilterFromDB(strContents, valves, strUserID, strUUID, nServiceType)
+        return self.__detectFilterFromDB(filterPatternItem)
+        
 
     #정책 테스트, 한개의 정책만 테스트 한다. TODO: 우선 개발후 2차 리펙토링
-    def TestRulePattern(self, strPrompt:str, strRegexRule:str, strAction:str):
+    def TestRulePattern(self, strPrompt:str, strRegexRule:str, strAction:str) -> RegexPaternDetectFilterResultItem:
 
         '''
         '''
 
-        counts:dict = {"block": 0, "masking": 0, "accept": 0}
+        # counts:dict = {"block": 0, "masking": 0, "accept": 0}
 
-        spans: List[Tuple[int, int]] = []
+        # spans: List[Tuple[int, int]] = []
 
         #TODO: 탐지된 id, name은 버린다.
 
@@ -131,11 +142,13 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         #최초 탐지된 룰 ID, Name을 반환하도록 개선
         # dictDetectRule: dict = {"id": "", "name": ""}
-        dictDetectRule: dict = {}
+        # dictDetectRule: dict = {}
+        
+        filterResultItem = RegexPaternDetectFilterResultItem()
 
-        self.__detectFilterPatternAt(strPrompt, spans, counts, dictDetectRule, dictRegexPattern)
+        self.__detectFilterPatternAt(strPrompt, dictRegexPattern, filterResultItem)
 
-        return (spans, counts, dictDetectRule)
+        return filterResultItem
 
     #상속, DB의 패턴 정책을 수신받는다.
     # def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
@@ -180,7 +193,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
     
 
     # filter 처리 리펙토링, 탐지 기능 재구현
-    def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int):
+    # def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int):
+    def __detectFilterFromDB(self, filterPatternItem:RegexPatternDetectFilterParameterItem):
 
         '''
         db의 필터 정책을 순회하여, action 값이 maskinig, block여부에 따라, 먼저 걸린 순서로 반환한다.
@@ -190,22 +204,39 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         TODO: 일부 하드코딩은 존재하며, 나중에 추가 리펙토링을 진행한다.
         '''
+        
+        text:str = filterPatternItem.contents
+        valves:Any = filterPatternItem.valves
+        
+        # strUserID:str = filterPatternItem.user_id
+        # strUUID:str = filterPatternItem.uuid
+        # nServiceType:int = filterPatternItem.ai_service_type
+        
+        # #regex 패턴, full scan 여부
+        # regex_fullscan_flag:bool = filterPatternItem.regex_fullscan_flag
 
+        #TODO: 개선 필요
+        # 최종, 또는 최선의 탐지 로직은 유지 (어떻게 만들지는 모르겠다.)
+        # 그외에는 span, counts에는 반영하지 않고, 정책코드, 정책명을 리스트로 담는다. => 어떤 문자열이 걸리는지를 확인해야 한다.
         # counts:dict = {"pem": 0, "jwt": 0, "known": 0, "entropy": 0}
-        counts:dict = {"block": 0, "masking": 0, "accept": 0}
+        # counts:dict = {"block": 0, "masking": 0, "accept": 0}
 
-        spans: List[Tuple[int, int]] = []
+        # spans: List[Tuple[int, int]] = []
 
+        #TODO: 개선 필요
         #최초 탐지된 룰 ID, Name을 반환하도록 개선
         # dictDetectRule: dict = {"id": "", "name": ""}
-        dictDetectRule: dict = {}
+        # dictDetectRule: dict = {}
+        
+        filterResultItem = RegexPaternDetectFilterResultItem()
         
         #순차적으로, scope 별로 조회
         #scope 순서는 user, service, group, default 정책이다.
         #service 타입, user 필드에 따른 서비스별 분기가 있기에, 각각 만들어야 한다.
         
         # 각 연결된 탐지, 수행
-        self.__detectLinkedRegexPatternList(self.__dictDBScopeRegexPattern, text, spans, counts, dictDetectRule, strUserID, strUUID, nServiceType)
+        # self.__detectLinkedRegexPatternList(self.__dictDBScopeRegexPattern, text, spans, counts, dictDetectRule, strUserID, strUUID, nServiceType)
+        self.__detectLinkedRegexPatternList(self.__dictDBScopeRegexPattern, filterPatternItem, filterResultItem)
         
         #탐지는 같은데, 걸리는 조합이 다르다. 탐지가 되면 skip, 아니면 next
 
@@ -215,6 +246,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
         # for dictDBPattern in self.__listDBRegexPattern:
         # for dictDBPattern in listUserPattern:
         #     self.__detectFilterPatternAt(text, spans, counts, dictDetectRule, dictDBPattern)
+        
+        spans = filterResultItem.spans
+        counts = filterResultItem.counts
+        dictDetectRule = filterResultItem.dictDetectRule
 
         # (D) 엔트로피 => 이건 어떤 기능인지 몰라서, 우선 추가
         for s, e in self.__high_entropy_hits(text, valves):
@@ -223,24 +258,32 @@ class DetectSecretFilterPattern (FilterPatternBase):
             
         #detectRule의 분석, action의 우선순위로, 재 조합한다.        
         dictFinalRulePolicy:dict = self.__decideFinalPolicyAction(dictDetectRule)
+        
+        #TODO: 우선 그대로, 다시 개발해야 한다.
+        filterResultItem.dictDetectRule.clear()
+        filterResultItem.dictDetectRule.update(dictFinalRulePolicy)
 
-        return (spans, counts, dictFinalRulePolicy)
+        # return (spans, counts, dictFinalRulePolicy)
+        return filterResultItem
     
-    def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, 
-                                       strUserID:str, strUUID:str, nServiceType:int):
+    
+    # def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, 
+    #                                    strUserID:str, strUUID:str, nServiceType:int):
+    def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, filterPatternItem:RegexPatternDetectFilterParameterItem,
+                                       filterResultItem:RegexPaternDetectFilterResultItem):
         
         '''
         '''
         
         listUserPattern:list = dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_USER)
-        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, strPromptText, spans, counts, dictDetectRule, strUserID, strUUID)
+        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, filterPatternItem, filterResultItem)
         
         if True == bDetectUser:
             return ERR_OK
         
         listServicePattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_SERVICE)
         
-        bDetectService:bool = self.__detectServiceBaseRegexPattern(listServicePattern, strPromptText, spans, counts, dictDetectRule, nServiceType)
+        bDetectService:bool = self.__detectServiceBaseRegexPattern(listServicePattern, filterPatternItem, filterResultItem)
         
         if True == bDetectService:
             return ERR_OK
@@ -251,16 +294,23 @@ class DetectSecretFilterPattern (FilterPatternBase):
         #default: 동일 패턴. 마지막은 동일 패턴, 그대로 전달
         listDefaultPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
         
-        self.__detectDefaultRegexPattern(listDefaultPattern, strPromptText, spans, counts, dictDetectRule)
+        self.__detectDefaultRegexPattern(listDefaultPattern, filterPatternItem, filterResultItem)
         
         return ERR_OK
     
     # 사용자 패턴, 사용자로 등록된 정책을 찾아서, 해당 사용자와 일치하는 정책만 탐지를 수행한다. 정책 구조는 동일
-    def __detectUserBasePattern(self, listUserPattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, strUserID:str, strUUID:str) -> bool:
+    # def __detectUserBasePattern(self, listUserPattern:list, strPromptText:str, strUserID:str, strUUID:str, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+    def __detectUserBasePattern(self, listUserPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
         
         '''
         #마지막에 bool값을 전달, next를 수행할지를 결정한다.
         '''
+        
+        strPromptText:str = filterPatternItem.contents
+        strUserID:str = filterPatternItem.user_id
+        strUUID:str = filterPatternItem.uuid
+        
+        bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
         
         for dictDBPattern in listUserPattern:
             
@@ -274,20 +324,28 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 
                 #LOG, 향후 제거
                 # strUserUUID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
-                LOG().info(f"detect user base regex pattern, id = {strDBUserUUID}, name = {strUserID}")        
-                self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
+                # LOG().info(f"detect user base regex pattern, id = {strDBUserUUID}, name = {strUserID}")        
+                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
                 
                 # 여기는 detect_secret과 같은 구조 (향후 사양 확인후 개선 필요)
-                if spans:
+                # fullscan 과 최초 탐지후 반환, 옵션화.
+                
+                if False == bRegexFullScanFlag and True == bDetectPattern:
                     return True
             
         return False
     
     # 서비스 패턴, 서비스 id로 매치한다.
-    def __detectServiceBaseRegexPattern(self, listservicePattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, nServiceID:int) -> bool:
+    # def __detectServiceBaseRegexPattern(self, listservicePattern:list, strPromptText:str, nServiceID:int, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+    def __detectServiceBaseRegexPattern(self, listservicePattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
         
         '''
         '''
+        
+        strPromptText:str = filterPatternItem.contents
+        nServiceID:int = filterPatternItem.ai_service_type
+        
+        bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
         
         for dictDBPattern in listservicePattern:
             
@@ -299,28 +357,40 @@ class DetectSecretFilterPattern (FilterPatternBase):
             if nServiceID == nDBServiceID:    
                 
                 #일단 LOG
-                LOG().info(f"detect service base regex pattern, id = {nServiceID}")        
-                self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
-                
-                # 여기는 detect_secret과 같은 구조 (향후 사양 확인후 개선 필요)
-                if spans:
+                # LOG().info(f"detect service base regex pattern, id = {nServiceID}")        
+                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
+                                
+                #TODO: refactoring
+                # if filterResultItem.spans:
+                #     return True
+                if False == bRegexFullScanFlag and True == bDetectPattern:
                     return True
         
         return False
     
     # default 패턴, 기존과 동일
-    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict):
+    # def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, filterResultItem:RegexPaternDetectFilterResultItem):
+    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem):
         
         '''
         '''
+        
+        bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
+        
+        strPromptText:str = filterPatternItem.contents
         
         for dictDBPattern in listDBRegexPattern:
-            self.__detectFilterPatternAt(strPromptText, spans, counts, dictDetectRule, dictDBPattern)
+            bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
+            
+            # if filterResultItem.spans:
+            #     return True
+            if False == bRegexFullScanFlag and True == bDetectPattern:
+                return True
                 
         return ERR_OK
 
     #개별 dictionary 별 정책 조회
-    def __detectFilterPatternAt(self, text:str, spans:list, dictCount:dict, dictDetectRule:dict, dictDBPattern:dict):
+    def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
 
         '''
         '''
@@ -336,6 +406,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
         regex_group_val:str = dictDBPattern.get("regex_group_val")
 
         regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
+        
+        spans = filterResultItem.spans
+        # dictCount = filterResultItem.counts
+        # dictDetectRule = filterResultItem.dictDetectRule
 
         #group 여부인지, 아닌지에 따른 분기, 여기는, 우선 나누지 않는다. (UI 개발 필요)
 
@@ -343,36 +417,45 @@ class DetectSecretFilterPattern (FilterPatternBase):
         if None == regex_pattern:
 
             LOG().error(f"invalid regex pattern, id = {id}, name = {name}, skip")
-            return ERR_FAIL
+            return False
 
         if CONFIG_OPT_ENABLE == regex_group:
-            for m in regex_pattern.finditer(text):
-                if regex_group_val and regex_group_val in m.groupdict():
-                    s, e = m.span(regex_group_val)
+            for match in regex_pattern.finditer(text):
+                if regex_group_val and regex_group_val in match.groupdict():
+                    s, e = match.span(regex_group_val)
                 else:
-                    s, e = m.span(0)
+                    s, e = match.span(0)
 
                 self.__add_span(spans, s, e)
                 # counts[action] += 1
-                dictCount[action] = dictCount.get(action,0) + 1
-
-                self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
+                # dictCount[action] = dictCount.get(action,0) + 1
+            
+                # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets)                
+                return True
         else:
-            for m in regex_pattern.finditer(text):
-                self.__add_span(spans, m.start(), m.end())
+            for match in regex_pattern.finditer(text):
+                self.__add_span(spans, match.start(), match.end())
                 # counts[action] += 1
-                dictCount[action] = dictCount.get(action,0) + 1
+                # dictCount[action] = dictCount.get(action,0) + 1
 
-                self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
+                # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
+                
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, match)
+                return True
 
-        return ERR_OK
-
-    #최초 탐지된 룰 정보 할당.
-    def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str, strTarget:str):
-
+        return False
+    
+    # 탐지된 패턴에 대한 집계, pipeline의 전달을 위해서 최종 로직은 필요해 보인다. 
+    def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, match:re.Match[str]):
+        
+        '''        
         '''
-        사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
-        '''
+        
+        dictDetectRule = filterResultItem.dictDetectRule
+        dictCount = filterResultItem.counts
+        
+        dictCount[strAction] = dictCount.get(strAction,0) + 1
         
         dictEachActionPolicy = dictDetectRule.get(strAction, {})
         
@@ -380,14 +463,49 @@ class DetectSecretFilterPattern (FilterPatternBase):
         if 0 == len(dictEachActionPolicy):
             #test
             LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
-            dictEachActionPolicy["id"] = strRuleID
-            dictEachActionPolicy["name"] = strRuleName
+            # dictEachActionPolicy["id"] = strRuleID 
+            # dictEachActionPolicy["name"] = strRuleName
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ID] = strRuleID 
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_NAME] = strRuleName
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
             
             dictDetectRule[strAction] = dictEachActionPolicy
-
+            
+        #탐지된 룰은 모두 증적에 추가
+        filterResultItem.detect_rule_list.append({
+            DBDefine.DB_FIELD_RULE_ID : strRuleID,
+            DBDefine.DB_FIELD_RULE_NAME : strRuleName,
+            DBDefine.DB_FIELD_RULE_ACTION : strAction,
+            DBDefine.DB_FIELD_RULE_TARGET : strTarget,
+            FilterDetectDefine.DETECT_REGEX_MATCH : f"{match.group()} ({match.start()},{match.end()})",            
+        })
+        
         return ERR_OK
+
+    # #최초 탐지된 룰 정보 할당.
+    # def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str, strTarget:str):
+
+    #     '''
+    #     사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
+    #     '''
+        
+    #     dictEachActionPolicy = dictDetectRule.get(strAction, {})
+        
+    #     #최초 탐지되면, 추가 (TODO: 리펙토링)
+    #     if 0 == len(dictEachActionPolicy):
+    #         #test
+    #         LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
+    #         # dictEachActionPolicy["id"] = strRuleID 
+    #         # dictEachActionPolicy["name"] = strRuleName
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ID] = strRuleID 
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_NAME] = strRuleName
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+            
+    #         dictDetectRule[strAction] = dictEachActionPolicy
+
+    #     return ERR_OK
 
 
     def __decideFinalPolicyAction(self, dictDetectRule:dict) -> dict:

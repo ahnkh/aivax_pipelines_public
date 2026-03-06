@@ -31,7 +31,7 @@ class Pipeline(PipelineBase):
         self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()        
         pass
     
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         '''
         '''
         

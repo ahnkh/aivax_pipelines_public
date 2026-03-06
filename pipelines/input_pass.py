@@ -57,7 +57,7 @@ class Pipeline(PipelineBase):
     # ----------------------------
     # 메인: inlet
     # ----------------------------        
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         '''
         TODO: 2단계 모델이 비활성화 되어, 입력 body의 전달도 불필요 하여 주석처리
         '''

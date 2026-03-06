@@ -202,7 +202,6 @@ class PipeLineMainApp:
         
         return self.__filterPolicyManager.GetFilterCustomConfig()
     
-    
     #테스트 함수, 추가
     def Test(self, dictTestOpt:dict):
         

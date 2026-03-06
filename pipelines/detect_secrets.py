@@ -73,7 +73,8 @@ class Pipeline(PipelineBase):
     ########################################### public
     
     # ---------- 파이프라인 엔트리 ----------
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    # async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
         '''
         TODO: 기존 형상은 가급적 유지
@@ -104,6 +105,9 @@ class Pipeline(PipelineBase):
         
         TODO: 2단계 모델이 보류되어, body전달은 불필요한 자원 낭비, 제거
         '''
+        
+        #TODO: regex 패턴, 모든 정책의 탐지 여부, 옵션으로 제공            
+        full_scan_flag:bool = customFilterConfigItem.regex_filter_config.full_scan_flag
         
         #chat completion을 통해 호출시, 예외처리
         if None == dictOuputResponse:
@@ -193,9 +197,26 @@ class Pipeline(PipelineBase):
             strLocalContents:str = copy.deepcopy(content)
             
             masked:str = ""
+            
+            #TOOD: 전달인자, 호출 인자, 다시 정의해서 전달되어야 한다.
+            #요청 파라미터도 최소화 한다.
+            filterPatternItem:RegexPatternDetectFilterParameterItem = RegexPatternDetectFilterParameterItem(
+                contents = strLocalContents,
+                user_id = user_id,
+                uuid = uuid,
+                ai_service_type = ai_service_type,
+                valves = self.valves,
+                regex_fullscan_flag = full_scan_flag
+            )
                        
-            valves = self.valves
-            (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(strLocalContents, valves, user_id, uuid, ai_service_type)
+            # valves = self.valves
+            # (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(strLocalContents, valves, user_id, uuid, ai_service_type)
+            # (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(filterPatternItem)            
+            filterResultItem:RegexPaternDetectFilterResultItem = detectSecretFilterPattern.DetectPattern(filterPatternItem)
+            
+            dictDetectedRule = filterResultItem.dictDetectRule
+            counts = filterResultItem.counts
+            spans = filterResultItem.spans
                         
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
             strPolicyID:str = dictDetectedRule.get("id", "")
@@ -344,7 +365,9 @@ class Pipeline(PipelineBase):
                 "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
                 
                 #masked contents 추가
-                "masked_contents" : masked
+                "masked_contents" : masked,
+                
+                "evidence" : filterResultItem.detect_rule_list
                 
                 # "final_action": fa_internal,
             }
@@ -376,7 +399,12 @@ class Pipeline(PipelineBase):
         from block_filter_modules.filter_pattern.helper.detect_secret_filter_pattern import DetectSecretFilterPattern
         detectSecretFilterPattern:DetectSecretFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_DETECT_SECRET)
         
-        (spans, counts, dictDetectedRule) = detectSecretFilterPattern.TestRulePattern(strPrompt, strRule, strAction)
+        # (spans, counts, dictDetectedRule) = detectSecretFilterPattern.TestRulePattern(strPrompt, strRule, strAction)
+        filterResultItem:RegexPaternDetectFilterResultItem = detectSecretFilterPattern.TestRulePattern(strPrompt, strRule, strAction)
+        
+        # 일단 기존 로직과 동일
+        spans = filterResultItem.spans
+        counts = filterResultItem.counts
         
         #TODO: 여기는 차단명이 없다. 테스트로 통일
         strPolicyName:str = "정책 테스트"

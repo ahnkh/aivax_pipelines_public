@@ -180,10 +180,20 @@ class FilterPolicyManager:
         
         filter_output_config:dict = pipe_filter_custom_config.get("filter_output_config")
         
+        # sslproxy 응답 제어 mask
         ssl_proxy_bypass_bitmask:int = filter_output_config.get("ssl_proxy_bypass_bitmask")
         
+        #차단후 다음 pipeline의 탐지여부
+        next_detect_after_block:bool = pipe_filter_custom_config.get("next_detect_after_block")
+        
+        # regex 패턴, full scan flag
+        regex_full_scan_flag:bool = pipe_filter_custom_config.get("regex_full_scan_flag")
+        
+        
         dictFilterCustomConfig:dict = {
-            FilterDefile.FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK : ssl_proxy_bypass_bitmask
+            FilterDefine.FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK : ssl_proxy_bypass_bitmask,
+            FilterDefine.FILTER_REGEX_FULL_SCAN_FLAG : regex_full_scan_flag,
+            FilterDefine.FILTER_NEXT_DETECT_AFTER_BLOCK : next_detect_after_block
         }
         
         filterCustomConfig.Initialize(dictFilterCustomConfig)

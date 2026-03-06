@@ -167,7 +167,7 @@ class RouterCustomHelper:
             #Block, 찾으면 바로 업데이트 후 Skip
             if PipelineFilterDefine.CODE_BLOCK == nActionCode:
                 
-                if nSSLProxyBypassBitMask & FilterDefile.SSL_PROXY_BYPASS_BLOCK:
+                if nSSLProxyBypassBitMask & FilterDefine.SSL_PROXY_BYPASS_BLOCK:
                     
                     # 일단 LOG
                     LOG().info(f"skip block by proxy bypass bitmask, mask = {nSSLProxyBypassBitMask}")
@@ -187,7 +187,7 @@ class RouterCustomHelper:
                 # 0b0001 block
                 # 0b0002 masking
                 # 0b0100 allow
-                if nSSLProxyBypassBitMask & FilterDefile.SSL_PROXY_BYPASS_MASKING:
+                if nSSLProxyBypassBitMask & FilterDefine.SSL_PROXY_BYPASS_MASKING:
                     
                     # 일단 LOG
                     LOG().info(f"skip masking by proxy bypass bitmask, mask = {nSSLProxyBypassBitMask}")

@@ -162,7 +162,7 @@ AI_SERVICE_NAME_MAP = {
 }
 
 # filter 관련 define
-class FilterDefile:
+class FilterDefine:
     
     #ssl proxy bypass, bitbask
     SSL_PROXY_BYPASS_ALLOW = 0b0000
@@ -171,7 +171,8 @@ class FilterDefile:
     
     # 필드명 - ssl proxy bypass 설정
     FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK = "ssl_proxy_bypass_bitmask"
-    
+    FILTER_REGEX_FULL_SCAN_FLAG = "regex_full_scan_flag"
+    FILTER_NEXT_DETECT_AFTER_BLOCK = "next_detect_after_block"    
     pass
 
 # DB 관련 Define
@@ -199,6 +200,12 @@ class DBDefine:
     DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
+    # pass
+    
+# 탐지 관련
+class FilterDetectDefine:
+    
+    DETECT_REGEX_MATCH = "match" #regex 패턴, match된 결과 (다른 곳에서도 필요)    
     # pass
 
 # file 분석 define
