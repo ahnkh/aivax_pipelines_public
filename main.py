@@ -191,8 +191,9 @@ def main():
         # strFastApiHost = "127.0.0.1"
         strFastApiHost = dictOpt.get(APP_PARMETER_DEFINE.WEB_HOST)
         nFastApiPort = int(dictOpt.get(APP_PARMETER_DEFINE.WEB_PORT))
-                    
-        run_uvicorn(app, strFastApiHost, nFastApiPort)
+          
+        #  외부에서 실행          
+        # run_uvicorn(app, strFastApiHost, nFastApiPort)
         
     except Exception as err:
         LOG().error(traceback.format_exc())
@@ -207,3 +208,24 @@ def main():
 if __name__ == "__main__":
     main()  
     pass
+
+
+def build_app():
+
+    InitLogger("log.txt", TRACE_LOG_PATH, TRACE_PREFIX)
+
+    dictOpt = {
+        APP_PARMETER_DEFINE.WEB_HOST: "0.0.0.0",
+        APP_PARMETER_DEFINE.WEB_PORT: 9099,
+        APP_PARMETER_DEFINE.CONFIG: CONFIG_FILE_PATH,
+    }
+
+    pipeLineMainApp = PipeLineMainApp()
+    pipeLineMainApp.Initialize(dictOpt)
+
+    setup_fast_api(app, pipeLineMainApp, daemon_api_router, pipeline_router)
+
+    return app
+
+# worker import 시 실행됨
+build_app()
