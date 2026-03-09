@@ -326,12 +326,7 @@ class RegexPaternDetectFilterResultItem:
     
     dictDetectRule: dict = field(default_factory=dict)
     
-    # counts:dict = {"block": 0, "masking": 0, "accept": 0}
-    # spans: List[Tuple[int, int]] = []
-    # dictDetectRule: dict = {}
-    
     #탐지된 룰 정보
     # detect_rule_list:list = []
-    detect_rule_list: List = field(default_factory=list)
-    
+    detect_rule_list: List = field(default_factory=list)    
     pass

@@ -172,7 +172,7 @@ class UserAccountDataHandler:
                 
                 LOG().info(f"new user account exist, insert {strUserKey}")
                 
-                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserKey)      
+                dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserKey)
                                                     
                 nError = self.__insertNewUserAccount(dictNewUserAccount)
                 
@@ -193,8 +193,14 @@ class UserAccountDataHandler:
             #별도의 스레드로 관리해야 할 수도 있다. (대기 시간이 길어서, 스레드 쪽이 유리)
             #우선 최대 제한 시간을 신규 계정과 등록과 맞춰서 하나의 스레드와 동일하게 유지
             
+        #26.03.09 사양 추가 
+        # 업데이트 시간, 사용자 프롬프트를 업데이트 한다. 신규 계정추가와는 별도로, 계정별 업데이트 시간, 프롬프트를 업데이트
+        self.__bulkUpdateUserExtraInfo(self.__dictNewUserInfo)
+            
         #저장후, 신규 수집한 map을 초기화 한다. (lock 필요, 호출시점에 lock이 걸린 상태이다.)
-        self.__dictNewUserInfo.clear()
+        # 기본 예외처리는 추가
+        if 0 < len(self.__dictNewUserInfo):
+            self.__dictNewUserInfo.clear()
         
         return ERR_OK
     
@@ -274,3 +280,36 @@ class UserAccountDataHandler:
         
         # pass
     
+    # 사용자 업데이트 시간, 프롬프트를 저장한다. (bulk)
+    def __bulkUpdateUserExtraInfo(self, dictNewUserInfo:dict):
+        
+        '''
+        update, bulk 파라미터를 만든다.
+        bulk 인터페이스 호출 (추가 개발)
+        수정시간, 프롬프트, ID
+        '''
+        
+        if 0 == len(dictNewUserInfo):
+            return ERR_OK
+        
+        #수정시간, 현재 시간으로 통일
+        now:datetime = datetime.datetime.now()
+        strNowDate:str = now.strftime("%Y-%m-%d %H:%M:%S")
+        
+        lstBulkInfo:list = []
+        
+        # 사용자 키를 기준으로 업데이트 한다.
+        for strUserKey in dictNewUserInfo.keys():
+            
+            dictNewUserAccount:dict = dictNewUserInfo.get(strUserKey)
+            
+            uuid:str = dictNewUserAccount.get(ApiParameterDefine.UUID)
+            prompt:str = dictNewUserAccount.get(ApiParameterDefine.MESSAGE_PROMPT)
+            
+            lstBulkInfo.append((strNowDate, prompt, uuid))
+        
+        #bulk 인터페이스로 전달
+        dictDBResult:dict = {}
+        sqlbulk(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_bulk_update_ai_user_time_and_prompt", lstBulkInfo, dictDBResult)
+        
+        return ERR_OK

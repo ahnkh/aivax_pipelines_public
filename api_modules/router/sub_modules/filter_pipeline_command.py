@@ -65,12 +65,20 @@ class FilterPipelineCommand:
         #TODO: uuid는 생성해야 한다. userKey로 관리된다. 자료 구조 필요, 계정관리자에서 관리해서, mainApp를 통해서 공유 받자.
         strUUID:str = mainApp.GenerateUUID(strUserKey)
         
+        #사용자 프롬프트의 최신 데이터 저장, 사양 변경으로 중복이지만 추가한다.
+        lstMessage:list = dictBodyParameter.get(ApiParameterDefine.MESSAGES)
+        last:dict = lstMessage[-1]
+        prompt:str = last.get(ApiParameterDefine.MESSAGE_PROMPT)
+        
         user:dict = {
             ApiParameterDefine.UUID : strUUID,
             ApiParameterDefine.NAME : modelItem.user_id,
             ApiParameterDefine.EMAIL : modelItem.email,
             ApiParameterDefine.AI_SERVICE : modelItem.ai_service,
-            ApiParameterDefine.CLIENT_HOST : modelItem.client_host,            
+            ApiParameterDefine.CLIENT_HOST : modelItem.client_host,   
+            
+            #프롬프트, user에도 담아서 전달한다.  
+            ApiParameterDefine.MESSAGE_PROMPT : prompt    
         }
         
         #customFilterConfigItem 를 전달하도록 사양 변경

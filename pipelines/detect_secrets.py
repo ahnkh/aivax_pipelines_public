@@ -135,7 +135,7 @@ class Pipeline(PipelineBase):
         messages = body.get(ApiParameterDefine.MESSAGES)
         
         last:dict = messages[-1]
-        content = last.get("content")
+        content = last.get(ApiParameterDefine.MESSAGE_PROMPT)
 
         #사용자 정보의 수집        
         user_id:str = ""

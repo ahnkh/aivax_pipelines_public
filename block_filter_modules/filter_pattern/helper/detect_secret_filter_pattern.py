@@ -418,6 +418,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
             LOG().error(f"invalid regex pattern, id = {id}, name = {name}, skip")
             return False
+        
+        #한 구문에 2개 이상이 매치될수 있다.
+        bPatternMatch:bool = False
 
         if CONFIG_OPT_ENABLE == regex_group:
             for match in regex_pattern.finditer(text):
@@ -432,7 +435,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
                 self.__aggregateDetectedRule(filterResultItem, id, name, action, targets)                
-                return True
+                bPatternMatch = True
         else:
             for match in regex_pattern.finditer(text):
                 self.__add_span(spans, match.start(), match.end())
@@ -442,9 +445,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
                 
                 self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, match)
-                return True
+                bPatternMatch = True
 
-        return False
+        return bPatternMatch
     
     # 탐지된 패턴에 대한 집계, pipeline의 전달을 위해서 최종 로직은 필요해 보인다. 
     def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, match:re.Match[str]):

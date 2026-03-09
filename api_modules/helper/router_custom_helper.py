@@ -85,8 +85,9 @@ class RouterCustomHelper:
                 ApiParameterDefine.MESSAGE_ID : modelItem.message_id #TODO: 없는 필드, sessionid를 같이 추가한다.
             },
             
+            #TODO: 이 구조를 변경하면, 약간의 성능 개선 기대.
             ApiParameterDefine.MESSAGES: [
-                {"role":"user", "content":strPromptMessage}
+                {"role":"user", ApiParameterDefine.MESSAGE_PROMPT : strPromptMessage}
             ],
             
             #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.

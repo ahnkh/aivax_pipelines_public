@@ -52,6 +52,13 @@
             "key": "rdb_insert_update_ai_user_account",
 	        "action" : "execute",
             "query" : "INSERT INTO app.users(id, email, ai_service_id) VALUES  ('{uuid}', '{email}', '{ai_service}')"
+        },
+
+        {
+            "desc" : "AI 서비스, 계정별 업데이트 시간, 마지막 프롬프트 업데이트 (bulk)",
+            "key": "rdb_bulk_update_ai_user_time_and_prompt",
+	        "action" : "execute_many",            
+            "query" : "UPDATE app.users SET updated_at = %s, prompt = %s where id = %s"
         }
 
     ]

@@ -50,6 +50,7 @@ class ApiParameterDefine:
     #message, pipeline으로 전달하는 데이터, 우선 여기에 추가
     META_DATA = "metadata"
     MESSAGES = "messages"
+    MESSAGE_PROMPT = "content" #사용자 프롬프트, messages안에 내장
     ATTACH_FILE = "attach_file"
     
     FILE_NAME = "file_name"

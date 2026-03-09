@@ -265,3 +265,4 @@ CONFIG_OPT_ENABLE = 1 #설정config json True/False 대응, 1: True, 기타 : Fa
 CONFIG_OPT_DISABLE = 0
 
 from mainapp.module_function import sqlprintf
+from common_modules.module_function import sqlbulk
