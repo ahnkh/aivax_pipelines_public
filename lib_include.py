@@ -249,7 +249,11 @@ class FileDefine:
     BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header" # watermark, header 탐지
     BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text" # watermark, ocr text 탐지
     # pass
-    
+
+# 웹서버, API 관련
+class APIServerDefine:
+    SESSION_COOKIE = "session_id"
+    pass    
 
 #TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
 TRACE_LOG_PATH = "./trace-log"

@@ -2,6 +2,7 @@
 import getopt
 import uvicorn
 import uvloop
+import secrets
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,13 +54,47 @@ uvloop.install()
 #TODO: 사용할수 없는 변수, 우선 소스 유지
 app.state.PIPELINES = PIPELINES
 
+# @app.middleware("http")
+# async def check_url(request: Request, call_next):
+#     start_time = int(time.time())
+#     app.state.PIPELINES = get_all_pipelines()
+#     response = await call_next(request)
+#     process_time = int(time.time()) - start_time
+#     response.headers["X-Process-Time"] = str(process_time)
+
+#     return response
+
+# 세션 생성 middleware 추가
+# SESSION_COOKIE = "session_id"
 @app.middleware("http")
-async def check_url(request: Request, call_next):
-    start_time = int(time.time())
-    app.state.PIPELINES = get_all_pipelines()
-    response = await call_next(request)
-    process_time = int(time.time()) - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+async def session_middleware(request: Request, call_next: Any):
+
+    session_id = request.cookies.get(APIServerDefine.SESSION_COOKIE)
+
+    # 세션 없으면 생성
+    if not session_id:
+        # session_id = str(uuid.uuid4())
+        session_id = secrets.token_hex(16) #TODO: 이게 더 성능이 빠르다.
+
+    # request id 생성
+    # request_id = str(uuid.uuid4())
+
+    request.state.session_id = session_id
+    # request.state.request_id = request_id
+
+    response: Response = await call_next(request)
+
+    # 최초 요청이면 cookie 생성
+    # if APIServerDefine.SESSION_COOKIE not in request.cookies:
+    if not request.cookies.get(APIServerDefine.SESSION_COOKIE):
+        response.set_cookie(
+            key=APIServerDefine.SESSION_COOKIE,
+            value=session_id,
+            httponly=True
+        )
+
+    # 응답 헤더에 request id 추가
+    # response.headers["X-Request-ID"] = request_id
 
     return response
 
@@ -123,16 +158,6 @@ def run_uvicorn(fastApi:FastAPI, strFastApiHost:str, nFastApiPort:int):
     
     return ERR_OK
 
-# 임의 테스트, mainapp에 추가한다. 운영시에는 제거.
-def test():
-    
-    #sqlprint test
-    from mainapp.helper.pipeline_test_module import PipelineTestModule
-    
-    testModule = PipelineTestModule()    
-    testModule.test()    
-    pass
-
 def main():
     
     try:
@@ -193,7 +218,7 @@ def main():
         nFastApiPort = int(dictOpt.get(APP_PARMETER_DEFINE.WEB_PORT))
           
         #  외부에서 실행          
-        # run_uvicorn(app, strFastApiHost, nFastApiPort)
+        run_uvicorn(app, strFastApiHost, nFastApiPort)
         
     except Exception as err:
         LOG().error(traceback.format_exc())

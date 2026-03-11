@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 #동기, 비동기 선택 옵션 추가 (향후를 위해서 구현)
 import inspect
+import secrets
 
 from lib_include import *
 
@@ -16,6 +17,9 @@ app = ApiRouterEx(
 )
 
 command = ApiRouterImplCommand()
+
+#message id 관리, 향후 리펙토링
+session_message_map = {}
 
 #신규 추가, 다중 필터 TODO: 기본 구성은 inlet을 참고한다.
 @app.post("/v1/filter/multiple_filter")
@@ -88,6 +92,24 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     응답 메시지 참고 사항
     - action: 0: allow, 1: block, 2: masking
     '''
+
+    #message_id 생성
+    session_id = request.state.session_id
+    # strMessageID:str = str(uuid.uuid4())
+    strMessageID:str = secrets.token_hex(16)
+    
+    # request.state.message_id = strMessageID
+    
+    # session에 message 저장
+    session_message_map[session_id] = strMessageID
+    
+    #세션 확인
+    
+    # LOG().info(f"input prompt - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
+    # LOG().info(f"input prompt - message id = {strMessageID}")
+    
+    #message_id, pipeline에서 만든다.
+    modelItem.message_id = strMessageID
     
     return await doRouterFunction("doFilterApiRouter", modelItem, request)
 
@@ -97,6 +119,20 @@ async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
     
     '''
     '''
+    
+    session_id = request.state.session_id
+    strMessageID:str = session_message_map.get(session_id)
+    
+    if session_id in session_message_map:
+        # del session_message_map[session_id]
+        session_message_map.pop(session_id, None)
+        
+    #message_id, pipeline에서 만든다.
+    modelItem.message_id = strMessageID
+    
+    #세션 확인
+    # LOG().info(f"output response - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
+    # LOG().info(f"output response - message id = {strMessageID}")
         
     return await doRouterFunction("doOutputApiRouter", modelItem, request)
     
