@@ -500,6 +500,7 @@ class Pipeline(PipelineBase):
         self._build_guard()
         print(f"[{self.id}] valves updated")
 
+    @DeprecationWarning
     async def inlet(self, body: Dict[str, Any], user: Optional[dict] = None, __request__: Optional[Request] = None) -> Dict[str, Any]:
         if not self.valves.enabled:
             return body

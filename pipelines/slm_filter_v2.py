@@ -31,7 +31,7 @@ class Pipeline(PipelineBase):
         self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()        
         pass
     
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         '''
         '''
         
@@ -91,7 +91,7 @@ class Pipeline(PipelineBase):
         self.__updateApiOutResponse(strSLMAction, strPolicyName, dictOuputResponse)
         
         # 로그의 저장
-        self.__addLogData(dictOuputResponse, dictSLMPolicyResult, metadata, dictUser, strLocalContents)
+        self.__addLogData(dictOuputResponse, dictSLMPolicyResult, metadata, dictUser, strLocalContents, dictLogBuffer)
         
         return ERR_OK
     
@@ -119,7 +119,7 @@ class Pipeline(PipelineBase):
         return ""
     
     # opensearch로의 저장, 분리해본다.
-    def __addLogData(self, dictOuputResponse:dict, dictSLMPolicyResult:dict, dictMetaData:dict, dictUser:dict, strContents:str):
+    def __addLogData(self, dictOuputResponse:dict, dictSLMPolicyResult:dict, dictMetaData:dict, dictUser:dict, strContents:str, dictLogBuffer:dict):
         
         '''
         '''
@@ -138,26 +138,28 @@ class Pipeline(PipelineBase):
         
         # 데이터 생성
         # 정책 : slm의 action, 정책ID, 정책명, DB의 action값, 카테고리
-        strAction:str = strPolicyAction
+        # strAction:str = strPolicyAction
         
         #masked 시점에, output으로 생성한 값, 전달
-        strMasked:str = dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "") 
+        # strMasked:str = dictOuputResponse.get(ApiParameterDefine.OUT_MASKED_CONTENTS, "") 
         
         # 로그의 저장
         #TODO: 약간의 중복코드, 일단 그대로 사용 (향후 tuple 정도로 정리)
         #사용자 정보의 수집        
-        user_id:str = ""
-        user_email:str = ""
-        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
-        uuid:str = ""
-        client_host:str = ""
-        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(dictUser)
+        # user_id:str = ""
+        # user_email:str = ""
+        # ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
+        # uuid:str = ""
+        # client_host:str = ""
+        # (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(dictUser)
         
-        message_id:str = dictMetaData.get(ApiParameterDefine.MESSAGE_ID)
-        session_id:str = dictMetaData.get(ApiParameterDefine.SESSION_ID)
+        # message_id:str = dictMetaData.get(ApiParameterDefine.MESSAGE_ID)
+        # session_id:str = dictMetaData.get(ApiParameterDefine.SESSION_ID)
         
         # opensearch 저장
-        #opensearch 저장 변수, TODO: 리펙토링 필요            
+        #opensearch 저장 변수, TODO: 리펙토링 필요 
+        '''
+        이전 데이터        
         dictOpensearchDocument:dict = {
             "@timestamp": ts_isoz(),
             
@@ -207,9 +209,19 @@ class Pipeline(PipelineBase):
             
             # "final_action": fa_internal,
         }
+        '''
+        
+        dictLogBuffer[DBDefine.DB_FIELID_FILTER_DETECT].append({
+            "filter" : PipelineFilterDefine.FILTER_STAGE_SLM,
+            "mode": strPolicyAction, #DB상의 action으로 교체
+            "policy_id" : strPolicyID,
+            "policy_name" : strPolicyName,
+            "target": strPolicyTarget,
+            "slm_content" : strSLMContent
+        })
 
         # self._index_opensearch(os_doc_final)
-        self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
+        # self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
         
         return ERR_OK
     

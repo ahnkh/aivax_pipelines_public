@@ -188,6 +188,9 @@ class FileBlockFilterPattern(FilterPatternBase):
             strFileName:str = dictFileInfo.get("name") # File Alias
             # dictFileInfo.get("mime_type") #TODO: 불필요
             
+            if 0 == len(id) or 0 == len(strFileName):
+                continue
+            
             # 사양변경,id가 실제 파일 경로 이 로직은 불필요
             #strAttachFileRealPath = f"{attach_file_base_dir}/{strFileName}"
                         

@@ -169,6 +169,8 @@ class VariantFilterForm(BaseModel):
     
     # 요청 및 응답간의 연결 키
     message_id:str = Field(default="", description="message id")
+    
+    debug: Optional[bool] = Field(default=False, description="debug mode")
     pass
 
 #outputfilter form 추가

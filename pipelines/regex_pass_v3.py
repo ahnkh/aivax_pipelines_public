@@ -488,7 +488,7 @@ class Pipeline(PipelineBase):
     async def on_valves_updated(self):
         pass
    
-    
+    @DeprecationWarning
     async def inlet(self, body: Dict[str, Any], user: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) -> Dict[str, Any]:
         
         '''

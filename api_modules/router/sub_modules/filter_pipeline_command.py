@@ -96,6 +96,13 @@ class FilterPipelineCommand:
         #TODO: regex 패턴의 inlet 범위는 사실상 한개로 압축되며, input filter 포함 2개이다.
         lstPipeFilterName:list = modelItem.filter_list
         
+        #TODO: 26.03.12 구조 변경, 로그 결과를 병합하기 위해서 별도 데이터 관리 객체에 모은다.
+        # filter가 끝나면 데이터 병합 Queue로 전달한다.
+        
+        #로그 병합용 dict를 생성후 update 한다.
+        # filter병합용 필드는 미리 만든다.
+        dictLogBuffer = {DBDefine.DB_FIELID_FILTER_DETECT : []} 
+        
         #모든 pipeline에 대한 순회
         for strPipelineFilterName in lstPipeFilterName:
             
@@ -164,7 +171,7 @@ class FilterPipelineCommand:
             
             #TODO: 너무 많은 인자. 최초 pipeline 구조로 인한 어쩔수 없는.. next 버전에서는 리펙토링 필요. 
             # await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
-            await methodFunction(dictBodyParameter, user, customFilterConfigItem, dictEachFilterOutput, __request__ = request)
+            await methodFunction(dictBodyParameter, user, customFilterConfigItem, dictLogBuffer, dictEachFilterOutput, __request__ = request)
             
             # 조건문 좀더 정확하게 검증.
             if False == bNextDetectAfterBlock:
@@ -198,22 +205,29 @@ class FilterPipelineCommand:
             ApiParameterDefine.OUT_ACTION_CODE : PipelineFilterDefine.CODE_ALLOW,
             ApiParameterDefine.OUT_MASKED_CONTENTS : "",
             ApiParameterDefine.OUT_BLOCK_MESSAGE : "",
+            
+            ApiParameterDefine.MESSAGE_ID : modelItem.message_id            
         }
             
         #Filter별 요청후, 마지막에 취합
-        
         
         routerCustomHelper.GenerateOutputFinalDecision(dictFinalOutMessage, dictFilterResult, nSSLProxyBypassBitMask)
         
         apiResponseHandler.attachResponse(f"final_decision", dictFinalOutMessage)
         
-        #개별 pipeline 결과, 취합된 결과의 저장
-        apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
+        #개별 pipeline 결과, 취합된 결과의 저장 => 성능 개선, 이건 제외한다. 향후 debug 모드 추가
+        if True == modelItem.debug:
+            apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
         
         #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
         
         # 사용자 정보의 저장, user 정보를 전달한다.
         mainApp.AddUserAccount(strUserKey, user)
+        
+        #TODO: 로그 메시지, messageid를 사용한다. (향후 안되면 그때 변경)
+        strLogMessageKey:str = modelItem.message_id
+        
+        mainApp.AddToLogQueue(LOG_INDEX_DEFINE.TYPE_LOG_INPUT, strLogMessageKey, dictLogBuffer)
         
         # TODO: sslproxy 전달 프롬프트
         dictApiOutResponse:dict = apiResponseHandler.outResponse()

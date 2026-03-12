@@ -19,8 +19,9 @@ from block_filter_modules.filter_policy.helper.filter_custom_config import Filte
 #Filter 별 패턴 탐지 기능 관리
 from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPatternManager
 
-#TODO: type_hint 개념 적용.
+#로그 처리 모듈 추가
 from utils.log_write_modules.log_write_handler import LogWriteHandler
+from utils.log_write_modules.log_merge_queue import LogMergeQueue
 
 # 계정 데이터 관리 모듈 추가
 from utils.user_account_modules.user_account_data_handler import UserAccountDataHandler
@@ -46,6 +47,8 @@ class PipeLineMainApp:
         
         #log 처리 모듈, Thread
         self.__logWriteHandler:LogWriteHandler = None
+        
+        self.__logMergeQueue:LogMergeQueue = None
         
         #pipeline 정보, 복사
         self.__dictPipelineModulesRef:dict = None
@@ -94,6 +97,9 @@ class PipeLineMainApp:
         
         self.__logWriteHandler:LogWriteHandler = LogWriteHandler()        
         self.__initializeLogWriter(self.__logWriteHandler, dictJsonLocalConfigRoot)
+        
+        self.__logMergeQueue:LogMergeQueue = LogMergeQueue()
+        self.__initializeLogQueue(self.__logMergeQueue, self.__logWriteHandler, dictJsonLocalConfigRoot)
         
         self.__initializeFactoryInstance(dictJsonLocalConfigRoot)
         
@@ -168,6 +174,14 @@ class PipeLineMainApp:
         self.__appHelper.AddLogData(self.__logWriteHandler, strDataType, dictOuptut)        
         return ERR_OK
     
+    def AddToLogQueue(self, nLogType:str, strLogMessageKey:str, dictDataQueue:dict):
+        
+        '''
+        '''
+        
+        self.__logMergeQueue.AddToLogQueue(nLogType, strLogMessageKey, dictDataQueue)
+        return ERR_OK
+    
     #사용자 계정의 추가, TODO: 사이즈가 커지면, 한단계 더 모듈 관리자를 추가한다. (항상 동작해야 하는 기능으로, 직접 호출 구조를 선택한다)
     def AddUserAccount(self, strUserKey:str, dictUserInfo:dict):
         
@@ -221,6 +235,19 @@ class PipeLineMainApp:
         log_write_module:dict = dictJsonLocalConfigRoot.get("log_write_module")
         
         logWriteHandler.Initialize(log_write_module)        
+        return ERR_OK
+    
+    # log queue 초기화
+    def __initializeLogQueue(self, logMergeQueue:LogMergeQueue, logWriteHandler:LogWriteHandler, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        TODO: thread 구조, logwriter의 전달이 필요할 수 있다.
+        '''
+        
+        log_merge_queue:dict = dictJsonLocalConfigRoot.get("log_merge_queue")
+        
+        logMergeQueue.Initialize(logWriteHandler, log_merge_queue)
+        
         return ERR_OK
         
     #Factory 모듈, Db 모듈 추가

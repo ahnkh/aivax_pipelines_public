@@ -29,17 +29,10 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     기존 inlet의 확장, 필터를 직접 지정하며, 다수의 필터를 호출하는 기능을 제공한다.
     
     **filter_list** : 차단 필터 리스트    
-    - _secret_filter_ : <u>API 차단 필터</u>
-    
-    - slm_filter : AI SLM 필터 
     - input_filter : opensearch 저장 (프롬프트)
-    
+    - _secret_filter_ : <u>regex 차단 필터</u>    
+    - slm_filter : AI SLM 필터     
     - file_block_filter : file에 대한 필터 기능 제공
-    
-    - <del>output_filter : opensearch 저장 (LLM 응답, 별도 API로 개발)</del>
-    - <del>load_detect_secrets : AI 차단 필터 (불완전 버전, 검증 필요)</del>
-    - <del>inlet_raw_logger : 테스트용, 미사용</del>
-    - <del>regex_filter : 정규표현식 기반 필터 (정규식 불완전, 탐지안되는 기능)</del>
     
     **prompt** : 프롬프트 메시지 (기존 message의 contents)    
     - 다음의 user, contents 구조에서 프롬프트만 사용하며, 차기 버전에서 user 정보가 필요시 추가 예정
@@ -92,24 +85,25 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     응답 메시지 참고 사항
     - action: 0: allow, 1: block, 2: masking
     '''
+    
+    if 0 == len(modelItem.message_id):
 
-    #message_id 생성
-    session_id = request.state.session_id
-    # strMessageID:str = str(uuid.uuid4())
-    strMessageID:str = secrets.token_hex(16)
+        #message_id 생성
+        session_id = request.state.session_id
+        # strMessageID:str = str(uuid.uuid4())
+        strMessageID:str = secrets.token_hex(16)
+        #세션 확인
+        
+        # LOG().info(f"input prompt - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
+        # LOG().info(f"input prompt - message id = {strMessageID}")
     
-    # request.state.message_id = strMessageID
-    
+        #message_id, pipeline에서 만든다.
+        modelItem.message_id = strMessageID
+        
     # session에 message 저장
-    session_message_map[session_id] = strMessageID
+    session_message_map[session_id] = modelItem.message_id
     
-    #세션 확인
-    
-    # LOG().info(f"input prompt - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
-    # LOG().info(f"input prompt - message id = {strMessageID}")
-    
-    #message_id, pipeline에서 만든다.
-    modelItem.message_id = strMessageID
+    LOG().info(f"input prompt - session_id = {request.state.session_id}, message_id = {strMessageID}")
     
     return await doRouterFunction("doFilterApiRouter", modelItem, request)
 
@@ -122,6 +116,8 @@ async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
     
     session_id = request.state.session_id
     strMessageID:str = session_message_map.get(session_id)
+    
+    LOG().info(f"output response - session_id = {session_id}, message_id = {strMessageID}")
     
     if session_id in session_message_map:
         # del session_message_map[session_id]

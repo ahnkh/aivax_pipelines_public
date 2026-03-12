@@ -46,9 +46,24 @@
                 "max_limit" : 10000,
 
                 "flush_finish_script" : ""
-            }
-                
+            },
+
+            {
+                "queue_id" : "aivax_log",
+
+                "collection_prefix" : "aivax_log",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            }                
         ]
+    },
+
+    "log_merge_queue":
+    {
+
     },
 
     "db_connector":

@@ -92,8 +92,14 @@ class OuputPipelineCommand:
             ApiParameterDefine.CLIENT_HOST : modelItem.client_host,   
         }
         
+        dictLogBuffer = {}
         dictOutputResponse = {}
-        await pipeline.outlet(dictBodyParameter, user, dictOutputResponse)
+        await pipeline.outlet(dictBodyParameter, user, dictLogBuffer, dictOutputResponse)
+        
+        #TODO: 로그 메시지, messageid를 사용
+        strLogMessageKey:str = modelItem.message_id
+        
+        mainApp.AddToLogQueue(LOG_INDEX_DEFINE.TYPE_LOG_OUTPUT, strLogMessageKey, dictLogBuffer)
         
         apiResponseHandler.attachResponse(f"out_result", dictOutputResponse)
         

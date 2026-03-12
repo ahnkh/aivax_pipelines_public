@@ -56,7 +56,7 @@ class Pipeline(PipelineBase):
     # outlet 훅
     # ---------------------------
     # async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None) -> Dict[str, Any]:
-    async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None, dictOuputResponse:dict = None) : #-> Dict[str, Any]:
+    async def outlet(self, body: Dict[str, Any], user: Optional[dict] = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None) : #-> Dict[str, Any]:
         
         '''
         '''
@@ -88,30 +88,30 @@ class Pipeline(PipelineBase):
         # message_id_req = metadata.get(ApiParameterDefine.MESSAGE_ID) or safe_get(body, "request", "id", default=None)
         # response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
         
-        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
-        session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
+        # message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        # session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
         
-        response_id:str = metadata.get("response_id", safe_get(body, "response", "id", default=None)) 
+        # response_id:str = metadata.get("response_id", safe_get(body, "response", "id", default=None)) 
 
         #sessionid, api에서 바로 가져온다.        
         # session_id, is_fallback = _get_session_id(body, user)
         # session_id, is_fallback = _get_session_id(body, user)
-        is_fallback = False
+        # is_fallback = False
 
         # 채널 복구 (없으면 web)
         # channel = _get_channel(body)
-        channel = "web" #TODO: 없는 데이터, web으로 통일
+        # channel = "web" #TODO: 없는 데이터, web으로 통일
         
-        user_role:str = ""
+        # user_role:str = ""
         
-        # TODO: 동일하게 사용
-        user_id:str = ""
-        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
-        user_email:str = ""
-        uuid:str = ""
-        client_host:str = ""
+        # # TODO: 동일하게 사용
+        # user_id:str = ""
+        # ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
+        # user_email:str = ""
+        # uuid:str = ""
+        # client_host:str = ""
         
-        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(user)
+        # (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(user)
         
         # if None != user:
             
@@ -134,7 +134,7 @@ class Pipeline(PipelineBase):
         total_tokens = safe_get(usage, "total_tokens", default=None)
 
         # 필터링 메타
-        filters_meta = body.get("_filters") if v.include_filters_meta else None
+        # filters_meta = body.get("_filters") if v.include_filters_meta else None
 
         # 어시스턴트 응답 추출 및 저장 정책 적용
         lstMessage:list = body.get(ApiParameterDefine.MESSAGES)
@@ -149,15 +149,16 @@ class Pipeline(PipelineBase):
         
         original_size_bytes = None
         
-        resp_hash:str = ""
+        # resp_hash:str = ""
         resp_text_to_store:str = ""
         original_size_bytes:int = 0
         
-        if v.hash_only:
-            resp_hash = self.__hashText(resp_text)
-            resp_text_to_store = None
+        # if v.hash_only:
+        #     resp_hash = self.__hashText(resp_text)
+        #     resp_text_to_store = None
             
-        elif v.store_response_text:
+        # elif v.store_response_text:
+        if v.store_response_text:
             resp_text_to_store, original_size_bytes = self.__truncateBytes(resp_text, v.response_max_bytes)
             #TODO: hash는 옵션으로 저장, 설정
             # resp_hash = _hash_text(resp_text)
@@ -166,6 +167,8 @@ class Pipeline(PipelineBase):
             resp_text_to_store = None
             # resp_hash = _hash_text(resp_text)
 
+        '''
+        이전 데이터
         doc = {
             "@timestamp": ts_isoz(),
             "event": {"id": response_id or message_id, "type": "response"},
@@ -194,9 +197,26 @@ class Pipeline(PipelineBase):
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             "filters": filters_meta,
         }
+        '''
+        
+        dictOutputLog = {
+            "output_text": resp_text_to_store,
+            "text_truncated_bytes": original_size_bytes,
+            # "hash_sha256": resp_hash,
+            "model": model_name,
+            "latency_ms": latency_ms,
+            "tokens": {
+                "prompt": prompt_tokens,
+                "completion": completion_tokens,
+                "total": total_tokens,
+            } if v.include_usage else None,            
+        }
+        
+        dictLogBuffer.update(dictOutputLog)
+        
         
         #TODO: 좀더 개선후 추가
-        self.AddLogData(LOG_INDEX_DEFINE.KEY_OUTPUT_FILTER, doc)
+        # self.AddLogData(LOG_INDEX_DEFINE.KEY_OUTPUT_FILTER, doc)
         
         # try:
             
@@ -217,11 +237,11 @@ class Pipeline(PipelineBase):
         '''
         '''
         if s is None or limit is None or limit <= 0:
-            return s, None
+            return s, len(s)
         
         b = s.encode("utf-8", errors="ignore")
         if len(b) <= limit:
-            return s, None
+            return s, len(s)
         
         tb = b[:limit]
         # 바이트 → 문자열 복원

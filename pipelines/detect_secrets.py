@@ -74,7 +74,7 @@ class Pipeline(PipelineBase):
     
     # ---------- 파이프라인 엔트리 ----------
     # async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, dictExtParameter:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
         '''
         TODO: 기존 형상은 가급적 유지
@@ -109,9 +109,9 @@ class Pipeline(PipelineBase):
         #TODO: regex 패턴, 모든 정책의 탐지 여부, 옵션으로 제공            
         full_scan_flag:bool = customFilterConfigItem.regex_filter_config.full_scan_flag
         
-        #chat completion을 통해 호출시, 예외처리
-        if None == dictOuputResponse:
-            dictOuputResponse = {}  
+        # #chat completion을 통해 호출시, 예외처리
+        # if None == dictOuputResponse:
+        #     dictOuputResponse = {}  
         
         #기본적인 응답 처리, action필드를 기본값으로 설정, TODO: 공통화
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
@@ -137,7 +137,7 @@ class Pipeline(PipelineBase):
         last:dict = messages[-1]
         content = last.get(ApiParameterDefine.MESSAGE_PROMPT)
 
-        #사용자 정보의 수집        
+        # #사용자 정보의 수집        
         user_id:str = ""
         user_email:str = ""
         ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
@@ -307,13 +307,13 @@ class Pipeline(PipelineBase):
                 
             # TODO: helper 생성 필요
             # 우선 테스트.
-            strFinalAction = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
+            # strFinalAction = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION)
             
             # meta = body.get("metadata") or {}
-            metadata:dict = body.get(ApiParameterDefine.META_DATA)
+            # metadata:dict = body.get(ApiParameterDefine.META_DATA)
             
-            message_id = metadata.get(ApiParameterDefine.MESSAGE_ID)
-            session_id = metadata.get(ApiParameterDefine.SESSION_ID)
+            # message_id = metadata.get(ApiParameterDefine.MESSAGE_ID)
+            # session_id = metadata.get(ApiParameterDefine.SESSION_ID)
             
             #위험한 코드, 다른 형태로 향후 개발.
             # client_ip = __request__.client.host
@@ -322,58 +322,72 @@ class Pipeline(PipelineBase):
             #ai service 명 추가
             # strAIServiceName:str = AI_SERVICE_NAME_MAP.get(ai_service_type, "")  
 
-            #opensearch 저장 변수, TODO: 리펙토링 필요            
-            dictOpensearchDocument:dict = {
-                "@timestamp": ts_isoz(),
+            #opensearch 저장 변수, TODO: 리펙토링 필요   
+            '''
+            #이전 데이터
+            # dictOpensearchDocument:dict = {
+            #     "@timestamp": ts_isoz(), #TODO: 제거 필요
                 
-                "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
-                "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
-                "content": strLocalContents,
-                "message":msg,
+            #     "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX, #TODO: filter가 N일때. 하나의 로그에 list로 들어가야 한다. opensearch는 그러한 구조로 고려 필요
+            #     "filter_name": PipelineFilterDefine.FILTER_STAGE_REGEX,
+            #     "content": strLocalContents, #TODO: 제거 필요
+            #     "message":msg, #TODO: 제거 필요
                 
-                "request": {"id": message_id},
-                "session": {"id": session_id},
+            #     "request": {"id": message_id},
+            #     "session": {"id": session_id},
                 
-                "user": {"id": user_id, "email": user_email, "uuid" : uuid},
+            #     "user": {"id": user_id, "email": user_email, "uuid" : uuid},
 
-                # "event":   {"id": msg_id, "type": "detect"},
-                # "request": {"id": msg_id},
-                # "session": {"id": sess_id},
-                # "user":    {"id": user_id},
+            #     # "event":   {"id": msg_id, "type": "detect"},
+            #     # "request": {"id": msg_id},
+            #     # "session": {"id": sess_id},
+            #     # "user":    {"id": user_id},
                 
-                # stage, regex로 통일
-                # "stage":   "detect_secrets",
-                "stage":   [PipelineFilterDefine.FILTER_STAGE_REGEX],
-                # "detection": detection_status,
-                "should_block": (strFinalAction == "block"),
-                "mode": strPolicyAction, #DB상의 action으로 교체 (should_block과 값이 다르다.)
+            #     # stage, regex로 통일
+            #     # "stage":   "detect_secrets",
+            #     "stage":   [PipelineFilterDefine.FILTER_STAGE_REGEX],
+            #     # "detection": detection_status,
+            #     "should_block": (strFinalAction == "block"),
+            #     "mode": strPolicyAction, #DB상의 action으로 교체 (should_block과 값이 다르다.)
                 
-                #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
-                "policy_id" : strPolicyID,
-                "policy_name" : strPolicyName,
-                "src":     {"ip": client_host},
+            #     #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
+            #     "policy_id" : strPolicyID,
+            #     "policy_name" : strPolicyName,
+            #     "src":     {"ip": client_host},
                 
-                "pii": {
-                    # type: 정책명 추가
-                    "types": strTarget, # 카테고리
-                    # 잘못된 하드코딩, 제거
-                    # "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
-                    "confidence": 1.0
-                },
+            #     "pii": {
+            #         # type: 정책명 추가
+            #         "types": strTarget, # 카테고리
+            #         # 잘못된 하드코딩, 제거
+            #         # "samples": "reasons: API 키의 탐지, 기밀 정보, 민감정보, 세부 지침 사항, 이모지 금지",
+            #         "confidence": 1.0
+            #     },
                 
-                #25.12.02 ai 서비스 유형 추가                
-                "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+            #     #25.12.02 ai 서비스 유형 추가                
+            #     "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
                 
-                #masked contents 추가
-                "masked_contents" : masked,
+            #     #masked contents 추가
+            #     "masked_contents" : masked,
                 
-                "evidence" : filterResultItem.detect_rule_list
+            #     "evidence" : filterResultItem.detect_rule_list
                 
-                # "final_action": fa_internal,
-            }
+            #     # "final_action": fa_internal,
+            # }
+            ''' 
 
             # self._index_opensearch(os_doc_final)
-            self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
+            # self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
+            
+            # 로그 병합용 dict
+            dictLogBuffer[DBDefine.DB_FIELID_FILTER_DETECT].append({
+                "filter" : PipelineFilterDefine.FILTER_STAGE_REGEX,
+                "mode": strPolicyAction, #DB상의 action으로 교체
+                "policy_id" : strPolicyID,
+                "policy_name" : strPolicyName,
+                "target": strTarget,
+                "masked_contents" : masked,
+                "evidence" : filterResultItem.detect_rule_list
+            })
 
             '''
             #2025.11.15 2단계 모델에 반영되었으나, 3단계 모델에서는 ssl proxy로 전달되지 않아 주석 처리

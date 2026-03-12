@@ -142,7 +142,6 @@ class RouterCustomHelper:
         # dictBlockHitHistory = {} => block은 걸리면 바로 전달, 종료
         dictMaskHitHistory = {}
         
-        
         for strFilterKey in dictEachFilterOutput.keys():
             
             #TODO: 2 depth
@@ -202,8 +201,9 @@ class RouterCustomHelper:
         #여기서 masking이 있으면 업데이트 한다.
         if 0 < len(dictMaskHitHistory):
             
-            LOG().debug("update masked contents")
+            # LOG().debug("update masked contents")
             self.__updateOutputContents(dictFinalResult, dictMaskHitHistory)
+        
         
         return ERR_OK
     

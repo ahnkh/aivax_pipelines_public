@@ -34,7 +34,7 @@ class Pipeline(PipelineBase):
     
     
     #pipeline, inlet, outlet 중 inlet 만 가져간다.
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
         '''
         TODO: 이 기능은 multiple filter 에서만 호출한다.
@@ -56,8 +56,8 @@ class Pipeline(PipelineBase):
         # metadata, session, message_id가 존재하며, 관련해서 추가정보를 수집한다.
         metadata:dict = body.get(ApiParameterDefine.META_DATA)
         
-        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
-        session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
+        # message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        # session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
         
         #TODO: 정책상의 policy action등, 별도로 분리한다.
         #TODO: file은 여러개라는 가정으로, 각 파일 list별 정책이 들어간다.        
@@ -73,12 +73,12 @@ class Pipeline(PipelineBase):
         #TODO: opensearch 저장은 모델 분리.
         #TODO: 약간의 중복코드, 일단 그대로 사용 (향후 tuple 정도로 정리)
         #사용자 정보의 수집        
-        user_id:str = ""
-        user_email:str = ""
-        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
-        uuid:str = ""
-        client_host:str = ""
-        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
+        # user_id:str = ""
+        # user_email:str = ""
+        # ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE #없으면, 기본 GPT
+        # uuid:str = ""
+        # client_host:str = ""
+        # (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
         
         # 응답 결과의 전달
         # 차단일때의 응답 정리, file 타입은 우선 차단 메시지를 만들지 않는다. (향후 공통화 + UI 설정 필요)
@@ -92,47 +92,60 @@ class Pipeline(PipelineBase):
         
         #opensearch 저장, file list 중심의 저장
         #TODO: 없는데이터라도 기존과 동일하게 공백으로.
-        dictOpensearchDocument = {
-            "@timestamp": ts_isoz(),
-            "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
-            "filter_name": PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
+        '''
+        #이전 데이터
+        # dictOpensearchDocument = {
+        #     "@timestamp": ts_isoz(),
+        #     "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
+        #     "filter_name": PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             
-            # "content": "", #TODOL 없는 데이터
-            # "message":"",
+        #     # "content": "", #TODOL 없는 데이터
+        #     # "message":"",
             
-            "request": {"id": message_id},
-            "session": {"id": session_id},
+        #     "request": {"id": message_id},
+        #     "session": {"id": session_id},
             
-            "user": {"id": user_id, "email": user_email, "uuid" : uuid},
+        #     "user": {"id": user_id, "email": user_email, "uuid" : uuid},
             
-            "stage": [PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK],
+        #     "stage": [PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK],
             
-            # 일단 이 값은 유지, input, output 점검 시점에 다시 정리
-            "should_block": (strPolicyAction == PipelineFilterDefine.ACTION_BLOCK),
+        #     # 일단 이 값은 유지, input, output 점검 시점에 다시 정리
+        #     "should_block": (strPolicyAction == PipelineFilterDefine.ACTION_BLOCK),
             
-            # 최종 Action
-            "mode": strPolicyAction,
+        #     # 최종 Action
+        #     "mode": strPolicyAction,
             
-            # TODO: file이 구조상 여러개이다. 각 파일별 정책이 들어간다.
-            # #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
-            # "policy_id" : strPolicyID,
-            # "policy_name" : strPolicyName,
+        #     # TODO: file이 구조상 여러개이다. 각 파일별 정책이 들어간다.
+        #     # #정책탐지시 정책 id, 이름 추가 (TODO: 25.12.02 정책 구조 변경에 따라 수정 필요, 진행중)
+        #     # "policy_id" : strPolicyID,
+        #     # "policy_name" : strPolicyName,
                 
-            "src":     {"ip": client_host},
+        #     "src":     {"ip": client_host},
             
-            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+        #     "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             
-            #regex pattern에 맞춰서.. => 각 파일별 정책, 파일 별로 추가한다.
+        #     #regex pattern에 맞춰서.. => 각 파일별 정책, 파일 별로 추가한다.
+        #     # "policy_id" : strPolicyID,
+        #     # "policy_name" : strPolicyName,
+            
+        #     ApiParameterDefine.FILE_SUMMARY : dictOuputResponse.get(ApiParameterDefine.FILE_SUMMARY)            
+        # }
+        '''
+        
+        dictLogBuffer[DBDefine.DB_FIELID_FILTER_DETECT].append({
+            "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
+            "mode": strPolicyAction, #DB상의 action으로 교체
             # "policy_id" : strPolicyID,
             # "policy_name" : strPolicyName,
+            # "target": strTarget,
             
             ApiParameterDefine.FILE_SUMMARY : dictOuputResponse.get(ApiParameterDefine.FILE_SUMMARY)            
-        }
+        })
         
         #file 요약, 그대로 저장 => summary만 저장
         # dictOpensearchDocument.update(dictOuputResponse)
         
-        self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
+        # self.AddLogData(LOG_INDEX_DEFINE.KEY_REGEX_FILTER, dictOpensearchDocument)
         
         return ERR_OK
     

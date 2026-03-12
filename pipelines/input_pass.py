@@ -57,7 +57,7 @@ class Pipeline(PipelineBase):
     # ----------------------------
     # 메인: inlet
     # ----------------------------        
-    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         '''
         TODO: 2단계 모델이 비활성화 되어, 입력 body의 전달도 불필요 하여 주석처리
         '''
@@ -66,8 +66,8 @@ class Pipeline(PipelineBase):
         # if not self.valves.enabled:
         #     return body
         
-        if dictOuputResponse is None:
-            dictOuputResponse = {} 
+        # if dictOuputResponse is None:
+        #     dictOuputResponse = {} 
         
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
 
@@ -98,7 +98,7 @@ class Pipeline(PipelineBase):
 
         # 메타에서 id, 세션, ip, 채널 등 추출(없으면 None/기본값)
         message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
-        session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
+        # session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
         
         #TODO: 불합리한 로직, 개선 필요.
         # src_ip = (
@@ -109,7 +109,7 @@ class Pipeline(PipelineBase):
         # )
         #TODO: channel 정보 미수집, getattr은 불합리
         # channel = metadata.get("channel") or getattr(self.valves, "default_channel", "web")
-        channel:str = self.valves.default_channel
+        # channel:str = self.valves.default_channel
         
         # user_role:str = getattr(self.valves, "default_user_role", None)
         user_role:str = self.valves.default_user_role
@@ -147,24 +147,50 @@ class Pipeline(PipelineBase):
         
         (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
 
-        # 저장 문서        
+        # 저장 문서  
+        '''
+        이전 버전        
+        # dictOpensearchDoc = {
+        #     "@timestamp": ts_isoz(),
+        #     "event":   {"id": message_id, "type": "query"}, # TODO: 제거 필요
+        #     "request": {"id": message_id},
+        #     "session": {"id": session_id}, # TODO: 제거 필요
+        #     # "user":    {"id": user_id, "role": user_role, "email": user_email},
+        #     "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
+        #     "src":     {"ip": client_host}, 
+        #     # "src":     {"ip": src_ip},
+        #     "channel": channel, # TODO: 제거 필요
+            
+        #     #25.12.02 ai 서비스 유형 추가
+        #     "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+        #     "query":   {"text": query_text}, #TODO: text보다 query로 저장 여부, opensearch에 문제가 되는지 확인 필요
+        # }
+        '''        
         dictOpensearchDoc = {
             "@timestamp": ts_isoz(),
-            "event":   {"id": message_id, "type": "query"},
-            "request": {"id": message_id},
-            "session": {"id": session_id},
+            "message_id" : message_id,
+            # "event":   {"id": message_id, "type": "query"}, # TODO: 제거 필요
+            # "request": {"id": message_id},
+            # "session": {"id": session_id}, # TODO: 제거 필요
             # "user":    {"id": user_id, "role": user_role, "email": user_email},
             "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
-            "src":     {"ip": client_host}, 
+            "client_host" : client_host,
+            # "src":     {"ip": client_host}, 
             # "src":     {"ip": src_ip},
-            "channel": channel,
+            # "channel": channel, # TODO: 제거 필요
             
             #25.12.02 ai 서비스 유형 추가
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
-            "query":   {"text": query_text},
+            # "query":   {"text": query_text}, #TODO: text보다 query로 저장 여부, opensearch에 문제가 되는지 확인 필요
+            "prompt" : query_text
         }
         
-        self.AddLogData(LOG_INDEX_DEFINE.KEY_INPUT_FILTER, dictOpensearchDoc)
+        # TODO: 사양 변경, 로그 병합 기능으로 구현한다.
+        # 다만, 완전히 저장 전까지는 동일한 구조도 같이 저장한다.
+        # self.AddLogData(LOG_INDEX_DEFINE.KEY_INPUT_FILTER, dictOpensearchDoc)
+        
+        # 항상 None이 아니어야 한다. + 불필요 필드는 향후 맞춘다.
+        dictLogBuffer.update(dictOpensearchDoc)
 
         #불필요한 전달, 제거 2단계가 필요하면 그때 다시 설계
         # return body

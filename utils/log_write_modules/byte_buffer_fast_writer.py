@@ -17,7 +17,6 @@ from lib_include import *
 
 '''
 byte 기반 고속 buffer writer, 불필요한 연산 최소화
-TODO: 거의 같고 연산만 다른 문제, 일단 넘어가자.
 '''
 
 class ByteBufferFastWriter:

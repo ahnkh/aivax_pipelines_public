@@ -1,0 +1,137 @@
+
+import orjson
+
+from lib_include import *
+
+from utils.log_write_modules.log_write_handler import LogWriteHandler
+
+from utils.log_write_modules.merge_fail_output_log_handler import MergeFailOutputLogHandler
+
+'''
+26.03.12 사양변경, 로그 병합기능, 중간 Queue 처리
+TODO: 로그 clear, 성능 개선, timestamp기준, 1일이 넘는 input로그는 초기화
+promptlogmap은 주기적으로 교체
+'''
+
+class LogMergeQueue:
+    
+    def __init__(self):
+        
+        #logwriter, 참조 추가
+        self.__logWriteHandlerRef:LogWriteHandler = None
+        
+        # 프롬프트 출력 로그를 보관할 dict, key로 검색할 hash
+        self.__dictPromptLogMap:dict = None
+        
+        # 병합이 실패한 로그의 처리
+        self.__mergeFailOutputLogHandler:MergeFailOutputLogHandler = None
+        pass
+    
+    def Initialize(self, logWriteHandler:LogWriteHandler, dictLogMergeQueueLocalConfig:dict):
+        
+        '''
+        '''
+        
+        self.__logWriteHandlerRef = logWriteHandler
+        
+        self.__dictPromptLogMap = dict()
+        
+        self.__mergeFailOutputLogHandler:MergeFailOutputLogHandler = MergeFailOutputLogHandler()
+        
+        return ERR_OK
+    
+    def AddToLogQueue(self, nLogType:int, strLogMessageKey:str, dictLogData:dict):
+        
+        '''
+        TODO: 병합기능이 필요하다. dict 타입의 원본의 전달 비용은 감수한다.
+        로그 유형에 대해서는 향후 확장이 될수도 있다. 주의
+        
+        TODO: 기능 분기, Input이면 Queue에 저장, Output이면 로그 기록
+        '''
+        
+        # #TEST 향후 좀더 보강
+        # byteLogData:bytes = orjson.dumps(dictLogData)
+            
+        # #마지막에 byte, 개행 추가
+        # byteLogData += b'\n'
+                
+        # self.__logWriteHandlerRef.AddData(LOG_INDEX_DEFINE.KEY_AIVAX_LOG, byteLogData)
+        
+        if LOG_INDEX_DEFINE.TYPE_LOG_INPUT == nLogType:
+            self.__storeInputPromptToLogMap(strLogMessageKey, dictLogData)
+            # pass
+        
+        elif LOG_INDEX_DEFINE.TYPE_LOG_OUTPUT == nLogType:
+            self.__writeMergedLog(strLogMessageKey, dictLogData)
+            # pass
+        else:
+            #있으면 안된다.
+            LOG().error(f"invalid log type {nLogType}")
+            return ERR_FAIL
+        
+        return ERR_OK
+    
+    #################################################### private
+    
+    # 프롬프트 로그, map에 보관한다.
+    def __storeInputPromptToLogMap(self, strLogMessageKey:str, dictLogData:dict):
+        
+        '''
+        '''
+        
+        #TOOD: 같은 키, 있으면 안되지만, 있을경우, FailQueue로 전달한다.
+        
+        if None == self.__dictPromptLogMap.get(strLogMessageKey):
+        
+            self.__dictPromptLogMap[strLogMessageKey] = dictLogData
+            
+        else:
+            #TODO: FailQueue로 원본 전달    
+            pass
+        
+        return ERR_OK
+    
+    # Output로그, 프롬프트를 찾아서, 병합후 저장한다.
+    def __writeMergedLog(self, strLogMessageKey:str, dictLogData:dict):
+        
+        '''
+        TODO: 동시성 처리, 동기화 조심, 스레드는 아니지만, 구조상 동시성 문제가 생길수 있다.
+        
+        일단 만들고 리펙토링
+        '''
+        
+        dictPromptLog:dict = None
+        
+        if 0 != len(strLogMessageKey):
+        
+            # dictPromptLog:dict = self.__dictPromptLog.get(strLogMessageKey)
+            dictPromptLog = self.__dictPromptLogMap.pop(strLogMessageKey)
+        
+        #TODO: prompt로그의 교체 기능, 향후 반영
+        
+        #동일ID의 데이터가 존재하면, 병합후 로그를 생성, 저장한다.
+        
+        if None != dictPromptLog:
+            
+            # 성능문제 조심
+            dictPromptLog.update(dictLogData)
+            
+            # byteLogData:bytes = orjson.dumps(dictPromptLog)
+            # byteLogData += b'\n'
+            # self.__logWriteHandlerRef.AddData(LOG_INDEX_DEFINE.KEY_AIVAX_LOG, byteLogData)
+            
+        else:
+            
+            # 일단 로깅
+            LOG().error(f"fail merge prompt log, call merge fail handler")
+            dictPromptLog = self.__mergeFailOutputLogHandler.HandleMergeFailLog(strLogMessageKey, dictLogData, self.__dictPromptLogMap)
+            
+        #반드시 만든다.
+        #성능문제 조심
+        dictPromptLog.update(dictLogData)
+        
+        byteLogData:bytes = orjson.dumps(dictPromptLog)
+        byteLogData += b'\n'
+        self.__logWriteHandlerRef.AddData(LOG_INDEX_DEFINE.KEY_AIVAX_LOG, byteLogData)
+        
+        return ERR_OK

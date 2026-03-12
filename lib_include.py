@@ -94,6 +94,11 @@ class LOG_INDEX_DEFINE:
     KEY_INPUT_FILTER = "input_filter"
     KEY_OUTPUT_FILTER = "output_filter"
     KEY_REGEX_FILTER = "regex_filter"
+    
+    KEY_AIVAX_LOG = "aivax_log"
+    
+    TYPE_LOG_INPUT = 0 #log 유형, 입력
+    TYPE_LOG_OUTPUT = 1 #log 유형, 출력    
     # pass
 
 #local 설정 config define, 모듈이 아직 크지 않아서, local config에 정의한다.
@@ -200,6 +205,8 @@ class DBDefine:
     DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
+    
+    DB_FIELID_FILTER_DETECT = "filter_detect"
     # pass
     
 # 탐지 관련
