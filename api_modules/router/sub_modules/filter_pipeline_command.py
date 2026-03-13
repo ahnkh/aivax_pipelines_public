@@ -88,7 +88,7 @@ class FilterPipelineCommand:
         # #우선 parameter만 만든다. => 요청 데이터와 응답 데이터는 따로 만들자. 동시 접근의 문제, 사용자의 부가 옵션은 modelItem에서 가져온다.
         
         #TODO: 메소드 이름, 향후 config로 관리, 지금은 하드코딩
-        strFilterMethodName = "inlet"
+        # strFilterMethodName = "inlet"
         
         #TODO: 가공을 위해서, 전체를 모아서 저장하자.
         dictFilterResult = {}
@@ -157,21 +157,25 @@ class FilterPipelineCommand:
                 continue
             '''
             
-            #예외처리 => 있어서는 안되는 구문, 종료시킨다.
-            if False == hasattr(pipeline, strFilterMethodName):
-                
-                strErrorMessage:str = f"invalid filter, not exist filter, filter = {strFilterMethodName}"
-                RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
-                # LOG().error(strErrorMessage)
+            #TODO: inlet으로 통일되어, 불필요한 성능 저하.
             
-            methodFunction = getattr(pipeline, strFilterMethodName)
+            # #예외처리 => 있어서는 안되는 구문, 종료시킨다.
+            # if False == hasattr(pipeline, strFilterMethodName):
                 
-            #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
-            # asyncio.run(methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request))
+            #     strErrorMessage:str = f"invalid filter, not exist filter, filter = {strFilterMethodName}"
+            #     RouterCustomHelper.GenerateHttpException(ApiErrorDefine.HTTP_404_NOT_FOUND, ApiErrorDefine.HTTP_404_NOT_FOUND_MSG, strErrorMessage, apiResponseHandler)
+            #     # LOG().error(strErrorMessage)
             
-            #TODO: 너무 많은 인자. 최초 pipeline 구조로 인한 어쩔수 없는.. next 버전에서는 리펙토링 필요. 
-            # await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
-            await methodFunction(dictBodyParameter, user, customFilterConfigItem, dictLogBuffer, dictEachFilterOutput, __request__ = request)
+            # methodFunction = getattr(pipeline, strFilterMethodName)
+                
+            # #TODO: request 객체의 전달 추가, 선언쪽에서 __request__ 로 선언되어 있어, 우선 이름을 맞춘다 (장기적으로 리펙토링은 필요)
+            # # asyncio.run(methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request))
+            
+            # #TODO: 너무 많은 인자. 최초 pipeline 구조로 인한 어쩔수 없는.. next 버전에서는 리펙토링 필요. 
+            # # await methodFunction(dictBodyParameter, user, dictExtParameter, dictEachFilterOutput, __request__ = request)   
+            # await methodFunction(dictBodyParameter, user, customFilterConfigItem, dictLogBuffer, dictEachFilterOutput, __request__ = request)
+            
+            await pipeline.inlet(dictBodyParameter, user, customFilterConfigItem, dictLogBuffer, dictEachFilterOutput, __request__ = request)
             
             # 조건문 좀더 정확하게 검증.
             if False == bNextDetectAfterBlock:
@@ -190,6 +194,12 @@ class FilterPipelineCommand:
             
             dictFilterResult[strPipelineFilterName] = dictEachFilterOutput
             #pass for
+            
+        # 각filter에 대한 최종 mode, sslproxy로 전달될 값과는 다르다. dictLogBuffer에서 mode값의 병합
+        strFinalMode:str = routerCustomHelper.GenerateFilterFinalMode(dictLogBuffer)
+        
+        #logbuffer에 업데이트하여 전달
+        dictLogBuffer[DBDefine.DB_FIELID_MODE] = strFinalMode
             
         #최종 메시지.
         #응답 데이터 가공 좀더 개선 필요     
@@ -230,10 +240,10 @@ class FilterPipelineCommand:
         mainApp.AddToLogQueue(LOG_INDEX_DEFINE.TYPE_LOG_INPUT, strLogMessageKey, dictLogBuffer)
         
         # TODO: sslproxy 전달 프롬프트
-        dictApiOutResponse:dict = apiResponseHandler.outResponse()
+        # dictApiOutResponse:dict = apiResponseHandler.outResponse()
+        # return dictApiOutResponse
 
-        # return apiResponseHandler.outResponse()
-        return dictApiOutResponse
+        return apiResponseHandler.outResponse()
         
     ########################################################## private
     

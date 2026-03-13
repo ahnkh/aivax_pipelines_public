@@ -293,7 +293,8 @@ class UserAccountDataHandler:
             return ERR_OK
         
         #수정시간, 현재 시간으로 통일
-        now:datetime = datetime.datetime.now()
+        #수정시간, UTC 시간으로 통일
+        now:datetime = datetime.datetime.now(timezone.utc)
         strNowDate:str = now.strftime("%Y-%m-%d %H:%M:%S")
         
         lstBulkInfo:list = []

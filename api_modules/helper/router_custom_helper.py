@@ -207,6 +207,42 @@ class RouterCustomHelper:
         
         return ERR_OK
     
+    # filter에서 최종 mode값을 추출한다.
+    def GenerateFilterFinalMode(self, dictLogOutput:dict) -> str:
+        
+        '''
+        filter_detect 리스트를 순회, mode값을 검색한다.
+        block -> masking -> allow -> "" 순으로 반환
+        각 mode에 대한 집계형태로 추출이 필요하기는 하다.
+        '''
+        
+        dictModeSummary = {            
+        }
+        
+        #항상 존재하는 값
+        lstFilterDetect:list = dictLogOutput.get(DBDefine.DB_FIELID_FILTER_DETECT)
+        
+        for dictFilter in lstFilterDetect:
+            
+            mode:str = dictFilter.get(DBDefine.DB_FIELID_MODE)
+            
+            dictModeSummary[mode] = mode
+            
+        #반환값 우선순위별로 반환
+        
+        if None != dictModeSummary.get(PipelineFilterDefine.ACTION_BLOCK):
+            return PipelineFilterDefine.ACTION_BLOCK
+        elif None != dictModeSummary.get(PipelineFilterDefine.ACTION_MASKING):
+            return PipelineFilterDefine.ACTION_MASKING
+        elif None != dictModeSummary.get(PipelineFilterDefine.ACTION_ACCEPT):
+            return PipelineFilterDefine.ACTION_ACCEPT
+        elif None != dictModeSummary.get(PipelineFilterDefine.ACTION_UNDETECTED):
+            return PipelineFilterDefine.ACTION_UNDETECTED
+        else:
+            return PipelineFilterDefine.ACTION_BLANK
+        
+        # return ERR_OK
+    
     #오류 발생시 대응 공통화    
     def GenerateHttpException(self, nErrorCode:int, strMsgCode:str, strErrorMessage:str, apiResponseHandler:ApiResponseHandlerEX = None):
         

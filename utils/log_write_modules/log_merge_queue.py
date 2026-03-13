@@ -126,9 +126,10 @@ class LogMergeQueue:
             LOG().error(f"fail merge prompt log, call merge fail handler")
             dictPromptLog = self.__mergeFailOutputLogHandler.HandleMergeFailLog(strLogMessageKey, dictLogData, self.__dictPromptLogMap)
             
-        #반드시 만든다.
-        #성능문제 조심
-        dictPromptLog.update(dictLogData)
+            #반드시 만든다.
+            #성능문제 조심
+            dictPromptLog.update(dictLogData)
+            # pass
         
         byteLogData:bytes = orjson.dumps(dictPromptLog)
         byteLogData += b'\n'

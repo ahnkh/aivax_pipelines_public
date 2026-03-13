@@ -86,24 +86,26 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     - action: 0: allow, 1: block, 2: masking
     '''
     
+    #session id, 항상 다르다는 가정, 사용 불가..
+    # session_id = request.state.session_id
+    
     if 0 == len(modelItem.message_id):
 
         #message_id 생성
-        session_id = request.state.session_id
+        
         # strMessageID:str = str(uuid.uuid4())
-        strMessageID:str = secrets.token_hex(16)
+        # strMessageID:str = secrets.token_hex(16)
         #세션 확인
         
         # LOG().info(f"input prompt - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
         # LOG().info(f"input prompt - message id = {strMessageID}")
     
         #message_id, pipeline에서 만든다.
-        modelItem.message_id = strMessageID
+        modelItem.message_id = secrets.token_hex(16)
+        LOG().info(f"input prompt - message_id = {modelItem.message_id}")
         
     # session에 message 저장
-    session_message_map[session_id] = modelItem.message_id
-    
-    LOG().info(f"input prompt - session_id = {request.state.session_id}, message_id = {strMessageID}")
+    session_message_map[modelItem.message_id] = modelItem.message_id
     
     return await doRouterFunction("doFilterApiRouter", modelItem, request)
 
@@ -114,17 +116,22 @@ async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
     '''
     '''
     
-    session_id = request.state.session_id
-    strMessageID:str = session_message_map.get(session_id)
+    #TODO: 반드시 넘어와야 한다...
+    # if 0 == len(modelItem.message_id):
     
-    LOG().info(f"output response - session_id = {session_id}, message_id = {strMessageID}")
-    
-    if session_id in session_message_map:
-        # del session_message_map[session_id]
-        session_message_map.pop(session_id, None)
+    #     # session_id = request.state.session_id
+    #     # strMessageID:str = session_message_map.get(session_id)
         
-    #message_id, pipeline에서 만든다.
-    modelItem.message_id = strMessageID
+    #     # LOG().info(f"output response - session_id = {session_id}, message_id = {strMessageID}")
+        
+    #     # if session_id in session_message_map:
+    #     #     # del session_message_map[session_id]
+    #     #     session_message_map.pop(session_id, None)
+        
+    #     #1차 예외처리, 우선 고려하지 않는다.
+            
+    #     #message_id, pipeline에서 만든다.
+    #     modelItem.message_id = strMessageID
     
     #세션 확인
     # LOG().info(f"output response - session_id = {request.state.session_id}, request_id = {request.state.request_id}")

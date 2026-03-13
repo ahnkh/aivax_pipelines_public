@@ -207,6 +207,7 @@ class DBDefine:
     DB_FIELD_RULE_TARGET = "targets"
     
     DB_FIELID_FILTER_DETECT = "filter_detect"
+    DB_FIELID_MODE = "mode"
     # pass
     
 # 탐지 관련
