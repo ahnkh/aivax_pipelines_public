@@ -66,37 +66,37 @@ app.state.PIPELINES = PIPELINES
 
 # 세션 생성 middleware 추가
 # SESSION_COOKIE = "session_id"
-@app.middleware("http")
-async def session_middleware(request: Request, call_next: Any):
+# @app.middleware("http")
+# async def session_middleware(request: Request, call_next: Any):
 
-    session_id = request.cookies.get(APIServerDefine.SESSION_COOKIE)
+#     session_id = request.cookies.get(APIServerDefine.SESSION_COOKIE)
 
-    # 세션 없으면 생성
-    if not session_id:
-        # session_id = str(uuid.uuid4())
-        session_id = secrets.token_hex(16) #TODO: 이게 더 성능이 빠르다.
+#     # 세션 없으면 생성
+#     if not session_id:
+#         # session_id = str(uuid.uuid4())
+#         session_id = secrets.token_hex(16) #TODO: 이게 더 성능이 빠르다.
 
-    # request id 생성
-    # request_id = str(uuid.uuid4())
+#     # request id 생성
+#     # request_id = str(uuid.uuid4())
 
-    request.state.session_id = session_id
-    # request.state.request_id = request_id
+#     request.state.session_id = session_id
+#     # request.state.request_id = request_id
 
-    response: Response = await call_next(request)
+#     response: Response = await call_next(request)
 
-    # 최초 요청이면 cookie 생성
-    # if APIServerDefine.SESSION_COOKIE not in request.cookies:
-    if not request.cookies.get(APIServerDefine.SESSION_COOKIE):
-        response.set_cookie(
-            key=APIServerDefine.SESSION_COOKIE,
-            value=session_id,
-            httponly=True
-        )
+#     # 최초 요청이면 cookie 생성
+#     # if APIServerDefine.SESSION_COOKIE not in request.cookies:
+#     if not request.cookies.get(APIServerDefine.SESSION_COOKIE):
+#         response.set_cookie(
+#             key=APIServerDefine.SESSION_COOKIE,
+#             value=session_id,
+#             httponly=True
+#         )
 
-    # 응답 헤더에 request id 추가
-    # response.headers["X-Request-ID"] = request_id
+#     # 응답 헤더에 request id 추가
+#     # response.headers["X-Request-ID"] = request_id
 
-    return response
+#     return response
 
 
 #fast api 실행 관련, TODO: main 에서 수행할지, mainapp에서 수행할지 향후 결정

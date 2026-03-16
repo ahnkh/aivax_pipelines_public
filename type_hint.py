@@ -9,7 +9,8 @@ from api_modules.models.schemas import (
     FilterForm, AddPipelineForm, 
     DeletePipelineForm, VariantFilterForm,OutputFilterItem,
     FilterRuleTestItem, FileAttachItem, OfficeFileAnalysisParameterItem,
-    PipelineCustomFilterConfigItem, RegexPatternDetectFilterParameterItem, RegexPaternDetectFilterResultItem
+    PipelineCustomFilterConfigItem, RegexPatternDetectFilterParameterItem, RegexPaternDetectFilterResultItem,
+    FilterPolicySignalItem
 )
      
 # #TODO: typehint 제공

@@ -202,6 +202,14 @@ class FilterRuleTestItem(BaseModel):
     action:str = Field(default="", description="action (block/masking)")    
     pass
 
+class FilterPolicySignalItem(BaseModel):
+    
+    '''
+    '''
+    
+    date : datetime.datetime = Field(default_factory=datetime.datetime.now)    
+    pass
+
 
 # file 분석, parameterItem
 class OfficeFileAnalysisParameterItem(BaseModel):

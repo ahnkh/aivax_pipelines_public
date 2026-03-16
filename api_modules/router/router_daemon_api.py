@@ -148,6 +148,17 @@ async def testFilterRule(modelItem: FilterRuleTestItem, request: Request) -> dic
     
     return await doRouterFunction("doTestFilterRule", modelItem, request)
 
+@app.post("/v1/filter/policy-signal")    
+async def signalPipelinePolicy(modelItem: FilterPolicySignalItem) -> dict:
+    
+    '''
+    '''
+    
+    LOG().info("signal policy")
+    
+    return {}
+
+
 #저장 인터페이스, TODO: API가 많을것 같지는 않다. 만약에 많아지면, 호출 기능 공통화, 이 API 까지는 각각 개발
 @app.post("/v1/log/add-log")
 async def addLogToOpenSearch(request: Request):
@@ -214,31 +225,7 @@ async def addLogToOpenSearch(request: Request):
     
     return await doRouterFunction("doLogApiRouter", dictItemModel)
     
-    # try:
-    
-    #     byteRawBody = await request.body()
-        
-    #     dictItemModel = {}
-    #     JsonHelper.LoadToDictionary(byteRawBody, dictItemModel)
 
-    #     return await doLogApiRouter(dictItemModel)
-
-    # except HTTPException as err:
-
-    #     LOG().error(traceback.format_exc()) 
-
-    #     dictOutput:dict = err.detail    
-    #     return dictOutput
-
-    # except Exception as err:
-        
-    #     # LOG().error(str(err))        
-    #     LOG().error(traceback.format_exc())  
-        
-    #     apiResponseHandler = ApiResponseHandlerEX()
-    #     apiResponseHandler.attachFailCode(ApiErrorDefine.API_UNKNOWN_ERROR, ApiErrorDefine.API_UNKNOWN_ERROR_MSG, str(err))
-
-    #     return apiResponseHandler.outResponse()
     
     
 #api router 실행, 공통화
