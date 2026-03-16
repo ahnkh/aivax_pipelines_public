@@ -156,7 +156,13 @@ async def signalPipelinePolicy(modelItem: FilterPolicySignalItem) -> dict:
     
     LOG().info("signal policy")
     
-    return {}
+    from mainapp.pipeline_main_app import PipeLineMainApp
+
+    mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
+    mainApp.NotifyPolicySignal()
+    
+    return GetApiOutResponse("notify policy signal",)
+    
 
 
 #저장 인터페이스, TODO: API가 많을것 같지는 않다. 만약에 많아지면, 호출 기능 공통화, 이 API 까지는 각각 개발
@@ -362,7 +368,7 @@ async def doTestFilterRule(modelItem: FilterRuleTestItem, request: Request) -> d
 
 
 #응답 데이터 반환, 우선 이 안에서 공통화
-def GetApiOutResponse(strApiCommandCode:str, strResponseKey:str, dictOutResponse:dict) -> dict:
+def GetApiOutResponse(strApiCommandCode:str, strResponseKey:str = None, dictOutResponse:dict = None) -> dict:
     
     '''
     '''

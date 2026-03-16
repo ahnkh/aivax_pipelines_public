@@ -220,6 +220,15 @@ class PipeLineMainApp:
     def Test(self, dictTestOpt:dict):
         
         pass
+    
+    # 정책 signal 수신
+    def NotifyPolicySignal(self, ):
+        '''
+        '''
+        
+        self.__filterPolicyManager.NotifyPolicySignal(self.__filterPatternManager)
+        
+        return ERR_OK
         
         
     ########################################## private

@@ -16,6 +16,9 @@ from block_filter_modules.filter_policy.helper.filter_dbpolicy_request_helper im
 # filter config
 from block_filter_modules.filter_policy.helper.filter_custom_config import FilterCustomConfig
 
+# 정책 데이터, 유지후 계속 보유한다.
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+
 '''
 차단등 정책 관리 모듈, db를 조회하여 dictionary등 
 활용이 편한 정보로 정규화 한다.
@@ -81,6 +84,22 @@ class FilterPolicyManager:
         
         return ERR_OK
     
+    # 정책 signal 업데이트
+    def NotifyPolicySignal(self, filterPatternManager:FilterPatternManager):
+        
+        '''
+        '''
+        
+        #TODO: 순환 참조 이슈, 번거로워도 개별로 저장한다.
+        filterPolicyGroupData:FilterPolicyGroupData = FilterPolicyGroupData()
+        filterPolicyGroupData.Initialize()
+        
+        filterDBPolicyRequestHelper:FilterDBPolicyRequestHelper = FilterDBPolicyRequestHelper()
+        
+        self.__doProcUpdateFilterPolicy(filterDBPolicyRequestHelper, filterPolicyGroupData, filterPatternManager)
+        
+        return ERR_OK
+    
     def ThreadHandlerProc(self, dictPolicyLocalConfig:dict, filterPatternManager:FilterPatternManager):
         
         '''
@@ -93,9 +112,6 @@ class FilterPolicyManager:
         
         filterDBPolicyRequestHelper:FilterDBPolicyRequestHelper = FilterDBPolicyRequestHelper()
         
-        # 정책 데이터, 유지후 계속 보유한다.
-        from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
-        
         #TODO: 순환 참조 이슈, 번거로워도 개별로 저장한다.
         filterPolicyGroupData:FilterPolicyGroupData = FilterPolicyGroupData()
         filterPolicyGroupData.Initialize()
@@ -104,26 +120,7 @@ class FilterPolicyManager:
             
             try:
                 
-                
-                # 최초 단순 조회
-                # filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
-                
-                # 2차, 그룹별 2 depth조회
-                filterDBPolicyRequestHelper.RequestFilterDBPolicyGroup(filterPolicyGroupData)
-                
-                # 파일 차단정보, 이것도 전달 필요
-                dictFileBlockPolicy:dict = {}
-                filterDBPolicyRequestHelper.RequestFileBlockPolicy(dictFileBlockPolicy)
-                
-                #정책의 가공이 필요하면, 이시점에서 가공 (미구현 상태에서 인수인계)
-                # self.__generateFilterPolicy()
-                
-                #패턴 관리자로 업데이트된 정책을 전달, 2차 filterPolicyGroupData 전달 구조로 변경
-                # filterPatternManager.notifyDBPolicyUpdateSignal(dictFilterPolicy)
-                filterPatternManager.notifyDBPolicyUpdateSignal(filterPolicyGroupData)
-                
-                #복사 없이, notify
-                filterPatternManager.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
+                self.__doProcUpdateFilterPolicy(filterDBPolicyRequestHelper, filterPolicyGroupData, filterPatternManager)
                 
                 time.sleep(nThreadCycle)
                 
@@ -133,12 +130,35 @@ class FilterPolicyManager:
                 #TODO: 예외가 발생하면 무한 대기가 된다. 
                 #개발자 레벨에서 확인할 오류는 확인하되, sleep을 주고, 문제 발생시 어쨌든 계속 시도는 해야 한다.
                 time.sleep(nThreadCycle)
-                
         
-        return ERR_OK
-    
+        # return ERR_OK
     
     ################################################# private
+    
+    def __doProcUpdateFilterPolicy(self, filterDBPolicyRequestHelper:FilterDBPolicyRequestHelper, filterPolicyGroupData:FilterPolicyGroupData, filterPatternManager:FilterPatternManager):
+        
+        
+        # 최초 단순 조회
+        # filterDBPolicyRequestHelper.RequestToDBPolicy(dictFilterPolicy, dictPolicyLocalConfig)
+        
+        # 2차, 그룹별 2 depth조회
+        filterDBPolicyRequestHelper.RequestFilterDBPolicyGroup(filterPolicyGroupData)
+        
+        # 파일 차단정보, 이것도 전달 필요
+        dictFileBlockPolicy:dict = {}
+        filterDBPolicyRequestHelper.RequestFileBlockPolicy(dictFileBlockPolicy)
+        
+        #정책의 가공이 필요하면, 이시점에서 가공 (미구현 상태에서 인수인계)
+        # self.__generateFilterPolicy()
+        
+        #패턴 관리자로 업데이트된 정책을 전달, 2차 filterPolicyGroupData 전달 구조로 변경
+        # filterPatternManager.notifyDBPolicyUpdateSignal(dictFilterPolicy)
+        filterPatternManager.notifyDBPolicyUpdateSignal(filterPolicyGroupData)
+        
+        #복사 없이, notify
+        filterPatternManager.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
+        
+        return ERR_OK
     
     #local 정책, config에서 가져온다. TODO: 이름이 모호하다. 우선 개발.
     def __initializeLocalPolicyConfig(self, dictJsonLocalConfigRoot:dict, dictPolicyLocalConfig:dict):

@@ -1,0 +1,42 @@
+
+curl -X 'POST' \
+  'http://127.0.0.1:7000/v1/filter/multiple_filter' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "filter_list": [
+    "input_filter",
+    "secret_filter",
+    "slm_filter"
+  ],
+  "prompt": "프롬프트 테스트 IP 127.0.0.1 이메일 ghahn@wins21.co.kr",
+  "encoding": false,
+  "user_id": "ghahn@wins21.co.kr",
+  "email": "ghahn@wins21.co.kr",
+  "ai_service": 1,
+  "client_host": "",
+  "session_id": "",
+  "attachments": [
+    {
+      "id": "",
+      "size": 0,
+      "name": "",
+      "mime_type": ""
+    }
+  ],
+  "message_id": "c_d9b4beb201ac86ac_1765879292"
+}'
+
+curl -X 'POST' \
+  'http://127.0.0.1:7000/v1/filter/output_filter' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "llm_output": "I'\''m here! Let me know if you need anything.",
+  "user_id": "ghahn",
+  "email": "ghahn@wins21.co.kr",
+  "ai_service": 0,
+  "client_host": "",
+  "session_id": "",
+  "message_id": ""
+}'
