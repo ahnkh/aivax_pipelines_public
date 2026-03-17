@@ -158,10 +158,12 @@ async def signalPipelinePolicy(modelItem: FilterPolicySignalItem) -> dict:
     
     from mainapp.pipeline_main_app import PipeLineMainApp
 
+    dictOutputResponse:dict = {}
+
     mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
-    mainApp.NotifyPolicySignal()
+    mainApp.NotifyPolicySignal(dictOutputResponse)
     
-    return GetApiOutResponse("notify policy signal",)
+    return GetApiOutResponse("policy signal", ApiResponseHandler.API_OUT_RESPONSE, dictOutputResponse)
     
 
 
@@ -321,7 +323,7 @@ async def doLogApiRouter(dictItemModel: dict) -> dict:
     
     # return apiResponseHandler.outResponse()
 
-    return GetApiOutResponse("log add api", "out_message_data", strOutputData)
+    return GetApiOutResponse("log add api", ApiResponseHandler.API_OUT_RESPONSE, strOutputData)
 
 
 #filter 정책 테스트, 우선 만들고, 공통화, 리펙토링

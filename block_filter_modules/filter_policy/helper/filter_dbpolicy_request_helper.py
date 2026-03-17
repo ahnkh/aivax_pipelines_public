@@ -21,7 +21,7 @@ class FilterDBPolicyRequestHelper:
         pass
       
     #DB 정책 데이터 조회
-    def RequestFilterDBPolicyGroup(self, filterPolicyGroupData:FilterPolicyGroupData):
+    def RequestFilterDBPolicyGroup(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict):
       
       '''
       filters 테이블을 조회한다.
@@ -74,6 +74,8 @@ class FilterDBPolicyRequestHelper:
       
       lstFilterID:list = dictDBFilterResult.get(DBSQLDefine.QUERY_DATA)
       
+      dictEachOutputPolicyFilter = {}
+      
       # filter 별로 각 scope에 대한 정책을 만든다.
       for dictFilterID in lstFilterID:
           
@@ -92,6 +94,9 @@ class FilterDBPolicyRequestHelper:
         
         #1단계 - 2depth의 자료 구조로 저장
         lstPolicyRuleFilter:list = dictPolicyRuleFilterResult.get(DBSQLDefine.QUERY_DATA)
+        
+        # 응답 결과 추가
+        dictEachOutputPolicyFilter[strFilterID] = len(lstPolicyRuleFilter)
         
         #데이터 확인, 없으면 skip
         if 0 == len(lstPolicyRuleFilter):
@@ -117,11 +122,16 @@ class FilterDBPolicyRequestHelper:
         #filterid 별 정책 추가.
         filterPolicyGroupData.AddPolicyRule(strFilterID, dictPolicyRuleScopeMap)                
         # pass
+        
+      dictOutputResponse["filter_policy"] = {
+        "user_count" : len(lstDBUserInfo),
+        "policy_filter_count" : dictEachOutputPolicyFilter        
+      }
       
       return ERR_OK
     
     # 파일명 정보, DB 조회
-    def RequestFileBlockPolicy(self, dictFileBlockPolicy:dict):
+    def RequestFileBlockPolicy(self, dictFileBlockPolicy:dict, dictOutputResponse:dict):
     
       '''
       시간상, 우선 빠르게 개발, 향후 2차 리펙토링
@@ -148,6 +158,10 @@ class FilterDBPolicyRequestHelper:
           elif "fileControlMaxSize" == skey:
             dictFileBlockPolicy[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = int(svalue)
             pass
+          #pass
+      
+      
+      dictOutputResponse["file_block_policy"] = dictFileBlockPolicy
       
       return ERR_OK
     

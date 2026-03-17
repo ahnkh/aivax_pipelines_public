@@ -222,11 +222,11 @@ class PipeLineMainApp:
         pass
     
     # 정책 signal 수신
-    def NotifyPolicySignal(self, ):
+    def NotifyPolicySignal(self, dictOutputResponse:dict):
         '''
         '''
         
-        self.__filterPolicyManager.NotifyPolicySignal(self.__filterPatternManager)
+        self.__filterPolicyManager.NotifyPolicySignal(self.__filterPatternManager, dictOutputResponse)
         
         return ERR_OK
         

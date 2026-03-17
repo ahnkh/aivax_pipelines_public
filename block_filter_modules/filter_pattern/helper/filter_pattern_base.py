@@ -173,7 +173,7 @@ class FilterPatternBase:
     
     #각 하위 클래스에서 상속받아서, 다르게 사용할 수도 있도록 구성
     @abstractmethod
-    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict) -> int:
         '''
         '''
         

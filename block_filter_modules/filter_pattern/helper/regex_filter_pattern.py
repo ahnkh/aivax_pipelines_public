@@ -30,9 +30,8 @@ class RegexFilterPattern (FilterPatternBase):
         return ERR_OK
     
     
-    #상속, DB의 패턴 정책을 수신받는다. 
-    # def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
-    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
+    #상속, DB의 패턴 정책을 수신받는다.     
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict) -> int:
         '''
         전체 정책을 받고, 각 정책에서 필요한 부분을 추출해서 사용한다.
         TODO: 인수인계 시점에는 정책의 구분자가 없어, 받은 데이터의 rule에 대해서 로그로 확인까지만 구현한다.

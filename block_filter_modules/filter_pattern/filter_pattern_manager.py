@@ -81,7 +81,7 @@ class FilterPatternManager:
     
     #정책관리자에서 정책이 변경되면, 변경된 정책을 dictionary 형태로 수신 받는다.
     # def notifyDBPolicyUpdateSignal(self, dictFilterPolicy:dict):
-    def notifyDBPolicyUpdateSignal(self, filterPolicyGroupData:FilterPolicyGroupData):
+    def notifyDBPolicyUpdateSignal(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict):
         
         '''
         각 패턴 필터에 브로드캐스팅한다. 
@@ -94,13 +94,13 @@ class FilterPatternManager:
             filterPatternModule:FilterPatternBase = self.__filterPatternMap.get(strPatternKey)
             
             if None != filterPatternModule:                            
-                filterPatternModule.notifyUpdateDBPatternPolicy(filterPolicyGroupData)                
+                filterPatternModule.notifyUpdateDBPatternPolicy(filterPolicyGroupData, dictOutputResponse)                
                 # pass
         
         return ERR_OK
     
     # File 차단, 확장자 및 사이즈 - customize, 직접 전달
-    def notifyCustomUpdateFileBlockInfo(self, dictFileBlockPolicy:dict):
+    def notifyCustomUpdateFileBlockInfo(self, dictFileBlockPolicy:dict, dictOutputResponse:dict):
         
         '''
         file 차단 정보 업데이트
@@ -111,8 +111,8 @@ class FilterPatternManager:
         if None != fileFilterPattern:
             
             #TODO: 정책의 변경여부는 filterpattern에서 체크
-            fileFilterPattern.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
             # pass
+            fileFilterPattern.notifyCustomUpdateFileBlockInfo(dictFileBlockPolicy)
             
         #TODO: 여기에 대한 예외처리는 하지 않는다.
         

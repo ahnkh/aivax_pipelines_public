@@ -113,7 +113,7 @@ class SLMFilterPattern (FilterPatternBase):
     
     # 정책 DB 데이터 수신
     
-    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict) -> int:
         
         '''
         '''
@@ -132,6 +132,8 @@ class SLMFilterPattern (FilterPatternBase):
             nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
             LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
             
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is changed, rule count = {nRuleCount}"
+            
             # 먼저 초기화
             self.__dictDBScopeRegexPattern:dict = {
                 DBDefine.POLICY_FILTER_SCOPE_USER : [],
@@ -144,6 +146,9 @@ class SLMFilterPattern (FilterPatternBase):
             
             self.__regexPolicyGenerateHelper.GenerateRegexGroupPolicy(dictPolicyRuleScopeMap, self.__dictDBScopeRegexPattern)
             #pass
+            
+        else:
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is equal (no changed)" 
         
         return ERR_OK
     

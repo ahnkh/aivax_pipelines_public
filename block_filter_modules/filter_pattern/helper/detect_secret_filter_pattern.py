@@ -150,9 +150,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         return filterResultItem
 
-    #상속, DB의 패턴 정책을 수신받는다.
-    # def notifyUpdateDBPatternPolicy(self, dictFilterPolicy:dict) -> int:
-    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData) -> int:
+    #상속, DB의 패턴 정책을 수신받는다.    
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict) -> int:
 
         '''
         전체 정책을 받고, 각 정책에서 필요한 부분을 추출해서 사용한다.
@@ -174,6 +173,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
             nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
             LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
             
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is changed, rule count = {nRuleCount}"
+            
             # 먼저 초기화
             self.__dictDBScopeRegexPattern:dict = {
                 DBDefine.POLICY_FILTER_SCOPE_USER : [],
@@ -186,6 +187,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
             self.__regexPolicyGenerateHelper.GenerateRegexGroupPolicy(dictPolicyRuleScopeMap, self.__dictDBScopeRegexPattern)
             #pass
+            
+        else:
+            #TODO: 메시지 관리 필요
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is equal (no changed)" 
 
         return ERR_OK
 
