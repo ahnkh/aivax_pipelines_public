@@ -3,9 +3,13 @@ import orjson
 
 from lib_include import *
 
+from type_hint import *
+
 from utils.log_write_modules.log_write_handler import LogWriteHandler
 
 from utils.log_write_modules.merge_fail_output_log_handler import MergeFailOutputLogHandler
+
+from utils.event_alarm_modules.event_alarm_handler import EventAlarmHandler
 
 '''
 26.03.12 사양변경, 로그 병합기능, 중간 Queue 처리
@@ -20,6 +24,8 @@ class LogMergeQueue:
         #logwriter, 참조 추가
         self.__logWriteHandlerRef:LogWriteHandler = None
         
+        self.__eventAlarmHandlerRef:EventAlarmHandler = None
+        
         # 프롬프트 출력 로그를 보관할 dict, key로 검색할 hash
         self.__dictPromptLogMap:dict = None
         
@@ -27,12 +33,14 @@ class LogMergeQueue:
         self.__mergeFailOutputLogHandler:MergeFailOutputLogHandler = None
         pass
     
-    def Initialize(self, logWriteHandler:LogWriteHandler, dictLogMergeQueueLocalConfig:dict):
+    def Initialize(self, logWriteHandler:LogWriteHandler, eventAlarmHandler:EventAlarmHandler, dictLogMergeQueueLocalConfig:dict):
         
         '''
         '''
         
         self.__logWriteHandlerRef = logWriteHandler
+        
+        self.__eventAlarmHandlerRef = eventAlarmHandler
         
         self.__dictPromptLogMap = dict()
         
@@ -130,9 +138,38 @@ class LogMergeQueue:
             #성능문제 조심
             dictPromptLog.update(dictLogData)
             # pass
+            
+        #TODO: 이시점에, Alarm로그로 전달되어야 한다. notify 계열로 전달
+        #alarm로그, 다시 만들어서 스레드로 전달. => python 문제 조심, N분 delay가 되어야 한다.
+        self.__sendEventAlarmMessage(dictPromptLog)
         
         byteLogData:bytes = orjson.dumps(dictPromptLog)
         byteLogData += b'\n'
         self.__logWriteHandlerRef.AddData(LOG_INDEX_DEFINE.KEY_AIVAX_LOG, byteLogData)
+        
+        return ERR_OK
+    
+    def __sendEventAlarmMessage(self, dictPromptLog:dict):
+        
+        '''
+        '''
+        
+        user = dictPromptLog.get("user", {})
+        
+        eventAlarmMessage:EventAlarmMessage = EventAlarmMessage(
+            time_stamp = dictPromptLog.get("@timestamp"),
+            messageid = dictPromptLog.get("message_id"),
+            user_id = user.get("id"),
+            user_role = user.get("role"),
+            email = user.get("email"),
+            uuid = user.get("uuid"),
+            
+            ai_service = dictPromptLog.get("ai_service"),
+            prompt = dictPromptLog.get("prompt"),
+            mode = dictPromptLog.get("mode"),
+            output_text = dictPromptLog.get("output_text"),
+        )
+        
+        self.__eventAlarmHandlerRef.AddEventMessage(eventAlarmMessage)
         
         return ERR_OK

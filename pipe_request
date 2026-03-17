@@ -1,6 +1,6 @@
 
 curl -X 'POST' \
-  'http://127.0.0.1:7000/v1/filter/multiple_filter' \
+  'http://127.0.0.1:9099/v1/filter/multiple_filter' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -38,5 +38,5 @@ curl -X 'POST' \
   "ai_service": 0,
   "client_host": "",
   "session_id": "",
-  "message_id": ""
+  "message_id": "c_d9b4beb201ac86ac_1765879292"
 }'

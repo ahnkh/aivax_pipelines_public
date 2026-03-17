@@ -23,11 +23,13 @@ from block_filter_modules.filter_pattern.filter_pattern_manager import FilterPat
 from utils.log_write_modules.log_write_handler import LogWriteHandler
 from utils.log_write_modules.log_merge_queue import LogMergeQueue
 
+# event alarm 
+from utils.event_alarm_modules.event_alarm_handler import EventAlarmHandler
+
 # 계정 데이터 관리 모듈 추가
 from utils.user_account_modules.user_account_data_handler import UserAccountDataHandler
 
-#ipc 통신, 서버 추가, main에서 실행하는 것으로 하자. 
-#ipc 통신으로 mainapp를 전달한다. (통신과 실행체 분리)
+#ipc 통신, 서버 추가
 from ipc_modules.ipc_pipeline_server import IPCPipelineServer
 
 from common_modules.global_common_module import GlobalCommonModule
@@ -70,6 +72,9 @@ class PipeLineMainApp:
         
         # ipc 통신 서버
         self.__ipcPipelineServer:IPCPipelineServer = None
+        
+        # event alarm 
+        self.__eventAlarmHandler:EventAlarmHandler = None
         pass
     
     
@@ -95,11 +100,15 @@ class PipeLineMainApp:
         self.__mainAppEnvLoader = MainAppEnvLoader()
         self.__mainAppEnvLoader.Initalize(dictOpt, dictJsonLocalConfigRoot)
         
+        # event alarm, 순서 필요, logMergeQueue으로 연결한다.
+        self.__eventAlarmHandler = EventAlarmHandler()
+        self.__initializeEventAlarmHandler(self.__eventAlarmHandler, dictJsonLocalConfigRoot)
+        
         self.__logWriteHandler:LogWriteHandler = LogWriteHandler()        
         self.__initializeLogWriter(self.__logWriteHandler, dictJsonLocalConfigRoot)
         
         self.__logMergeQueue:LogMergeQueue = LogMergeQueue()
-        self.__initializeLogQueue(self.__logMergeQueue, self.__logWriteHandler, dictJsonLocalConfigRoot)
+        self.__initializeLogQueue(self.__logMergeQueue, self.__logWriteHandler, self.__eventAlarmHandler, dictJsonLocalConfigRoot)
         
         self.__initializeFactoryInstance(dictJsonLocalConfigRoot)
         
@@ -129,6 +138,8 @@ class PipeLineMainApp:
         mainApp:PipeLineMainApp = self
         
         self.__initializeIPCServer(self.__ipcPipelineServer, mainApp, dictJsonLocalConfigRoot)
+        
+        
         
         return ERR_OK
     
@@ -247,7 +258,7 @@ class PipeLineMainApp:
         return ERR_OK
     
     # log queue 초기화
-    def __initializeLogQueue(self, logMergeQueue:LogMergeQueue, logWriteHandler:LogWriteHandler, dictJsonLocalConfigRoot:dict):
+    def __initializeLogQueue(self, logMergeQueue:LogMergeQueue, logWriteHandler:LogWriteHandler, eventAlarmHandler:EventAlarmHandler, dictJsonLocalConfigRoot:dict):
         
         '''
         TODO: thread 구조, logwriter의 전달이 필요할 수 있다.
@@ -255,7 +266,7 @@ class PipeLineMainApp:
         
         log_merge_queue:dict = dictJsonLocalConfigRoot.get("log_merge_queue")
         
-        logMergeQueue.Initialize(logWriteHandler, log_merge_queue)
+        logMergeQueue.Initialize(logWriteHandler, eventAlarmHandler, log_merge_queue)
         
         return ERR_OK
         
@@ -309,6 +320,18 @@ class PipeLineMainApp:
         '''
         
         ipcPipelineServer.Initialize(mainApp, dictJsonLocalConfigRoot)
+        
+        return ERR_OK
+    
+    # event alarm handler
+    def __initializeEventAlarmHandler(self, eventAlarmHandler:EventAlarmHandler, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        '''
+        
+        event_alarm_handler:dict = dictJsonLocalConfigRoot.get("event_alarm_handler")
+        
+        eventAlarmHandler.Initialize(event_alarm_handler)
         
         return ERR_OK
        

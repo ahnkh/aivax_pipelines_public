@@ -166,6 +166,33 @@
 
         "next_detect_after_block" : true
 
-    }
-    
+    },
+
+    "event_alarm_handler":
+    {
+        "event_forward_cycle" : 10,
+
+        "pipe_filter_event":
+        {
+            "desc" : "pipeline filter, level 0:all, 0x001:block, 0x010:masking, 0x100:allow, 0x011: block+masking, 0x111:block+masking+allow",
+            "event_max_limit" : 100,            
+            "alarm_level_mask" : 0
+        },
+
+        "audit_event":
+        {
+        },
+
+        "user_event":
+        {            
+        },
+
+        "ui_alarm_event":
+        {
+            "url" : "http://127.0.0.1:3001/api/notification/event",
+            "timeout" : 10
+        }
+
+
+    }    
 }

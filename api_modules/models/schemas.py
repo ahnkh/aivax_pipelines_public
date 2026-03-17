@@ -340,3 +340,25 @@ class RegexPaternDetectFilterResultItem:
     # detect_rule_list:list = []
     detect_rule_list: List = field(default_factory=list)    
     pass
+
+# # event 알람 메시지 관련
+@dataclass(slots=True)
+class EventAlarmMessage:
+    
+    '''
+    Regex 패턴 요청, Filter로 요청
+    '''
+    
+    time_stamp: str
+    messageid: str
+    
+    user_id: str
+    user_role: str
+    email: str
+    uuid : str
+    
+    ai_service : str
+    prompt: str
+    mode : str
+    output_text : str    
+    # pass
