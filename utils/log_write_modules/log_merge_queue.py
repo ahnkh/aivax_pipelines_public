@@ -110,10 +110,10 @@ class LogMergeQueue:
         
         dictPromptLog:dict = None
         
-        if 0 != len(strLogMessageKey):
+        if 0 != len(strLogMessageKey) and strLogMessageKey in self.__dictPromptLogMap:
         
             # dictPromptLog:dict = self.__dictPromptLog.get(strLogMessageKey)
-            dictPromptLog = self.__dictPromptLogMap.pop(strLogMessageKey)
+            dictPromptLog = self.__dictPromptLogMap.pop(strLogMessageKey, None)
         
         #TODO: prompt로그의 교체 기능, 향후 반영
         
