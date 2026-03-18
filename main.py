@@ -240,7 +240,7 @@ def build_app():
     InitLogger("log.txt", TRACE_LOG_PATH, TRACE_PREFIX)
 
     dictOpt = {
-        APP_PARMETER_DEFINE.WEB_HOST: "0.0.0.0",
+        APP_PARMETER_DEFINE.WEB_HOST: "127.0.0.1",
         APP_PARMETER_DEFINE.WEB_PORT: 9099,
         APP_PARMETER_DEFINE.CONFIG: CONFIG_FILE_PATH,
     }

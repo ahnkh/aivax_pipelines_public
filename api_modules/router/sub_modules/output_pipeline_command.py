@@ -10,7 +10,7 @@ from api_modules.helper.router_custom_helper import RouterCustomHelper
 pipeline, output filter 전달 command
 '''
 
-class OuputPipelineCommand:
+class OutputPipelineCommand:
     
     def __init__(self):
         pass

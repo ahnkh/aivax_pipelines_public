@@ -139,8 +139,6 @@ class PipeLineMainApp:
         
         self.__initializeIPCServer(self.__ipcPipelineServer, mainApp, dictJsonLocalConfigRoot)
         
-        
-        
         return ERR_OK
     
     ######################################## public

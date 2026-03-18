@@ -6,7 +6,7 @@ from type_hint import *
 from api_modules.helper.router_custom_helper import RouterCustomHelper
 
 from api_modules.router.sub_modules.filter_pipeline_command import FilterPipelineCommand
-from api_modules.router.sub_modules.output_pipeline_command import OuputPipelineCommand
+from api_modules.router.sub_modules.output_pipeline_command import OutputPipelineCommand
 
 '''
 fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
@@ -20,9 +20,8 @@ class ApiRouterImplCommand:
         self.__routerCustomHelper = RouterCustomHelper()
         
         self.__filterPipelineCommand = FilterPipelineCommand()
-        self.__outputPipelineCommand = OuputPipelineCommand()
+        self.__outputPipelineCommand = OutputPipelineCommand()
         pass
-    
     
     #api, FastApi Router - 재사용
     #TODO: 비동기 코드, fast api에서는 비동기로 호출하고, ipc등 동기 상황은 ayncio로 호출 필요

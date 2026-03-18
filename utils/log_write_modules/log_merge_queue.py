@@ -57,14 +57,6 @@ class LogMergeQueue:
         TODO: 기능 분기, Input이면 Queue에 저장, Output이면 로그 기록
         '''
         
-        # #TEST 향후 좀더 보강
-        # byteLogData:bytes = orjson.dumps(dictLogData)
-            
-        # #마지막에 byte, 개행 추가
-        # byteLogData += b'\n'
-                
-        # self.__logWriteHandlerRef.AddData(LOG_INDEX_DEFINE.KEY_AIVAX_LOG, byteLogData)
-        
         if LOG_INDEX_DEFINE.TYPE_LOG_INPUT == nLogType:
             self.__storeInputPromptToLogMap(strLogMessageKey, dictLogData)
             # pass
@@ -103,9 +95,7 @@ class LogMergeQueue:
     def __writeMergedLog(self, strLogMessageKey:str, dictLogData:dict):
         
         '''
-        TODO: 동시성 처리, 동기화 조심, 스레드는 아니지만, 구조상 동시성 문제가 생길수 있다.
-        
-        일단 만들고 리펙토링
+        TODO: 동시성 처리, 동기화 조심, 스레드는 아니지만, 구조상 동시성 문제가 생길수 있다.    
         '''
         
         dictPromptLog:dict = None
@@ -154,7 +144,7 @@ class LogMergeQueue:
         '''
         '''
         
-        user = dictPromptLog.get("user", {})
+        user:dict = dictPromptLog.get("user", {})
         
         eventAlarmMessage:EventAlarmMessage = EventAlarmMessage(
             time_stamp = dictPromptLog.get("@timestamp"),

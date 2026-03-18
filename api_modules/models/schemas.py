@@ -174,6 +174,7 @@ class VariantFilterForm(BaseModel):
     pass
 
 #outputfilter form 추가
+# @dataclass(slots=True)
 class OutputFilterItem(BaseModel):
     
     llm_output: str = Field(default="", description="llm응답 결과") 
@@ -184,8 +185,8 @@ class OutputFilterItem(BaseModel):
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")   
     
-    message_id:str = Field(default="", description="message id")
-    pass    
+    message_id:str = Field(default="", description="message id")    
+    # pass    
     
 class AddPipelineForm(BaseModel):
     url: str

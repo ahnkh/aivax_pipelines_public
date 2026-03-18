@@ -170,7 +170,7 @@
 
     "event_alarm_handler":
     {
-        "event_forward_cycle" : 10,
+        "event_forward_cycle" : 15,
 
         "pipe_filter_event":
         {

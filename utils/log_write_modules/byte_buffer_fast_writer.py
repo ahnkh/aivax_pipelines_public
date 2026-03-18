@@ -6,15 +6,6 @@ from typing import Any
 
 from lib_include import *
 
-# from utils.log_write_modules.local_etc_define import *
-
-# import sys
-# import traceback
-
-# import threading #tid 가져오기 위해 선언
-# import time
-
-
 '''
 byte 기반 고속 buffer writer, 불필요한 연산 최소화
 '''
@@ -35,7 +26,6 @@ class ByteBufferFastWriter:
         self.__nWriteLimit:int = 0 #저장 제한값
 
         self.__lastFlushTime:float = 0.0 #마지막 flush 시간, 직접 지정한다.
-
         pass
     
     def UpdateLastFlushTime(self, nLastFlushTime:float):

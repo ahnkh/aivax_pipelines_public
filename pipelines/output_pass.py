@@ -111,7 +111,8 @@ class Pipeline(PipelineBase):
         # uuid:str = ""
         # client_host:str = ""
         
-        # (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(user)
+        #TODO: output filter에도 추가, messageid가 없을때, id, email, service type, client_host 값으로 prompt와 output을 연결한다.
+        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(user)
         
         # if None != user:
             
@@ -200,6 +201,7 @@ class Pipeline(PipelineBase):
         '''
         
         dictOutputLog = {
+            "@timestamp": ts_isoz(),
             "output_text": resp_text_to_store,
             "text_truncated_bytes": original_size_bytes,
             # "hash_sha256": resp_hash,
@@ -209,11 +211,17 @@ class Pipeline(PipelineBase):
                 "prompt": prompt_tokens,
                 "completion": completion_tokens,
                 "total": total_tokens,
-            } if v.include_usage else None,            
+            } if v.include_usage else None,    
+            
+            # 중복되면 유실된다, 이름 변경
+            # "user": {"id": user_id, "email": user_email},
+            "user_id" : user_id,
+            "user_email" : user_email,            
+            "client_host" : client_host,        
+            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
         }
         
         dictLogBuffer.update(dictOutputLog)
-        
         
         #TODO: 좀더 개선후 추가
         # self.AddLogData(LOG_INDEX_DEFINE.KEY_OUTPUT_FILTER, doc)

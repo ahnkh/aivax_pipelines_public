@@ -4,11 +4,11 @@ import threading
 from collections import deque
 # from typing import List, Any
 
+# from apscheduler.schedulers.background import BackgroundScheduler
 
 from lib_include import *
 
 from type_hint import *
-
 
 '''
 event에 대한 alarm 처리
@@ -32,7 +32,7 @@ class EventAlarmHandler:
         
         self.__buffer:deque = deque()
         
-        thread = threading.Thread(name="user account data thread", target=self.ThreadHandlerProc, daemon=True, args=(dictEventAlarmHandlerLocalConfig,))
+        thread = threading.Thread(name="event alarm thread", target=self.ThreadHandlerProc, daemon=True, args=(dictEventAlarmHandlerLocalConfig,))
         thread.start()
         
         return ERR_OK
@@ -66,16 +66,39 @@ class EventAlarmHandler:
         url:str = ui_alarm_event.get("url")
         timeout:str = ui_alarm_event.get("timeout")
         
+        # fNextRun:float = time.time()
+        
         while True:
                         
             try:
+                
+                # now = time.time()
+                start = time.monotonic()
                                 
                 with self.__lock:
                     
-                    if len(self.__buffer) > 0:                        
+                    if len(self.__buffer) > 0:
                         self.__sendAlarmEvent(event_max_limit, url, timeout)
-                
-                time.sleep(event_forward_cycle) 
+                    
+                    elapsed = time.monotonic() - start
+                    sleepTime = event_forward_cycle - elapsed
+                    
+                    if sleepTime > 0:
+                        time.sleep(sleepTime)
+                    
+                    # if now >= fNextRun:
+                        
+                    #     fNextRun += event_forward_cycle
+                        
+                    #     if now > fNextRun:
+                    #         fNextRun = now + event_forward_cycle
+                    
+                    # fSleepTime:float = fNextRun - time.time()
+                    
+                    # if fSleepTime > 0:                
+                    #     #TODO: 전송이 밀리면, 같이 밀린다.
+                    #     # time.sleep(event_forward_cycle) 
+                    #     time.sleep(fSleepTime) 
                 
             except Exception as err:         
                 LOG().error(traceback.format_exc())
@@ -112,6 +135,8 @@ class EventAlarmHandler:
             
             #전송 못한 나머지는 버린다.
             if nSendCount > nEventMaxLimit:
+                nQueueCount = len(lstEvent)
+                LOG().info(f"send buffer overflow, maxlimit = {nEventMaxLimit}, count = {nQueueCount}")
                 break
             
             #여기는 어쩔수 없다. 이벤트를 만들어서 버린다.

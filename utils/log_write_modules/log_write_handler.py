@@ -24,7 +24,7 @@ class LogWriteHandler:
         # self.__condition = threading.Condition(self.__lock)
 
         #string buffer write queue
-        self.__dictBufferWriteQueue = {}
+        self.__dictBufferWriteQueue:dict = {}
 
         # self.__thread = None
         pass
@@ -106,9 +106,8 @@ class LogWriteHandler:
                     self.__flushBufferWriterAt(byteBufferFastWriter, nMaxWaitTimeout)
                     
             self.__lock.release()
-
-        #TOOD: 호출될 수 없는 구문.
-        return ERR_OK
+        
+        # return ERR_OK
 
     ################################################## protected
 

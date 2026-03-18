@@ -107,7 +107,11 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     # session에 message 저장
     session_message_map[modelItem.message_id] = modelItem.message_id
     
-    return await doRouterFunction("doFilterApiRouter", modelItem, request)
+    # 성능 최우선, 단순화 
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)    
+    return await command.doFilterApiRouter(mainApp, modelItem, request)
+    
+    # return await doRouterFunction("doFilterApiRouter", modelItem, request)
 
 #output filter에 대한 api 제공
 @app.post("/v1/filter/output_filter")
@@ -137,7 +141,10 @@ async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
     # LOG().info(f"output response - session_id = {request.state.session_id}, request_id = {request.state.request_id}")
     # LOG().info(f"output response - message id = {strMessageID}")
         
-    return await doRouterFunction("doOutputApiRouter", modelItem, request)
+    # return await doRouterFunction("doOutputApiRouter", modelItem, request)
+    
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)    
+    return await command.doOutputApiRouter(mainApp, modelItem, request)
     
     
 #정책 추가 인터페이스, 정책에 대한 테스트와 응답 결과만 반환한다.
@@ -232,9 +239,7 @@ async def addLogToOpenSearch(request: Request):
     JsonHelper.LoadToDictionary(byteRawBody, dictItemModel)
     
     return await doRouterFunction("doLogApiRouter", dictItemModel)
-    
-
-    
+   
     
 #api router 실행, 공통화
 # async def doRouterFuction(strMethodName:str, modelItem: Any, request: Request) -> dict:
