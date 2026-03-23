@@ -203,9 +203,13 @@ class FilterPipelineCommand:
         
         #logbuffer에 업데이트하여 전달
         dictLogBuffer[DBDefine.DB_FIELID_MODE] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
-        dictLogBuffer[DBDefine.DB_FIELID_POLICY_ID] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_ID, "")
-        dictLogBuffer[DBDefine.DB_FIELID_POLICY_NAME] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_NAME, "")
-        dictLogBuffer[DBDefine.DB_FIELD_RULE_CATEGORY] = dictFinalFilterDetect.get(DBDefine.DB_FIELD_RULE_CATEGORY, "")
+        
+        #policy라는 이름의 키로, 하위에 추가한다.
+        dictLogBuffer[DBDefine.DB_FIELID_POLICY] = {
+            DBDefine.DB_FIELID_POLICY_ID : dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_ID, ""),
+            DBDefine.DB_FIELID_POLICY_NAME : dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_NAME, ""),
+            DBDefine.DB_FIELD_RULE_CATEGORY : dictFinalFilterDetect.get(DBDefine.DB_FIELD_RULE_CATEGORY, ""),
+        }
             
         #최종 메시지.
         #응답 데이터 가공 좀더 개선 필요     

@@ -209,6 +209,7 @@ class DBDefine:
     
     DB_FIELID_FILTER_DETECT = "filter_detect"
     DB_FIELID_MODE = "mode"
+    DB_FIELID_POLICY = "policy"
     DB_FIELID_POLICY_ID = "policy_id"
     DB_FIELID_POLICY_NAME = "policy_name"
     # pass
