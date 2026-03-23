@@ -403,6 +403,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
         name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
         targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+        category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
 
         # rule:str = dictDBPattern.get("rule")
         action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
@@ -439,7 +440,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 # dictCount[action] = dictCount.get(action,0) + 1
             
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
-                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets)                
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match)                
                 bPatternMatch = True
         else:
             for match in regex_pattern.finditer(text):
@@ -449,13 +450,13 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
                 
-                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, match)
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match)
                 bPatternMatch = True
 
         return bPatternMatch
     
     # 탐지된 패턴에 대한 집계, pipeline의 전달을 위해서 최종 로직은 필요해 보인다. 
-    def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, match:re.Match[str]):
+    def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, strCategory:str, match:re.Match[str]):
         
         '''        
         '''
@@ -477,6 +478,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_NAME] = strRuleName
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_CATEGORY] = strCategory
             
             dictDetectRule[strAction] = dictEachActionPolicy
             
@@ -486,6 +488,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             DBDefine.DB_FIELD_RULE_NAME : strRuleName,
             DBDefine.DB_FIELD_RULE_ACTION : strAction,
             DBDefine.DB_FIELD_RULE_TARGET : strTarget,
+            DBDefine.DB_FIELD_RULE_CATEGORY : strCategory,
             FilterDetectDefine.DETECT_REGEX_MATCH : f"{match.group()} ({match.start()},{match.end()})",            
         })
         

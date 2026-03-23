@@ -222,7 +222,8 @@ class Pipeline(PipelineBase):
             strPolicyID:str = dictDetectedRule.get("id", "")
             strPolicyName:str = dictDetectedRule.get("name", "")
             strPolicyAction:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ACTION, "")
-            strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: define 처리 필수
+            strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: 삭제 예정
+            strCategory:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_CATEGORY, "") #카테고리
             
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
@@ -385,6 +386,7 @@ class Pipeline(PipelineBase):
                 "policy_id" : strPolicyID,
                 "policy_name" : strPolicyName,
                 "target": strTarget,
+                "category": strCategory,
                 "masked_contents" : masked,
                 "evidence" : filterResultItem.detect_rule_list
             })

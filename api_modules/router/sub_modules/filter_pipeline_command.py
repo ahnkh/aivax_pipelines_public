@@ -196,10 +196,16 @@ class FilterPipelineCommand:
             #pass for
             
         # 각filter에 대한 최종 mode, sslproxy로 전달될 값과는 다르다. dictLogBuffer에서 mode값의 병합
-        strFinalMode:str = routerCustomHelper.GenerateFilterFinalMode(dictLogBuffer)
+        # strFinalMode:str = routerCustomHelper.GenerateFilterFinalMode(dictLogBuffer)
+        dictFinalFilterDetect:dict = routerCustomHelper.GenerateFinalFilterDetect(dictLogBuffer)
+        
+        # strFinalMode:str = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
         
         #logbuffer에 업데이트하여 전달
-        dictLogBuffer[DBDefine.DB_FIELID_MODE] = strFinalMode
+        dictLogBuffer[DBDefine.DB_FIELID_MODE] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
+        dictLogBuffer[DBDefine.DB_FIELID_POLICY_ID] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_ID, "")
+        dictLogBuffer[DBDefine.DB_FIELID_POLICY_NAME] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_NAME, "")
+        dictLogBuffer[DBDefine.DB_FIELD_RULE_CATEGORY] = dictFinalFilterDetect.get(DBDefine.DB_FIELD_RULE_CATEGORY, "")
             
         #최종 메시지.
         #응답 데이터 가공 좀더 개선 필요     

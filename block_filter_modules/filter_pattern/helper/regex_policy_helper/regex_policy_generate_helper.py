@@ -135,6 +135,7 @@ class RegexPolicygenerateHelper:
             id:str = dictPolicy.get("id")
             name:str = dictPolicy.get("name")
             targets:str = dictPolicy.get(DBDefine.DB_FIELD_RULE_TARGET) #targets 추가
+            category:str = dictPolicy.get(DBDefine.DB_FIELD_RULE_CATEGORY) #category 추가
 
             rule:str = dictPolicy.get("rule")
 
@@ -199,7 +200,8 @@ class RegexPolicygenerateHelper:
                 "name" : name,
                 "rule" : rule,
                 "action" : action,
-                DBDefine.DB_FIELD_RULE_TARGET : targets, #targets, 카테고리 추가
+                DBDefine.DB_FIELD_RULE_TARGET : targets, #targets 추가 (향후 제거)
+                DBDefine.DB_FIELD_RULE_CATEGORY : category, #카테고리 추가
                 "regex_pattern" : regexPattern, #룰을 컴파일 못했으면, 예외처리
                 "regex_flag" : regexFlag,
                 "regex_group" : regexGroup,

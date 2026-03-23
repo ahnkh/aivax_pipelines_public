@@ -36,7 +36,7 @@ class FilterDBPolicyRequestHelper:
       # 정책을 조회한다. 개별 조회
       dictDBPolicyRuleResult = {}
       '''
-      select id, name, targets, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status from app.policy_rules where status = 'deployed' order by action desc
+      select id, name, targets, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status, category from app.policy_rules where status = 'deployed' order by action desc
       '''
       sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_policy_rule", {}, dictDBPolicyRuleResult)
       

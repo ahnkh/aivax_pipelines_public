@@ -205,9 +205,12 @@ class DBDefine:
     DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
+    DB_FIELD_RULE_CATEGORY = "category" #26.03.23 카테고리 필드, 신규 추가
     
     DB_FIELID_FILTER_DETECT = "filter_detect"
     DB_FIELID_MODE = "mode"
+    DB_FIELID_POLICY_ID = "policy_id"
+    DB_FIELID_POLICY_NAME = "policy_name"
     # pass
     
 # 탐지 관련

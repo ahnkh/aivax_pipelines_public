@@ -258,6 +258,7 @@ class SLMFilterPattern (FilterPatternBase):
                 id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
                 name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
                 targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+                category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
 
                 #SLM의 응답에 대한 차단 결과와 별개로, 정책의 action이 존재한다.
                 #정책의 action은 UI로 전달되며, 1차는 정책의 action으로 sslproxy의 결과를 제어한다.
@@ -268,6 +269,7 @@ class SLMFilterPattern (FilterPatternBase):
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
                 
                 #TODO: 이 값이 중복으로 사용.. 분리해서 전달이 되거나, 가공되어야 한다.
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            

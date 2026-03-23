@@ -136,6 +136,8 @@ class RouterCustomHelper:
         
         TODO: block, mask 각각 처음것을 찾는쪽이 더 효율적으로 보인다. 
         HitData 개념으로, 각각 하나씩 가지고, block을 우선순위를 높게 설정하여 저장한다.
+        
+        26.03.23 사양변경, policy/id,name, category 필드도 추가
         '''
         
         #최초 수집 데이터 저장용 History buffer
@@ -242,6 +244,57 @@ class RouterCustomHelper:
             return PipelineFilterDefine.ACTION_BLANK
         
         # return ERR_OK
+        
+    #최종 filterdetect, 여기는 가공하지 말고 원본을 그대로 반환한다.
+    def GenerateFinalFilterDetect(self, dictLogOutput:dict) -> dict:
+        
+        '''
+        logoutput에서 filter_detect를 찾는다. 
+        block이면 바로 반환
+        block이 아니면, 다시 map으로 전환
+        mode, policy id,name, category 값이 들어있는 dictionary를 반환한다.
+        '''
+        
+        lstFilterDetect:list = dictLogOutput.get(DBDefine.DB_FIELID_FILTER_DETECT)
+        
+        dictModeSortedFilter = {}
+        
+        for dictFilter in lstFilterDetect:
+            
+            mode:str = dictFilter.get(DBDefine.DB_FIELID_MODE)
+            
+            if PipelineFilterDefine.ACTION_BLOCK == mode:
+                
+                return dictFilter
+            
+            #나머지는 다시 변환.
+            
+            dictModeSortedFilter[mode] = dictFilter
+            # pass
+            
+        #일단, 그냥 구현
+        dictMaskFilter:dict = dictModeSortedFilter.get(PipelineFilterDefine.ACTION_MASKING)
+        
+        if None != dictMaskFilter:
+            return dictMaskFilter
+        
+        dictAcceptFilter:dict = dictModeSortedFilter.get(PipelineFilterDefine.ACTION_ACCEPT)
+        
+        if None != dictAcceptFilter:
+            return dictAcceptFilter
+        
+        dictUndetectFilter:dict = dictModeSortedFilter.get(PipelineFilterDefine.ACTION_UNDETECTED)
+        
+        if None != dictUndetectFilter:
+            return dictUndetectFilter
+        
+        dictBlankFilter:dict = dictModeSortedFilter.get(PipelineFilterDefine.ACTION_BLANK)
+        
+        if None != dictBlankFilter:
+            return dictBlankFilter
+        
+        #TODO: 여기까지 왔으면, exception이다.
+        return {}
     
     #오류 발생시 대응 공통화    
     def GenerateHttpException(self, nErrorCode:int, strMsgCode:str, strErrorMessage:str, apiResponseHandler:ApiResponseHandlerEX = None):

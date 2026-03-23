@@ -66,7 +66,7 @@ class Pipeline(PipelineBase):
             DBDefine.DB_FIELD_RULE_NAME : "",
             DBDefine.DB_FIELD_RULE_ACTION : "",
             DBDefine.DB_FIELD_RULE_TARGET : "",
-            
+            DBDefine.DB_FIELD_RULE_CATEGORY : "", #TODO: SLM 은 target, category 가 고정이다.            
         }
         
         # 탐지, 우선은 별도 모듈 대한 private 함수로, 개발후 분리 필요. 설계 미흡으로 향후 추가 개발 필요
@@ -135,6 +135,7 @@ class Pipeline(PipelineBase):
         #TODO: 정책의 Action을 바라본다.
         strPolicyAction:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_ACTION, "")
         strPolicyTarget:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_TARGET, "")
+        strPolicyCategory:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_CATEGORY, "")
         
         # 데이터 생성
         # 정책 : slm의 action, 정책ID, 정책명, DB의 action값, 카테고리
@@ -217,6 +218,7 @@ class Pipeline(PipelineBase):
             "policy_id" : strPolicyID,
             "policy_name" : strPolicyName,
             "target": strPolicyTarget,
+            "category": strPolicyCategory,
             "slm_content" : strSLMContent
         })
 
