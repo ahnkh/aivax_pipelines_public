@@ -41,8 +41,10 @@ class EventAlarmHandler:
     def AddEventMessage(self, eventAlarmMessage:EventAlarmMessage):
         
         #TODO: 일단 추가후, MaxQueue 처리는 스레드 안에서.. 주기를 짧게 가져가야 할 필요가 있다.
-        with self.__lock:
-            self.__buffer.append(eventAlarmMessage)
+        #deque은 lock을 사용하지 않는다.
+        # with self.__lock:
+            # self.__buffer.append(eventAlarmMessage)
+        self.__buffer.append(eventAlarmMessage)
             
         return ERR_OK
     
