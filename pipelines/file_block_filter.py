@@ -54,7 +54,7 @@ class Pipeline(PipelineBase):
         attach_file:list = body.get(ApiParameterDefine.ATTACH_FILE)
         
         # metadata, session, message_id가 존재하며, 관련해서 추가정보를 수집한다.
-        metadata:dict = body.get(ApiParameterDefine.META_DATA)
+        # metadata:dict = body.get(ApiParameterDefine.META_DATA)
         
         # message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
         # session_id:str = metadata.get(ApiParameterDefine.SESSION_ID)
