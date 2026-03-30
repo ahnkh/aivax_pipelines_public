@@ -203,6 +203,7 @@ class FilterPipelineCommand:
         
         #logbuffer에 업데이트하여 전달
         dictLogBuffer[DBDefine.DB_FIELID_MODE] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
+        dictLogBuffer[DBDefine.DB_FIELID_MASKED_CONTENTS] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MASKED_CONTENTS, "")
         
         #policy라는 이름의 키로, 하위에 추가한다.
         dictLogBuffer[DBDefine.DB_FIELID_POLICY] = {

@@ -212,6 +212,7 @@ class DBDefine:
     DB_FIELID_POLICY = "policy"
     DB_FIELID_POLICY_ID = "policy_id"
     DB_FIELID_POLICY_NAME = "policy_name"
+    DB_FIELID_MASKED_CONTENTS = "masked_contents"
     # pass
     
 # 탐지 관련
