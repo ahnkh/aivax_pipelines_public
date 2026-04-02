@@ -202,8 +202,11 @@ class FilterPipelineCommand:
         # strFinalMode:str = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
         
         #logbuffer에 업데이트하여 전달
+        
         dictLogBuffer[DBDefine.DB_FIELID_MODE] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MODE, "")
-        dictLogBuffer[DBDefine.DB_FIELID_MASKED_CONTENTS] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MASKED_CONTENTS, "")
+        
+        #2026.04.01 - masked contents가 없을때, 기본값 none으로 변경.
+        dictLogBuffer[DBDefine.DB_FIELID_MASKED_CONTENTS] = dictFinalFilterDetect.get(DBDefine.DB_FIELID_MASKED_CONTENTS, None)
         
         #policy라는 이름의 키로, 하위에 추가한다.
         dictLogBuffer[DBDefine.DB_FIELID_POLICY] = {
@@ -216,7 +219,7 @@ class FilterPipelineCommand:
         #응답 데이터 가공 좀더 개선 필요     
         #message 형태 데이터, 데몬과 협의 대상, 아직 정리가 되지는 않았다.
         #TODO: 우선 생성한다.
-        dictFinalOutMessage = {            
+        dictFinalOutMessage = {
             # "action" : 0, #allow = 0, block = 1, masking = 2
             # "masked_contents" : "",
             # "block_message" : "",    
