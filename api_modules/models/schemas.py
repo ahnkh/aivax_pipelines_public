@@ -185,7 +185,9 @@ class OutputFilterItem(BaseModel):
     client_host : Optional[str] = Field(default="", description="사용자 host, ip")
     session_id : Optional[str] = Field(default="", description="session id")   
     
-    message_id:str = Field(default="", description="message id")    
+    message_id:str = Field(default="", description="message id") 
+    
+    debug: Optional[bool] = Field(default=False, description="debug mode")   
     # pass    
     
 class AddPipelineForm(BaseModel):

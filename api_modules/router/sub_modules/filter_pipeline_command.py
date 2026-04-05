@@ -78,7 +78,7 @@ class FilterPipelineCommand:
             ApiParameterDefine.CLIENT_HOST : modelItem.client_host,   
             
             #프롬프트, user에도 담아서 전달한다.  
-            ApiParameterDefine.MESSAGE_PROMPT : prompt    
+            ApiParameterDefine.MESSAGE_PROMPT : prompt
         }
         
         #customFilterConfigItem 를 전달하도록 사양 변경
@@ -242,6 +242,10 @@ class FilterPipelineCommand:
         #개별 pipeline 결과, 취합된 결과의 저장 => 성능 개선, 이건 제외한다. 향후 debug 모드 추가
         if True == modelItem.debug:
             apiResponseHandler.attachResponse(f"filter_result", dictFilterResult)
+            
+            #디버그 모드, 로그 메시지 저장
+            apiResponseHandler.attachResponse(f"log_evidence", dictLogBuffer)
+            #pass
         
         #TODO: 응답 데이터의 저장, filter 결과의 분석 vs pipeline 호출
         
