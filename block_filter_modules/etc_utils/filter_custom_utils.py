@@ -40,7 +40,7 @@ class FilterCustomUtils:
         return (user_id, user_email, ai_service_type, uuid, client_host)
     
     
-    # 사용자 메시지 처리, 우선 하드코딩
+    # 사용자 메시지 처리, 우선 하드코딩, 단순 패턴일때는 category 1개로 표기
     def CustomBlockMessages(self, strPolicyCategory) -> str:
         
         '''
