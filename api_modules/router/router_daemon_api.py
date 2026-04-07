@@ -42,8 +42,6 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
     **encoding** : 프롬프트 인코딩 여부 (기본값 비활성화)    
     - _true_ : <u>encoding (기본값 미사용, 평문 처리)</u>
     
-    _**etc_flag** : 예외된 플래그 옵션 (차기 버전에서 추가 계획)_
-    
     **user_role** :
     - id : 사용자 ID
     - email : email
@@ -59,9 +57,10 @@ async def filter_prompt_from_engine(modelItem: VariantFilterForm, request: Reque
         -H 'Content-Type: application/json'
         -d '{
         "filter_list": [
-            "secret_filter",
             "input_filter",
-            "file_block_filter"
+            "secret_filter",            
+            "file_block_filter",
+            "slm_filter"
         ],
         "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
         "user_id": "ghahn",
