@@ -112,7 +112,7 @@
         "use" : 0
     },
 
-    "slm_pipelie_filter_module":
+    "slm_pipeline_filter_module":
     {
         "use_skip" : 1,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",

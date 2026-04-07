@@ -159,17 +159,17 @@ class SLMFilterPattern (FilterPatternBase):
     def __initializeLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFilterLocalConfig:dict):
         
         '''
-        "slm_pipelie_filter_module":
+        "slm_pipeline_filter_module":
         {
             "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
             "request_timeout" : 60
         }
         '''
         
-        slm_pipelie_filter_module:dict = dictJsonLocalConfigRoot.get("slm_pipelie_filter_module")
+        slm_pipeline_filter_module:dict = dictJsonLocalConfigRoot.get("slm_pipeline_filter_module")
         
         # 이값, 그대로 활용한다.
-        dictFilterLocalConfig.update(slm_pipelie_filter_module)
+        dictFilterLocalConfig.update(slm_pipeline_filter_module)
         
         return ERR_OK
     
