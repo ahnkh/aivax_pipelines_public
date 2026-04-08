@@ -219,6 +219,7 @@ class Pipeline(PipelineBase):
             "user_email" : user_email,            
             "client_host" : client_host,        
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+            "respose_date" : datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         
         dictLogBuffer.update(dictOutputLog)

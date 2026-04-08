@@ -182,7 +182,10 @@ class Pipeline(PipelineBase):
             #25.12.02 ai 서비스 유형 추가
             "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
             # "query":   {"text": query_text}, #TODO: text보다 query로 저장 여부, opensearch에 문제가 되는지 확인 필요
-            "prompt" : query_text
+            "prompt" : query_text,
+            
+            # timestamp와 별도로, 요청시간을 추가한다.
+            "request_date" : datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         
         # TODO: 사양 변경, 로그 병합 기능으로 구현한다.
