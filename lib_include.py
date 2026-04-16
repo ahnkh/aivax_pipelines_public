@@ -17,9 +17,6 @@ from datetime import timezone
 
 from typing import List, Optional, Dict, Union, Generator, Iterator, Tuple, Any
 from urllib.parse import urlparse
-
-#TODO: 개별 모듈과 공통 모듈 분리.
-
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 
@@ -74,21 +71,15 @@ from common_modules.instance_factory.global_instance_factory import GlobalInstan
 from common_modules.db_modules.sql_client_interface import SQLClientInterface
 from common_modules.db_modules.sql_map_modules.sql_map_interface import SQLMapInterface
 
-
-# define, const
-
 ERR_OK = 1
 ERR_FAIL = -1 
 
-#실행 파라미터 define
 class APP_PARMETER_DEFINE:
     WEB_HOST = "host"
     WEB_PORT = "port"
     CONFIG = "config"
-    TEST = "test"
-    # pass
+    TEST = "test"    
 
-#log index define => index와 log writer id를 동일하게 관리
 class LOG_INDEX_DEFINE:
     KEY_LLM_FILTER = "llm_filter"
     KEY_INPUT_FILTER = "input_filter"
@@ -97,11 +88,9 @@ class LOG_INDEX_DEFINE:
     
     KEY_AIVAX_LOG = "aivax_log"
     
-    TYPE_LOG_INPUT = 0 #log 유형, 입력
-    TYPE_LOG_OUTPUT = 1 #log 유형, 출력    
-    # pass
+    TYPE_LOG_INPUT = 0
+    TYPE_LOG_OUTPUT = 1
 
-#local 설정 config define, 모듈이 아직 크지 않아서, local config에 정의한다.
 class LOCAL_CONFIG_DEFINE:
     KEY_DB_SERVER_DEFAULT_IP = "default_server_ip"
     KEY_DB_SERVER_DEFAULT_PORT = "default_server_port"
@@ -109,23 +98,18 @@ class LOCAL_CONFIG_DEFINE:
     
     KEY_DB_POLL_CYCLE_SECOND = "db_poll_cycle_second"
     
-    #상수 기본값도 같이 정의
     VAL_DB_SERVER_DEFAULT_IP = "127.0.0.1"
     VAL_DB_SERVER_DEFAULT_PORT = "3000"
     VAL_DB_SERVER_DEFAULT_SCHEME = "http"
     
     VAL_DB_POLL_CYCLE_SECOND = 60
-    # pass
 
-# ipc 통신 define
 class IPC_ROUTER_DEFINE:
     
     REQUEST_ROUTER_POINT = "router.point"
     
-    ROUTER_PIPELINE_FILTER = "multiple_filter" #기존 multiple_filter, 그대로.
-    # pass
+    ROUTER_PIPELINE_FILTER = "multiple_filter"
 
-# AI 서비스, ID to string define Map
 class AI_SERVICE_DEFINE:
     
     SERVICE_UNDEFINE = 0
@@ -143,7 +127,6 @@ class AI_SERVICE_DEFINE:
     # NAME_SERVICE_UNDEFINE = "openapi.chatgpt" #미지정이면, 일단 GPT로.
     # NAME_SERVICE_CHAT_GPT = "openapi.chatgpt"
     
-    #TODO: 이름은 mariadb에 join되어 있으며 ai_services 테이블을 참조
     NAME_SERVICE_UNDEFINE = "unknown" 
     NAME_SERVICE_CHAT_GPT = "GPT"
     NAME_SERVICE_GEMINI = "Gemini"
@@ -154,7 +137,6 @@ class AI_SERVICE_DEFINE:
     NAME_CODE_ASSIST_COPILOT = "openapi.copilot"
     NAME_CODE_ASSIST_CURSOR = "cursor.ai"
     NAME_CODE_ASSIST_CLAUDE = "claude.code"
-    # pass
     
 AI_SERVICE_NAME_MAP = {
     
@@ -166,24 +148,19 @@ AI_SERVICE_NAME_MAP = {
     AI_SERVICE_DEFINE.SERVICE_PERPLEXITY : AI_SERVICE_DEFINE.NAME_SERVICE_PERPLEXITY,   
 }
 
-# filter 관련 define
 class FilterDefine:
     
-    #ssl proxy bypass, bitbask
     SSL_PROXY_BYPASS_ALLOW = 0b0000
     SSL_PROXY_BYPASS_BLOCK = 0b0001
     SSL_PROXY_BYPASS_MASKING = 0b0010
     
-    # 필드명 - ssl proxy bypass 설정
     FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK = "ssl_proxy_bypass_bitmask"
     FILTER_REGEX_FULL_SCAN_FLAG = "regex_full_scan_flag"
     FILTER_NEXT_DETECT_AFTER_BLOCK = "next_detect_after_block"    
     pass
 
-# DB 관련 Define
 class DBDefine:
     
-    # FILTER_KEY_DETECT_SECRET = "filter-detect-secret"
     FILTER_KEY_REGEX = "filter-regex"
     FILTER_KEY_BLOCK_FILE = "filter-file-block"
     FILTER_KEY_SLM = "filter-slm"
@@ -193,11 +170,9 @@ class DBDefine:
     POLICY_FILTER_SCOPE_GROUP = "group"
     POLICY_FILTER_SCOPE_DEFAULT = "default"
     
-    #필드명, subject_id
     DB_FIELD_SUBJECT_ID = "subject_id"
     DB_FIELD_SUBJECT_VAL = "subject_val"    
     
-    # regex 관련
     DB_FIELD_RULE_ID = "id"
     DB_FIELD_RULE_REGEX_PATTERN = "regex_pattern"
     DB_FIELD_RULE_REGEX_FLAG = "regex_flag"
@@ -205,7 +180,7 @@ class DBDefine:
     DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
-    DB_FIELD_RULE_CATEGORY = "category" #26.03.23 카테고리 필드, 신규 추가
+    DB_FIELD_RULE_CATEGORY = "category"
     
     DB_FIELID_FILTER_DETECT = "filter_detect"
     DB_FIELID_MODE = "mode"
@@ -213,18 +188,15 @@ class DBDefine:
     DB_FIELID_POLICY_ID = "policy_id"
     DB_FIELID_POLICY_NAME = "policy_name"
     DB_FIELID_MASKED_CONTENTS = "masked_contents"
-    # pass
+
     
-# 탐지 관련
 class FilterDetectDefine:
     
-    DETECT_REGEX_MATCH = "match" #regex 패턴, match된 결과 (다른 곳에서도 필요)    
-    # pass
+    DETECT_REGEX_MATCH = "match"
 
-# file 분석 define
+
 class FileDefine:
     
-    #MIME Type
     MIME_DOC = "application/msword"
     MIME_DOCX = "application/octet-stream"
     MIME_DOCX_V2 = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -236,7 +208,6 @@ class FileDefine:
     MIME_XLS = "application/vnd.ms-excel"
     MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     
-    #File 확장자
     FILE_EXT = {
         MIME_DOC : "doc",
         MIME_DOCX : "docx",
@@ -252,33 +223,28 @@ class FileDefine:
     
     FILE_EXT_UNKNOWN = "unknown"
     
-    # file 차단 관련 (별도 생성)
-    DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext" #구분자, 여러개
-    DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size" #최대 크기
+    DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext"
+    DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size"
     
-    # 차단 사유, 상수화 향후 UI로 메시지 관리 기능 추가
-    BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension" #허용되지 않는 파일 유형
-    BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit" # 파일 사이즈 허용
-    BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header" # watermark, header 탐지
-    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text" # watermark, ocr text 탐지
-    # pass
+    BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
+    BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit"
+    BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header"
+    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"
+    
 
-# 웹서버, API 관련
 class APIServerDefine:
     SESSION_COOKIE = "session_id"
     pass    
 
-#TODO: TRACE LOG 통일, 정리. => 외부 경로로 지정할수 있음. => tracelog 경로 통일
 TRACE_LOG_PATH = "./trace-log"
 TRACE_PREFIX = "pipe_line"  
 
-#load_env_file()에서 다시 로드한다. 우선 기본값 개념으로 할당.
 API_KEY = os.getenv("PIPELINES_API_KEY", "0p3n-w3bu!")
 PIPELINES_DIR = os.getenv("PIPELINES_DIR", "./pipelines")
 
 CONFIG_FILE_PATH = "./local_resource/config.json"
 
-CONFIG_OPT_ENABLE = 1 #설정config json True/False 대응, 1: True, 기타 : False
+CONFIG_OPT_ENABLE = 1 
 CONFIG_OPT_DISABLE = 0
 
 from mainapp.module_function import sqlprintf

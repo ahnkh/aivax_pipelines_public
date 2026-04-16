@@ -1,10 +1,7 @@
+import ipaddress
 from typing import Optional, Dict, Any, List, Union
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-# import json
-# import logging
-# import base64
-# import ssl
 
 from lib_include import *
 
@@ -12,10 +9,8 @@ from type_hint import *
 
 from block_filter_modules.etc_utils.filter_custom_utils import FilterCustomUtils
 
-# from datetime import datetime
 
 '''
-opensearch, 저장 pipeline
 '''
 
 class Pipeline(PipelineBase):
@@ -34,17 +29,13 @@ class Pipeline(PipelineBase):
             priority: int = 0
             enabled: bool = True
 
-            # 필드 기본값
             default_channel: str = "web"
             default_user_role: Optional[str] = None
 
-        # self.Valves = Valves
         self.valves = Valves()
         
-        # 공용 helper
         self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
 
-    # 프레임워크 훅
     async def on_startup(self):
         pass
 
@@ -54,31 +45,11 @@ class Pipeline(PipelineBase):
     async def on_valves_updated(self):
         pass
 
-    # ----------------------------
-    # 메인: inlet
-    # ----------------------------        
     async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
-        '''
-        TODO: 2단계 모델이 비활성화 되어, 입력 body의 전달도 불필요 하여 주석처리
-        '''
-        
-        # 불필요 기능, 제거
-        # if not self.valves.enabled:
-        #     return body
-        
-        # if dictOuputResponse is None:
-        #     dictOuputResponse = {} 
         
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
 
-        # meta: Dict[str, Any] = body.get("metadata") or {}
         metadata:dict = body.get(ApiParameterDefine.META_DATA)
-        
-        # openwebui가 아니면 불필요 기능, 제거
-        # stage = meta.get("stage") or meta.get("hook") or body.get("stage")
-        # if stage and str(stage).lower() != "inlet":
-        #     # return body
-        #     raise Exception(f"invalid stage, id = {self.id}, stage = {stage}")
 
         msgs: List[Dict[str, Any]] = body.get(ApiParameterDefine.MESSAGES, [])
         query_text = None
@@ -119,6 +90,11 @@ class Pipeline(PipelineBase):
         ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
         uuid:str = ""
         client_host:str = ""
+        
+        nClientHostCIDR:int = 0
+        
+        if 0 < len(client_host):        
+            nClientHostCIDR = int(ipaddress.ip_address(client_host.strip()))
         
         #__user__ 거슬린다.
         # dictUserInfo:dict = __user__
@@ -175,6 +151,7 @@ class Pipeline(PipelineBase):
             # "user":    {"id": user_id, "role": user_role, "email": user_email},
             "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
             "client_host" : client_host,
+            "client_host_cidr" : nClientHostCIDR,
             # "src":     {"ip": client_host}, 
             # "src":     {"ip": src_ip},
             # "channel": channel, # TODO: 제거 필요

@@ -114,9 +114,10 @@
 
     "slm_pipeline_filter_module":
     {
-        "use_skip" : 1,
+        "use_skip" : 0,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
-        "request_timeout" : 60
+        "request_timeout" : 60,
+        "model_version" : 2
     },
 
     "file_block_filter_module":
