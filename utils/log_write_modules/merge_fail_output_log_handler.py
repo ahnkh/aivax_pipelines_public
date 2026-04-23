@@ -75,9 +75,15 @@ class MergeFailOutputLogHandler:
         
         
         # 모두 loop를 돌았는데, email, 서비스 유형이 없으면, 다음 로직으로 반환
-        # 제일 마지막, 가져올 데이터가 없으면, 처음 데이터를 전달한다.
-        dictPrompt = next(iter(dictPromptLogMap.values()), {})
+        # 제일 마지막, 가져올 데이터가 없으면, 처음 데이터를 전달한다. => 비어있는 프롬프트로 저장한다. (향후)
+        # dictPrompt = next(iter(dictPromptLogMap.values()), {})
         
-        return dictPrompt
+        # return {
+        #     "prompt" : None,
+        #     "client_host_cidr" : 0,
+        #     "request_date" : datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        # }
+        
+        return None
     
     

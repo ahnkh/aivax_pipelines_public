@@ -82,11 +82,14 @@ class LogMergeQueue:
             
             dictPromptLog.update(dictLogData)
             
-            
         else:
             
             LOG().error(f"fail merge prompt log, call merge fail handler")
             dictPromptLog = self.__mergeFailOutputLogHandler.HandleMergeFailLog(strLogMessageKey, dictLogData, self.__dictPromptLogMap)
+                        
+            if None == dictPromptLog:
+                LOG().error(f"fail update prompt, messageid = {strLogMessageKey}")
+                return ERR_FAIL
             
             dictPromptLog.update(dictLogData)
             

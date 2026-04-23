@@ -84,6 +84,8 @@ class Pipeline(PipelineBase):
         # meta: Dict[str, Any] = body.get("metadata") or {}
         metadata: Dict[str, Any] = body.get(ApiParameterDefine.META_DATA, {})
         
+        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        
         #TODO: 이값, 정리 필요
         # message_id_req = metadata.get(ApiParameterDefine.MESSAGE_ID) or safe_get(body, "request", "id", default=None)
         # response_id = metadata.get("response_id") or safe_get(body, "response", "id", default=None)
@@ -202,6 +204,7 @@ class Pipeline(PipelineBase):
         
         dictOutputLog = {
             "@timestamp": ts_isoz(),
+            "message_id" : message_id,
             "output_text": resp_text_to_store,
             "text_truncated_bytes": original_size_bytes,
             # "hash_sha256": resp_hash,
