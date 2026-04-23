@@ -187,11 +187,11 @@ class Pipeline(PipelineBase):
                 continue
             
             content = msg.get("content")
-            if not isinstance(content, str) or not content.strip():
-                # LOG().error(f"invalid content, {content}")
+            # if not isinstance(content, str) or not content.strip():
+            #     # LOG().error(f"invalid content, {content}")
                 
-                raise Exception(f"invalid content format, id = {self.id}, content = {content}")                
-                # continue
+            #     raise Exception(f"invalid content format, id = {self.id}, content = {content}")                
+            #     # continue
                 
             #TODO: content, 재사용하면 안된다.
             strLocalContents:str = copy.deepcopy(content)

@@ -63,9 +63,9 @@ class Pipeline(PipelineBase):
                     break
 
         # user 메시지가 없으면 저장 스킵 (assistant/tool/system만 있는 경우)
-        if last_role != "user" or not query_text:
-            raise Exception(f"invalid role, not exist user role, id = {self.id}, query_text = {query_text}")
-            # return body
+        # if last_role != "user" or not query_text:
+        #     raise Exception(f"invalid role, not exist user role, id = {self.id}, query_text = {query_text}")
+        #     # return body
 
         # 메타에서 id, 세션, ip, 채널 등 추출(없으면 None/기본값)
         message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
