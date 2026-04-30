@@ -323,14 +323,11 @@ class FilterDBPolicyRequestHelper:
           
         #문자열로 변환
         strBase64Decode = byteBase64Decode.decode("utf-8")
-          
-        #어차피 여기서만 조회, 그냥 업데이트
+        
+        #여기서 앞뒤 공백 제거
+        strBase64Decode = strBase64Decode.strip()
+                  
         dictDBFilterRule["rule"] = strBase64Decode
-          
-        #그 연산이 그연산..
-        # dictNewPattern = {
-        #   "id" : id
-        # }
         
       except Exception as err:
         
@@ -339,7 +336,6 @@ class FilterDBPolicyRequestHelper:
         
         #TODO: 연산이 실패한 룰은, 무시한다.
         return ERR_FAIL
-      
     
       return ERR_OK
       

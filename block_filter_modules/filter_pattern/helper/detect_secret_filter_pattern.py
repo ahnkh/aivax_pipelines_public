@@ -392,7 +392,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             if False == bRegexFullScanFlag and True == bDetectPattern:
                 return True
                 
-        return ERR_OK
+        return False
 
     #개별 dictionary 별 정책 조회
     def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
