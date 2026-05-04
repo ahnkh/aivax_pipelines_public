@@ -194,11 +194,10 @@ class ApiRouterImplCommand:
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
-        # OUTPUT 프롬프트
-        # LOG().info(f"run api output command, output = {modelItem.llm_output}")
+        # OUTPUT 프롬프트        
+        # LOG().info(f"run api output command, user = {modelItem.user_id}, email = {modelItem.email}, ai_service = {modelItem.ai_service}, client_host = {modelItem.client_host}, message_id = {modelItem.message_id}, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
-    
     
     ################################################### private
     
@@ -222,6 +221,7 @@ class ApiRouterImplCommand:
                 email = requestModelItem.email,
                 ai_service = requestModelItem.ai_service,
                 session_id = requestModelItem.session_id,
+                client_host = requestModelItem.client_host,
                 message_id = requestModelItem.message_id,            
             )
             

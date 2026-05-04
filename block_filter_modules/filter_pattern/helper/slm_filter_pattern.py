@@ -83,7 +83,7 @@ class SLMFilterPattern (FilterPatternBase):
             return ERR_OK
         
         # 요청 패턴, 일단 개발, 향후 개선 (이정도로는 부족)
-        post = {
+        post:dict = {
             "model" : "cipherguard01",
             "messages" : [
                 {
@@ -99,10 +99,11 @@ class SLMFilterPattern (FilterPatternBase):
             "Content-Type" : "application/json"
         }
         
-        resp = requests.post(strURL, json=post, timeout=request_timeout, headers=header)
-        resp.raise_for_status()
+        dictSLMHttpResponse:dict = self.__requestToSLM(strURL, post, request_timeout, header)
         
-        dictSLMHttpResponse:dict = resp.json()
+        if None == dictSLMHttpResponse:
+            LOG().info("fail request to slm, skip slm filter")
+            return ERR_FAIL
         
         #TODO: 정책의 개입, 업데이트
         #TODO: 정책, 차단이 되면, 처음 탐지되는 정책으로 업데이트 한다.
@@ -304,6 +305,39 @@ class SLMFilterPattern (FilterPatternBase):
             #pass
         
         return ERR_OK
+    
+    # SLM, API 요청
+    def __requestToSLM(self, strURL:str, dictJsonTypePost:dict, nRequestTimeOut:int, dictHeader:dict) -> dict:
+        
+        '''
+        '''
+        
+        try:
+            
+            resp = requests.post(strURL, json=dictJsonTypePost, timeout=nRequestTimeOut, headers=dictHeader)
+        
+            # 4xx, 5xx 일때 오류 발생
+            resp.raise_for_status()
+            
+            dictSLMHttpResponse:dict = resp.json()
+            
+            return dictSLMHttpResponse
+            
+        except requests.exceptions.Timeout:
+            LOG().error("fail request to slm, time out exception")
+            
+        except requests.exceptions.ConnectionError:            
+            LOG().error("fail request to slm, connect error")
+            
+        except requests.exceptions.HTTPError as e:
+            LOG().error(f"fail request to slm, http error {e}")
+            
+        # except requests.exceptions.RequestException as e:
+        #     print(f"기타 오류: {e}")
+        except Exception as e:            
+            LOG().error(traceback.format_exc())
+                        
+        return None
         
         
         
