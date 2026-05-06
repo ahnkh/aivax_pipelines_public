@@ -148,7 +148,7 @@ class SSLProxyPolicySignalHandler:
             
             strExportStatus:str = SSLProxyPolicySignalHandler.EXPORT_PASS
             
-            if SSLProxyPolicySignalHandler.STATUS_BLOCK:
+            if SSLProxyPolicySignalHandler.STATUS_BLOCK == status:
                 strExportStatus = SSLProxyPolicySignalHandler.EXPORT_BLOCK
             
             dictNewPolicy[name] = strExportStatus
