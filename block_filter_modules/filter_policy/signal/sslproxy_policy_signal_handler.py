@@ -17,6 +17,14 @@ class SSLProxyPolicySignalHandler:
     
     EXPORT_SUMMARY = "summary"
     EXPORT_AI_SERVICE = "ai_service"
+    EXPORT_REDIRECT_URL = "redirect_url"
+    
+    EXPORT_BLOCK = "block_redirect"
+    EXPORT_PASS = "pass"
+    
+    STATUS_BLOCK = 1
+    STATUS_PASS = 0
+    
     
     def __init__(self):
         
@@ -26,12 +34,24 @@ class SSLProxyPolicySignalHandler:
         # 신규 정책과 비교하여, 달라질때만 전달하는 구조
         self.__dictLastPolicy:dict = {
             
-            # 수집 데이터 원본
+            # 수집 데이터 원본 => 이건 유지
             SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE: [],
+            # NAME, 소문자를 키로, status값을 치환하여 저장
             
+            #구분을 위한 필드, 유지
             SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
-            "desc" : "unknown,gpt,gemini,claude,grok,perplexity"
+            # "desc" : "unknown,gpt,gemini,claude,grok,perplexity"
         }
+        
+        # TODO: 사양 변경
+        '''
+        {
+            "gpt": "block_redirect",
+            "gemini": "pass",
+            "claude": "pass",
+            "redirect_url" : ""
+        }
+        '''
         # pass
     
     # 모듈 초기화
@@ -61,6 +81,8 @@ class SSLProxyPolicySignalHandler:
         '''        
         # LOG().info("notify policy signal")
         
+        strRedirectUrl:str = self.__localSignalPolicy.get("redirect_url")
+        
         # signal을 받으면, 새로운 최근 데이터를 가져온다.
         dictNewPolicy:dict = {
             
@@ -68,7 +90,7 @@ class SSLProxyPolicySignalHandler:
             SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE : [],
             
             SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
-            "desc" : ""
+            SSLProxyPolicySignalHandler.EXPORT_REDIRECT_URL : strRedirectUrl #기본값
         }
 
         #DB 조회, 값 업데이트        
@@ -111,26 +133,38 @@ class SSLProxyPolicySignalHandler:
         
         # python의 join을 사용한다.
         lstStatus:list = []
-        lstDesc:list = []
+        # lstDesc:list = []
         
         for dictAIServiceInfo in lstAIServiceInfo:
             
             # id:int = dictAIServiceInfo.get("id")
-            name:int = dictAIServiceInfo.get("name")
-            status:int = dictAIServiceInfo.get("status")
+            name:int = str(dictAIServiceInfo.get("name", "")).lower()
+            status:int = int(dictAIServiceInfo.get("status", SSLProxyPolicySignalHandler.STATUS_PASS))
+            
+            # 이름이 공백이어서는 안된다.
+            if 0 == len(name):
+                LOG().error(f"invalid value, name is empty, skip")
+                continue
+            
+            strExportStatus:str = SSLProxyPolicySignalHandler.EXPORT_PASS
+            
+            if SSLProxyPolicySignalHandler.STATUS_BLOCK:
+                strExportStatus = SSLProxyPolicySignalHandler.EXPORT_BLOCK
+            
+            dictNewPolicy[name] = strExportStatus
             
             lstStatus.append(status)
-            lstDesc.append(name)
+            # lstDesc.append(name)
             # pass
             
         strStatus:str = ",".join(map(str, lstStatus))
-        strDesc:str = ",".join(map(str, lstDesc))
+        # strDesc:str = ",".join(map(str, lstDesc))
         
         #수집된 원본
         dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE] = lstAIServiceInfo
         
         dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_SUMMARY] = strStatus
-        dictNewPolicy["desc"] = strDesc
+        # dictNewPolicy["desc"] = strDesc
       
         return ERR_OK
     

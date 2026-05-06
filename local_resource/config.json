@@ -201,6 +201,7 @@
         "export_dir" : "/home1/aivax/data_resource/policy_signal",
         "export_file" : "aivax_policy.json",
 
-        "sslproxy_process" : "sslproxy"
+        "sslproxy_process" : "sslproxy",
+        "redirect_url" : "https://www.naver.com"
     }
 }
