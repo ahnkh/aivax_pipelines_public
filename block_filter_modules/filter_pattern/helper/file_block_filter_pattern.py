@@ -162,7 +162,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             },
             
             "file_detail":[
-                {"file":"test.docx", "size":10, "hash":"", "action":""}\                
+                {"file":"test.docx", "size":10, "hash":"", "action":""}
             ]
         }
         '''

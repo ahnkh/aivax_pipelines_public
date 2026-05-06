@@ -32,6 +32,9 @@ from utils.user_account_modules.user_account_data_handler import UserAccountData
 #ipc 통신, 서버 추가
 from ipc_modules.ipc_pipeline_server import IPCPipelineServer
 
+#policy signal
+from block_filter_modules.filter_policy.signal.sslproxy_policy_signal_handler import SSLProxyPolicySignalHandler
+
 from common_modules.global_common_module import GlobalCommonModule
 
 '''
@@ -75,6 +78,9 @@ class PipeLineMainApp:
         
         # event alarm 
         self.__eventAlarmHandler:EventAlarmHandler = None
+        
+        # policy signal
+        self.__sslProxyPolicySignalHandler:SSLProxyPolicySignalHandler = None
         pass
     
     
@@ -138,6 +144,10 @@ class PipeLineMainApp:
         mainApp:PipeLineMainApp = self
         
         self.__initializeIPCServer(self.__ipcPipelineServer, mainApp, dictJsonLocalConfigRoot)
+        
+        # policy signal handler
+        self.__sslProxyPolicySignalHandler:SSLProxyPolicySignalHandler = SSLProxyPolicySignalHandler()
+        self.__sslProxyPolicySignalHandler.Initialize(dictJsonLocalConfigRoot)
         
         return ERR_OK
     
@@ -237,6 +247,8 @@ class PipeLineMainApp:
         
         self.__filterPolicyManager.NotifyPolicySignal(self.__filterPatternManager, dictOutputResponse)
         
+        self.__sslProxyPolicySignalHandler.NotifyPolicySignal()
+        
         return ERR_OK
         
         
@@ -304,9 +316,10 @@ class PipeLineMainApp:
         
         #TODO: 초기 설정값, config 필요
         
-        user_account_data_module:dict = dictJsonLocalConfigRoot.get("user_account_data_module")
+        # user_account_data_module:dict = dictJsonLocalConfigRoot.get("user_account_data_module")
         
-        userAccountDataHandler.Initialize(user_account_data_module)
+        # userAccountDataHandler.Initialize(user_account_data_module)
+        userAccountDataHandler.Initialize(dictJsonLocalConfigRoot)
         
         return ERR_OK
     

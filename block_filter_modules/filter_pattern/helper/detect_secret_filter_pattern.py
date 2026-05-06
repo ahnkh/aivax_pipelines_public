@@ -46,6 +46,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         #TODO: scope 단위의 DB 패턴으로 관리
         self.__dictDBScopeRegexPattern:dict = None
+        
+        # 사용자 정보  (부서정보 탐지를 위해서 필요)
+        self.__dictUserIDMap:dict = None
 
         #TODO: 이건 어떤 기능인지 확인후 이름 변경 우선 이기능은 유지
         self.re_b64_shape = None
@@ -70,6 +73,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
             DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
             DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
         }
+        
+        # 사용자 ID Map.
+        self.__dictUserIDMap:dict = {}
         
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
         
@@ -191,6 +197,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
         else:
             #TODO: 메시지 관리 필요
             dictOutputResponse[strFilterKey] = f"filter pattern policy is equal (no changed)" 
+            
+            
+        #TODO: 정책과 별도로, 사용자 정보의 수집 필요
+        filterPolicyGroupData.GetAllUserIDMap(self.__dictUserIDMap)
 
         return ERR_OK
 
@@ -281,41 +291,44 @@ class DetectSecretFilterPattern (FilterPatternBase):
         '''
         
         listUserPattern:list = dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_USER)
-        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, filterPatternItem, filterResultItem)
+        bDetectUser:bool = self.__detectUserBasePattern(listUserPattern, filterPatternItem, filterResultItem, FilterDetectDefine.SCOPE_USER)
         
         if True == bDetectUser:
             return ERR_OK
         
-        listServicePattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_SERVICE)
-        
-        bDetectService:bool = self.__detectServiceBaseRegexPattern(listServicePattern, filterPatternItem, filterResultItem)
+        listServicePattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_SERVICE)        
+        bDetectService:bool = self.__detectServiceBaseRegexPattern(listServicePattern, filterPatternItem, filterResultItem, FilterDetectDefine.SCOPE_SERVICE)
         
         if True == bDetectService:
             return ERR_OK
         
-        # #TODO: 그룹, 무시
-        # listGroupPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_GROUP)
+        # #TODO: 그룹 기능 개발 (26.05.06)
+        listGroupPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_GROUP)        
+        bDetectGroup:bool = self.__detectGroupBaseRegexPattern(listGroupPattern, filterPatternItem, filterResultItem, FilterDetectDefine.SCOPE_GROUP)
+        
+        if True == bDetectGroup:
+            return ERR_OK
         
         #default: 동일 패턴. 마지막은 동일 패턴, 그대로 전달
         listDefaultPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
         
-        self.__detectDefaultRegexPattern(listDefaultPattern, filterPatternItem, filterResultItem)
+        self.__detectDefaultRegexPattern(listDefaultPattern, filterPatternItem, filterResultItem, FilterDetectDefine.SCOPE_DEFAULT)
         
         return ERR_OK
     
     # 사용자 패턴, 사용자로 등록된 정책을 찾아서, 해당 사용자와 일치하는 정책만 탐지를 수행한다. 정책 구조는 동일
     # def __detectUserBasePattern(self, listUserPattern:list, strPromptText:str, strUserID:str, strUUID:str, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
-    def __detectUserBasePattern(self, listUserPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+    def __detectUserBasePattern(self, listUserPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str) -> bool:
         
         '''
         #마지막에 bool값을 전달, next를 수행할지를 결정한다.
         '''
         
         strPromptText:str = filterPatternItem.contents
-        strUserID:str = filterPatternItem.user_id
+        # strUserID:str = filterPatternItem.user_id
         strUUID:str = filterPatternItem.uuid
         
-        bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
+        # bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
         
         for dictDBPattern in listUserPattern:
             
@@ -330,19 +343,20 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 #LOG, 향후 제거
                 # strUserUUID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
                 # LOG().info(f"detect user base regex pattern, id = {strDBUserUUID}, name = {strUserID}")        
-                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
+                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem, strScope)
                 
                 # 여기는 detect_secret과 같은 구조 (향후 사양 확인후 개선 필요)
                 # fullscan 과 최초 탐지후 반환, 옵션화.
                 
-                if False == bRegexFullScanFlag and True == bDetectPattern:
+                # if False == bRegexFullScanFlag and True == bDetectPattern:
+                if True == bDetectPattern:
                     return True
             
         return False
     
     # 서비스 패턴, 서비스 id로 매치한다.
     # def __detectServiceBaseRegexPattern(self, listservicePattern:list, strPromptText:str, nServiceID:int, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
-    def __detectServiceBaseRegexPattern(self, listservicePattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+    def __detectServiceBaseRegexPattern(self, listservicePattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str) -> bool:
         
         '''
         '''
@@ -350,12 +364,12 @@ class DetectSecretFilterPattern (FilterPatternBase):
         strPromptText:str = filterPatternItem.contents
         nServiceID:int = filterPatternItem.ai_service_type
         
-        bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
+        # bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
         
         for dictDBPattern in listservicePattern:
             
             #여기서 subjectid, subject val 값와 user를 비교한다. 넘어오는것은 user 명이다. (엔진에서 추출)
-            nDBServiceID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
+            nDBServiceID = int(dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID, 0))
             # sterUserIDVal = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_VAL)
             
             # 일치하는 UserID만 비교
@@ -363,19 +377,60 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 
                 #일단 LOG
                 # LOG().info(f"detect service base regex pattern, id = {nServiceID}")        
-                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
+                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem, strScope)
                                 
                 #TODO: refactoring
                 # if filterResultItem.spans:
                 #     return True
-                if False == bRegexFullScanFlag and True == bDetectPattern:
+                # if False == bRegexFullScanFlag and True == bDetectPattern:
+                if True == bDetectPattern:
                     return True
         
         return False
     
+    # 부서 정보 패턴 TODO: 사양 확인 필요
+    def __detectGroupBaseRegexPattern(self, listGroupPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str) -> bool:
+        
+        '''
+        '''
+        
+        #uuid를 사용자 키로, 사용자 정보에서 groupID를 추출한다.
+        strPromptText:str = filterPatternItem.contents
+        strUUID:str = filterPatternItem.uuid
+        
+        dictUserInfo:dict = self.__dictUserIDMap.get(strUUID)
+        
+        #사용자 정보가 없으면 그대로 bypsss
+        if None == dictUserInfo:
+            return False
+        
+        #그룹정보를 가져온다.
+        user_group_id:str = dictUserInfo.get("user_group_id")
+        
+        # bRegexFullScanFlag:bool = filterPatternItem.regex_fullscan_flag
+        
+        for dictDBPattern in listGroupPattern:
+            
+            #여기서 subjectid, subject val 값와 user_group_id를 비교한다.
+            strUserGroupID = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_ID)
+            # sterUserIDVal = dictDBPattern.get(DBDefine.DB_FIELD_SUBJECT_VAL)
+            
+            # 일치하는 UserID만 비교
+            if user_group_id == strUserGroupID:    
+                
+                #일단 LOG
+                # LOG().info(f"detect service base regex pattern, id = {nServiceID}")        
+                bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem, strScope)
+                                
+                # if False == bRegexFullScanFlag and True == bDetectPattern:
+                if True == bDetectPattern:
+                    return True
+        
+        return False #탐지가 되면 종료된다. 기본값 False
+    
     # default 패턴, 기존과 동일
     # def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, filterResultItem:RegexPaternDetectFilterResultItem):
-    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem):
+    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, filterPatternItem:RegexPatternDetectFilterParameterItem, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str):
         
         '''
         '''
@@ -385,7 +440,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         strPromptText:str = filterPatternItem.contents
         
         for dictDBPattern in listDBRegexPattern:
-            bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem)
+            bDetectPattern:bool = self.__detectFilterPatternAt(strPromptText, dictDBPattern, filterResultItem, strScope)
             
             # if filterResultItem.spans:
             #     return True
@@ -394,8 +449,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 
         return False
 
-    #개별 dictionary 별 정책 조회
-    def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+    #개별 패턴 - 정책 조회
+    def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str) -> bool:
 
         '''
         '''
@@ -440,7 +495,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
                 # dictCount[action] = dictCount.get(action,0) + 1
             
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
-                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match)                
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match, strScope)
                 bPatternMatch = True
         else:
             for match in regex_pattern.finditer(text):
@@ -450,13 +505,13 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
                 # self.__assignFirstDetectedRule(dictDetectRule, id, name, action, targets)
                 
-                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match)
+                self.__aggregateDetectedRule(filterResultItem, id, name, action, targets, category, match, strScope)
                 bPatternMatch = True
 
         return bPatternMatch
     
     # 탐지된 패턴에 대한 집계, pipeline의 전달을 위해서 최종 로직은 필요해 보인다. 
-    def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, strCategory:str, match:re.Match[str]):
+    def __aggregateDetectedRule(self, filterResultItem:RegexPaternDetectFilterResultItem, strRuleID:str, strRuleName:str, strAction:str, strTarget:str, strCategory:str, match:re.Match[str], strScope:str):
         
         '''        
         '''
@@ -480,6 +535,8 @@ class DetectSecretFilterPattern (FilterPatternBase):
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
             dictEachActionPolicy[DBDefine.DB_FIELD_RULE_CATEGORY] = strCategory
             
+            dictEachActionPolicy[DBDefine.DB_FIELD_RULE_SCOPE] = strScope
+            
             dictDetectRule[strAction] = dictEachActionPolicy
             
         #탐지된 룰은 모두 증적에 추가
@@ -489,6 +546,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             DBDefine.DB_FIELD_RULE_ACTION : strAction,
             DBDefine.DB_FIELD_RULE_TARGET : strTarget,
             DBDefine.DB_FIELD_RULE_CATEGORY : strCategory,
+            DBDefine.DB_FIELD_RULE_SCOPE : strScope,
             FilterDetectDefine.DETECT_REGEX_MATCH : f"{match.group()} ({match.start()},{match.end()})",            
         })
         

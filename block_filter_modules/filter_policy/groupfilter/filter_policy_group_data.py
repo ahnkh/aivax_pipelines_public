@@ -25,7 +25,23 @@ class FilterPolicyGroupData:
         '''
         self.__dictPolicyRuleMap:dict = None
         
+        #사용자 정보, DB에서 가져온 데이터, 여기서 관리를 검토.
+        #사용자 ID로 Map을 생성한다. 
+        self.__dictUserInfoIDMap:dict = None
+        
         pass
+    
+    # 초기화
+    def Initialize(self, ):
+        
+        '''
+        '''
+        
+        self.__dictPolicyRuleMap:dict = {}
+        
+        self.__dictUserInfoIDMap:dict = {}
+        
+        return ERR_OK
     
     # 수집된 정책, 초기화, filter 별로 초기화 한다.
     def ClearPolicyRule(self, strFilterID:str):
@@ -75,11 +91,40 @@ class FilterPolicyGroupData:
         
         return nPolicyRuleCount
     
-    def Initialize(self, ):
+    # 사용자 정보 업데이트, update 구문으로.
+    def UpdateUserInfo(self, dictUserInfo:dict):
         
         '''
         '''
         
-        self.__dictPolicyRuleMap:dict = {}
+        # 존재하면 초기화
+        if None != self.__dictUserInfoIDMap and 0 < len(self.__dictUserInfoIDMap):            
+            self.__dictUserInfoIDMap = {}
+            # pass
+            
+        self.__dictUserInfoIDMap.update(dictUserInfo)
         
+        return ERR_OK
+    
+    # 사용자 정보 반환, ID로 반환하는 것으로 하자.
+    def GetUserInfoByID(self, strUserKey:str) -> dict:
+        
+        '''
+        '''
+        
+        dictEachUserInfo:dict = self.__dictUserInfoIDMap.get(strUserKey)
+        
+        #TOOD: 없을수 있다. 호출 측에서 예외처리 필요
+        return dictEachUserInfo
+    
+    #전체 사용자 Map, 전달
+    def GetAllUserIDMap(self, dictUserIDMap:dict):
+        
+        '''
+        '''
+        
+        dictUserIDMap.clear()
+        # dictUserIDMap = {}
+        
+        dictUserIDMap.update(self.__dictUserInfoIDMap)
         return ERR_OK

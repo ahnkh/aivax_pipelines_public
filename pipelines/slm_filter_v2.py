@@ -57,6 +57,7 @@ class Pipeline(PipelineBase):
         
         slmFilterPattern:SLMFilterPattern = self.GetFilterPatternModule(FilterPatternManager.PATTERN_FILTER_SLM)
         
+        #TODO: 향후 예외처리
         slmFilterPattern.DetectPattern(strLocalContents, dictOuputResponse, dictSLMPolicyResult)
         
         strSLMAction:str = dictSLMPolicyResult.get(ApiParameterDefine.OUT_ACTION)

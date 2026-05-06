@@ -59,6 +59,7 @@ class FilterDBPolicyRequestHelper:
         
       lstDBUserInfo:list = dictDBUserResult.get(DBSQLDefine.QUERY_DATA)
       
+      #TODO: 이 정보가 별도로 관리, 캐싱이 되어서 프롬프트 탐지 API가 호출될때 참조 되어야 한다.
       dictUserIDMap:dict = {}
       self.__generateUserInfoMap(lstDBUserInfo, dictUserIDMap)
       
@@ -75,6 +76,9 @@ class FilterDBPolicyRequestHelper:
       lstFilterID:list = dictDBFilterResult.get(DBSQLDefine.QUERY_DATA)
       
       dictEachOutputPolicyFilter = {}
+      
+      # 사용자 정보, 업데이트
+      filterPolicyGroupData.UpdateUserInfo(dictUserIDMap)
       
       # filter 별로 각 scope에 대한 정책을 만든다.
       for dictFilterID in lstFilterID:

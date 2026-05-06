@@ -87,10 +87,11 @@ class UserAccountDataHandler:
         return self.__uuidMap.GenerateNewUUID(strUserKey)
     
     # 사용자 계정관리, 초기화
-    def Initialize(self, dictUserAccountDataLocalConfig:dict):
+    def Initialize(self, dictJsonLocalConfigRoot:dict):
         
         '''
         '''
+        
         
         LOG().info("initialize user account handler")
         
@@ -100,13 +101,13 @@ class UserAccountDataHandler:
         #별도의 스레드를 호출한다. 계정 정보는, mainapp 외 백그라운드로 수집된다.
         
         #스레드 호출, 가급적 인스턴스를 전역으로 관리
-        thread = threading.Thread(name="user account data thread", target=self.ThreadHandlerProc, daemon=True, args=(dictUserAccountDataLocalConfig,))
+        thread = threading.Thread(name="user account data thread", target=self.ThreadHandlerProc, daemon=True, args=(dictJsonLocalConfigRoot,))
         thread.start()        
         return ERR_OK
     
     
     # 스레드 생성.
-    def ThreadHandlerProc(self, dictUserAccountDataLocalConfig):
+    def ThreadHandlerProc(self, dictJsonLocalConfigRoot:dict):
 
         '''
         데몬이 종료될때까지는 계속 수행된다. 
@@ -114,13 +115,20 @@ class UserAccountDataHandler:
         TODO: try/catch 예외처리 필수.
         '''
         
+        user_account_data_module:dict = dictJsonLocalConfigRoot.get("user_account_data_module")
+        
+        global_env:dict = dictJsonLocalConfigRoot.get("global_env")
+        
+        #web 서버
+        db_api_server:dict = global_env.get("db_api_server")
+        
         # nMaxWaitTimeout:int = LogWriteHandler.MAX_WAIT_TIME_OUT
         # nThreadSleep:int = 1
         
         # 최초 기동후 조회, 데이터 구조를 생성한다. 과거 데이터를 가지고 있는다.
         self.__readUserInfoFromDB()
         
-        thread_handler:dict = dictUserAccountDataLocalConfig.get("thread_handler")
+        thread_handler:dict = user_account_data_module.get("thread_handler")
         
         #스레드 sleep, 기본 15초로 지정
         sleep:int = thread_handler.get("sleep")
@@ -135,7 +143,7 @@ class UserAccountDataHandler:
                     
                     #if 문, 불필요한 insert 자제.
                     if 0 < len(self.__dictNewUserInfo):
-                        self.__doInsertUserAccount()
+                        self.__doInsertUserAccount(db_api_server)
                 
                 # 정상적인 케이스의 sleep, lock 구문의 밖에서 sleep, lock이 오래 잡히는 것을 방지한다.
                 time.sleep(sleep) 
@@ -152,7 +160,7 @@ class UserAccountDataHandler:
     ########################################### private
     
     # 사용자 계정의 등록 (계정의 경우 중복 데이터가 많고, 실제 추가되는 계정은 100개 남짓으로 예상된다)
-    def __doInsertUserAccount(self, ):
+    def __doInsertUserAccount(self, dictDBApiServer:dict):
         
         '''
         신규로 등록된 계정, 과거 계정과 비교하여
@@ -174,7 +182,7 @@ class UserAccountDataHandler:
                 
                 dictNewUserAccount:dict = self.__dictNewUserInfo.get(strUserKey)
                                                     
-                nError = self.__insertNewUserAccount(dictNewUserAccount)
+                nError = self.__insertNewUserAccount(dictNewUserAccount, dictDBApiServer)
                 
                 #TODO: 수집후 오류가 발생하면 exception이 발생한다. 오류가 없으면, 원본에도 저장한다.
                 #TODO: 키만 존재하면 되고, 실제 데이터는 기존과 동일하지 않아도 무방하기는 하다.
@@ -239,7 +247,7 @@ class UserAccountDataHandler:
         return ERR_OK
     
     #DB로 신규 계정을 추가한다.
-    def __insertNewUserAccount(self, dictNewUserAccount:dict):
+    def __insertNewUserAccount(self, dictNewUserAccount:dict, dictDBApiServer:dict):
         
         '''
         이름은  아래 항목으로 통일, 등록시간은 맞춘다. => 15초 단위인데.. 일단 불필요한 부분에 자원 낭비를 없애는 차원.
@@ -275,6 +283,21 @@ class UserAccountDataHandler:
         
         dictDBResult:dict = {}
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_insert_update_ai_user_account", dictDBInfo, dictDBResult)
+        
+        #신규 사용자가 등록되면, email과 서비스 id를 지정한다.
+        #우선 테스트
+        
+        default_server_ip:str = dictDBApiServer.get("default_server_ip")
+        default_server_port:str = dictDBApiServer.get("default_server_port")
+        default_schema:str = dictDBApiServer.get("default_schema")
+        
+        strURL:str = f"{default_schema}://{default_server_ip}:{default_server_port}/api/v1/internal/users"
+        post:dict = {
+            "email": email,
+            'aiServiceId':ai_service
+        }
+        
+        self.__requestToSimpleJsonRequest(strURL, post)
         
         return ERR_OK
         
@@ -314,3 +337,47 @@ class UserAccountDataHandler:
         sqlbulk(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_bulk_update_ai_user_time_and_prompt", lstBulkInfo, dictDBResult)
         
         return ERR_OK
+    
+    # def 
+    
+    # 간단한 HTTP 요청, 향후 공통화
+    def __requestToSimpleJsonRequest(self, strURL:str, dictJsonTypePost:dict, nRequestTimeOut:int=60) -> dict:
+        
+        '''
+        http://127.0.0.1:4000/api/v1/internal/users
+        {
+            'email':'user@exampl.e.com',
+            'aiServiceId':"1"
+        }
+        '''
+        
+        try:
+            
+            headers:dict = {
+                "Content-Type" : "application/json"
+            }
+            
+            resp = requests.post(strURL, json=dictJsonTypePost, timeout=nRequestTimeOut, headers=headers)
+        
+            # 4xx, 5xx 일때 오류 발생
+            resp.raise_for_status()
+            
+            dictSLMHttpResponse:dict = resp.json()
+            
+            return dictSLMHttpResponse
+            
+        except requests.exceptions.Timeout:
+            LOG().error("fail request to slm, time out exception")
+            
+        except requests.exceptions.ConnectionError:            
+            LOG().error("fail request to slm, connect error")
+            
+        except requests.exceptions.HTTPError as e:
+            LOG().error(f"fail request to slm, http error {e}")
+            
+        # except requests.exceptions.RequestException as e:
+        #     print(f"기타 오류: {e}")
+        except Exception as e:            
+            LOG().error(traceback.format_exc())
+                        
+        return None

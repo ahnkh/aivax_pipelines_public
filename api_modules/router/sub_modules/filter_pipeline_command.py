@@ -65,6 +65,9 @@ class FilterPipelineCommand:
         #TODO: uuid는 생성해야 한다. userKey로 관리된다. 자료 구조 필요, 계정관리자에서 관리해서, mainApp를 통해서 공유 받자.
         strUUID:str = mainApp.GenerateUUID(strUserKey)
         
+        #TODO: groupid도 추출되어야 한다.
+        #TODO: groupid는 UI를 통해서 만들어진다. 별도의 관리 데이터가 필요하다.
+        
         #사용자 프롬프트의 최신 데이터 저장, 사양 변경으로 중복이지만 추가한다.
         lstMessage:list = dictBodyParameter.get(ApiParameterDefine.MESSAGES)
         last:dict = lstMessage[-1]
@@ -213,6 +216,7 @@ class FilterPipelineCommand:
             DBDefine.DB_FIELID_POLICY_ID : dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_ID, ""),
             DBDefine.DB_FIELID_POLICY_NAME : dictFinalFilterDetect.get(DBDefine.DB_FIELID_POLICY_NAME, ""),
             DBDefine.DB_FIELD_RULE_CATEGORY : dictFinalFilterDetect.get(DBDefine.DB_FIELD_RULE_CATEGORY, ""),
+            DBDefine.DB_FIELD_RULE_SCOPE : dictFinalFilterDetect.get(DBDefine.DB_FIELD_RULE_SCOPE, ""),
         }
             
         #최종 메시지.

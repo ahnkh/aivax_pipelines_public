@@ -156,7 +156,7 @@ class FilterDefine:
     
     FILTER_CONFIG_SSL_PROXY_BYPASS_BITMASK = "ssl_proxy_bypass_bitmask"
     FILTER_REGEX_FULL_SCAN_FLAG = "regex_full_scan_flag"
-    FILTER_NEXT_DETECT_AFTER_BLOCK = "next_detect_after_block"    
+    FILTER_NEXT_DETECT_AFTER_BLOCK = "next_detect_after_block"  
     pass
 
 class DBDefine:
@@ -181,6 +181,7 @@ class DBDefine:
     DB_FIELD_RULE_ACTION = "action"    
     DB_FIELD_RULE_TARGET = "targets"
     DB_FIELD_RULE_CATEGORY = "category"
+    DB_FIELD_RULE_SCOPE = "scope"
     
     DB_FIELID_FILTER_DETECT = "filter_detect"
     DB_FIELID_MODE = "mode"
@@ -193,6 +194,12 @@ class DBDefine:
 class FilterDetectDefine:
     
     DETECT_REGEX_MATCH = "match"
+    
+    SCOPE_USER = "user"
+    SCOPE_GROUP = "group"
+    SCOPE_SERVICE = "service"
+    SCOPE_DEFAULT = "default"    
+    pass
 
 
 class FileDefine:

@@ -235,22 +235,22 @@ if __name__ == "__main__":
     pass
 
 
-def build_app():
+# def build_app():
 
-    InitLogger("log.txt", TRACE_LOG_PATH, TRACE_PREFIX)
+#     InitLogger("log.txt", TRACE_LOG_PATH, TRACE_PREFIX)
 
-    dictOpt = {
-        APP_PARMETER_DEFINE.WEB_HOST: "127.0.0.1",
-        APP_PARMETER_DEFINE.WEB_PORT: 9099,
-        APP_PARMETER_DEFINE.CONFIG: CONFIG_FILE_PATH,
-    }
+#     dictOpt = {
+#         APP_PARMETER_DEFINE.WEB_HOST: "127.0.0.1",
+#         APP_PARMETER_DEFINE.WEB_PORT: 9099,
+#         APP_PARMETER_DEFINE.CONFIG: CONFIG_FILE_PATH,
+#     }
 
-    pipeLineMainApp = PipeLineMainApp()
-    pipeLineMainApp.Initialize(dictOpt)
+#     pipeLineMainApp = PipeLineMainApp()
+#     pipeLineMainApp.Initialize(dictOpt)
 
-    setup_fast_api(app, pipeLineMainApp, daemon_api_router, pipeline_router)
+#     setup_fast_api(app, pipeLineMainApp, daemon_api_router, pipeline_router)
 
-    return app
+#     return app
 
-# worker import 시 실행됨
-build_app()
+# # worker import 시 실행됨
+# build_app()

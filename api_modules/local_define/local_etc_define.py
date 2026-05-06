@@ -38,6 +38,7 @@ class ApiParameterDefine:
     
     #사용자 관련, 추가    
     USER_ID = "user_id"
+    USER_GROUP_ID = "user_group_id"
     NAME = "name"
     EMAIL = "email"
     

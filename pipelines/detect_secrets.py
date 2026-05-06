@@ -219,11 +219,12 @@ class Pipeline(PipelineBase):
             spans = filterResultItem.spans
                         
             #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
-            strPolicyID:str = dictDetectedRule.get("id", "")
-            strPolicyName:str = dictDetectedRule.get("name", "")
+            strPolicyID:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ID, "")
+            strPolicyName:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_NAME, "")
             strPolicyAction:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ACTION, "")
             strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: 삭제 예정
             strCategory:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_CATEGORY, "") #카테고리
+            strScope:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_SCOPE, "") #카테고리
             
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
@@ -387,6 +388,7 @@ class Pipeline(PipelineBase):
                 "policy_name" : strPolicyName,
                 "target": strTarget,
                 "category": strCategory,
+                "scope": strScope,
                 "masked_contents" : masked,
                 "evidence" : filterResultItem.detect_rule_list
             })
