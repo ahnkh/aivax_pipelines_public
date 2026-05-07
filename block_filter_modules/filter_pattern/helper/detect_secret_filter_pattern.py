@@ -152,7 +152,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         filterResultItem = RegexPaternDetectFilterResultItem()
 
-        self.__detectFilterPatternAt(strPrompt, dictRegexPattern, filterResultItem)
+        self.__detectFilterPatternAt(strPrompt, dictRegexPattern, filterResultItem, FilterDetectDefine.SCOPE_DEFAULT)
 
         return filterResultItem
 
@@ -450,7 +450,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
         return False
 
     #개별 패턴 - 정책 조회
-    def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str) -> bool:
+    def __detectFilterPatternAt(self, text:str, dictDBPattern:dict, filterResultItem:RegexPaternDetectFilterResultItem, strScope:str = FilterDetectDefine.SCOPE_DEFAULT) -> bool:
 
         '''
         '''
