@@ -22,8 +22,8 @@ class SSLProxyPolicySignalHandler:
     EXPORT_BLOCK = "block_redirect"
     EXPORT_PASS = "pass"
     
-    STATUS_BLOCK = 1
-    STATUS_PASS = 0
+    STATUS_BLOCK = 0 #미사용이 차단, 사용이 허용이다.
+    STATUS_PASS = 1
     
     
     def __init__(self):
@@ -32,18 +32,8 @@ class SSLProxyPolicySignalHandler:
         
         # 최근 정책, 다음 패턴으로 분류한다.
         # 신규 정책과 비교하여, 달라질때만 전달하는 구조
-        self.__dictLastPolicy:dict = {
+        # self.__dictLastPolicy:dict = {
             
-            # 수집 데이터 원본 => 이건 유지
-            SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE: [],
-            # NAME, 소문자를 키로, status값을 치환하여 저장
-            
-            #구분을 위한 필드, 유지
-            SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
-            # "desc" : "unknown,gpt,gemini,claude,grok,perplexity"
-        }
-        
-        # TODO: 사양 변경
         '''
         {
             "gpt": "block_redirect",
@@ -52,6 +42,19 @@ class SSLProxyPolicySignalHandler:
             "redirect_url" : ""
         }
         '''
+            
+        #     # 수집 데이터 원본 => 이건 유지
+        #     # SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE: [],
+        #     # NAME, 소문자를 키로, status값을 치환하여 저장
+            
+        #     #구분을 위한 필드, 유지
+        #     # SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
+        #     # "desc" : "unknown,gpt,gemini,claude,grok,perplexity"
+        # }
+        
+        #과거 정책, 저장하지는 않고 별도로 관리한다.
+        self.__strLastPolicySummary:str = ""
+        
         # pass
     
     # 모듈 초기화
@@ -86,20 +89,24 @@ class SSLProxyPolicySignalHandler:
         # signal을 받으면, 새로운 최근 데이터를 가져온다.
         dictNewPolicy:dict = {
             
-            #원본 그대로 추가
-            SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE : [],
+            #원본 그대로 추가 => 제거
+            # SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE : [],
             
-            SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
+            # SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
             SSLProxyPolicySignalHandler.EXPORT_REDIRECT_URL : strRedirectUrl #기본값
         }
 
-        #DB 조회, 값 업데이트        
-        self.__gatherDBPolicy(dictNewPolicy)
+        #DB 조회, 값 업데이트 
+        lstNewStatus:list = []       
+        self.__gatherDBPolicy(dictNewPolicy, lstNewStatus)
         
-        # 과거 값과 비교
-        strLastStatus:str = self.__dictLastPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
+        strNewStatus:str = ",".join(map(str, lstNewStatus))
         
-        strNewStatus:str = dictNewPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
+        # 과거 값과 비교 self.__strLastPolicySummary
+        # strLastStatus:str = self.__dictLastPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
+        strLastStatus:str = self.__strLastPolicySummary
+        
+        # strNewStatus:str = dictNewPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
         
         #값이 없으면, 무시한다.
         if None != strNewStatus and strNewStatus != strLastStatus:
@@ -110,14 +117,14 @@ class SSLProxyPolicySignalHandler:
             # pass
             
         # 완료되면, 과거 정책 업데이트
-        self.__dictLastPolicy = copy.deepcopy(dictNewPolicy)
+        # self.__dictLastPolicy = copy.deepcopy(dictNewPolicy)
+        self.__strLastPolicySummary = strNewStatus
         
         return ERR_OK
     
-    
     ############################################# private
     
-    def __gatherDBPolicy(self, dictNewPolicy):
+    def __gatherDBPolicy(self, dictNewPolicy:dict, lstNewStatus:list):
         
         '''
         '''
@@ -132,7 +139,7 @@ class SSLProxyPolicySignalHandler:
         lstAIServiceInfo:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
         
         # python의 join을 사용한다.
-        lstStatus:list = []
+        # lstStatus:list = []
         # lstDesc:list = []
         
         for dictAIServiceInfo in lstAIServiceInfo:
@@ -153,17 +160,17 @@ class SSLProxyPolicySignalHandler:
             
             dictNewPolicy[name] = strExportStatus
             
-            lstStatus.append(status)
+            lstNewStatus.append(status)
             # lstDesc.append(name)
             # pass
             
-        strStatus:str = ",".join(map(str, lstStatus))
+        # strStatus:str = ",".join(map(str, lstNewStatus))
         # strDesc:str = ",".join(map(str, lstDesc))
         
         #수집된 원본
-        dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE] = lstAIServiceInfo
+        # dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE] = lstAIServiceInfo
         
-        dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_SUMMARY] = strStatus
+        # dictNewPolicy[SSLProxyPolicySignalHandler.EXPORT_SUMMARY] = strStatus
         # dictNewPolicy["desc"] = strDesc
       
         return ERR_OK
@@ -214,6 +221,8 @@ class SSLProxyPolicySignalHandler:
         lstSSLProxyPid = []
         self.__findSSLProxyPid(sslproxy_process, lstSSLProxyPid)
         
+        LOG().info(f"signal to sslproxy, pid list {lstSSLProxyPid}")
+        
         #try구문, 한번더 감싸자. 죽을수도 있다. 하나라도 실패하면 예외, 중단
         try:
             for nPid in lstSSLProxyPid:
@@ -230,7 +239,6 @@ class SSLProxyPolicySignalHandler:
         except OSError as e:
             LOG().error("os error")
         
-        
         return ERR_OK
     
     #sslproxy의 pid를 찾는다.
@@ -240,18 +248,57 @@ class SSLProxyPolicySignalHandler:
         디버깅을 위해서 기능 분리
         '''
         
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        for proc in psutil.process_iter(['pid', 'exe']):
+
             try:
-                if strProxyProcessName in " ".join(proc.info['cmdline']):
-                    # print(f"PID {proc.pid} → SIGUSR2 전송")
-                    # os.kill(proc.pid, signal.SIGUSR2)
-                    # found = True
+                exe = proc.info.get('exe')
+                
+                # LOG().info(f"exe = {exe}")
+
+                if exe and exe.endswith("/sslproxy"):
+                    
+                    # LOG().info(f"append pid {proc.pid}")
                     lstSSLProxyPid.append(proc.pid)
 
-            # 예외처리
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                LOG().error("sslproxy pid is not found")
-                continue
+            except Exception:
+                pass
+        
+        
+        # for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+
+        #     try:
+        #         cmdline = proc.info.get('cmdline')
+
+        #         if not cmdline:
+        #             continue
+
+        #         cmd = " ".join(cmdline)
+
+        #         if strProxyProcessName in cmd:
+                    
+        #             LOG().info(f"find ssl proxy, pid={proc.pid}, cmd={cmd}")
+                    
+        #             lstSSLProxyPid.append(proc.pid)
+
+        #     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        #         continue
+
+        #     except Exception as e:
+        #         LOG().error(f"process scan error: {e}")
+        #         continue
+        
+        # for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        #     try:
+        #         if strProxyProcessName in " ".join(proc.info['cmdline']):
+        #             # print(f"PID {proc.pid} → SIGUSR2 전송")
+        #             # os.kill(proc.pid, signal.SIGUSR2)
+        #             # found = True
+        #             lstSSLProxyPid.append(proc.pid)
+
+        #     # 예외처리
+        #     except (psutil.NoSuchProcess, psutil.AccessDenied):
+        #         LOG().error("sslproxy pid is not found")
+        #         continue
         
         return ERR_OK
         
