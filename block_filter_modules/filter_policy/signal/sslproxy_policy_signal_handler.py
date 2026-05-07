@@ -18,6 +18,7 @@ class SSLProxyPolicySignalHandler:
     EXPORT_SUMMARY = "summary"
     EXPORT_AI_SERVICE = "ai_service"
     EXPORT_REDIRECT_URL = "redirect_url"
+    EXPORT_BLOCK_HTML_FILE = "block_html_file"
     
     EXPORT_BLOCK = "block_redirect"
     EXPORT_PASS = "pass"
@@ -52,8 +53,9 @@ class SSLProxyPolicySignalHandler:
         #     # "desc" : "unknown,gpt,gemini,claude,grok,perplexity"
         # }
         
-        #과거 정책, 저장하지는 않고 별도로 관리한다.
-        self.__strLastPolicySummary:str = ""
+        # 과거 정책 history   
+        self.__strLastAiServicePolicySummary:str = ""
+        self.__strLastSettingPolicySummary:str = ""
         
         # pass
     
@@ -85,6 +87,7 @@ class SSLProxyPolicySignalHandler:
         # LOG().info("notify policy signal")
         
         strRedirectUrl:str = self.__localSignalPolicy.get("redirect_url")
+        strBlockHtmlFile:str = self.__localSignalPolicy.get("block_html_file")
         
         # signal을 받으면, 새로운 최근 데이터를 가져온다.
         dictNewPolicy:dict = {
@@ -93,38 +96,37 @@ class SSLProxyPolicySignalHandler:
             # SSLProxyPolicySignalHandler.EXPORT_AI_SERVICE : [],
             
             # SSLProxyPolicySignalHandler.EXPORT_SUMMARY : "",                        
-            SSLProxyPolicySignalHandler.EXPORT_REDIRECT_URL : strRedirectUrl #기본값
+            SSLProxyPolicySignalHandler.EXPORT_REDIRECT_URL : strRedirectUrl, #기본값
+            SSLProxyPolicySignalHandler.EXPORT_BLOCK_HTML_FILE : strBlockHtmlFile
         }
 
-        #DB 조회, 값 업데이트 
-        lstNewStatus:list = []       
-        self.__gatherDBPolicy(dictNewPolicy, lstNewStatus)
+        #DB 조회, 값 업데이트  - sslproxy
+        lstNewAiServiceStatus:list = []       
+        self.__gatherAIServiceDBPolicy(dictNewPolicy, lstNewAiServiceStatus)
         
-        strNewStatus:str = ",".join(map(str, lstNewStatus))
+        #DB 조회, - settings
+        lstNewSettingStatus:list = []
+        self.__gatherSettingPolicy(dictNewPolicy, lstNewSettingStatus)
         
-        # 과거 값과 비교 self.__strLastPolicySummary
-        # strLastStatus:str = self.__dictLastPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
-        strLastStatus:str = self.__strLastPolicySummary
+        # 정책 비교, 비교 여부
         
         # strNewStatus:str = dictNewPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
         
+        bPolicyChanged:bool = self.__isPolicyChange(lstNewAiServiceStatus, lstNewSettingStatus)
+        
         #값이 없으면, 무시한다.
-        if None != strNewStatus and strNewStatus != strLastStatus:
-            
-            LOG().info(f"policy changed, signal to ssl policy, status = {strNewStatus}")
+        # if None != strNewStatus and strNewStatus != strLastStatus:
+        if True == bPolicyChanged:
             
             self.__doSignalToSSLProxy(self.__localSignalPolicy, dictNewPolicy)
             # pass
-            
-        # 완료되면, 과거 정책 업데이트
-        # self.__dictLastPolicy = copy.deepcopy(dictNewPolicy)
-        self.__strLastPolicySummary = strNewStatus
         
         return ERR_OK
     
     ############################################# private
     
-    def __gatherDBPolicy(self, dictNewPolicy:dict, lstNewStatus:list):
+    # AIService 정보, sslproxy 엔진으로 정보 전달
+    def __gatherAIServiceDBPolicy(self, dictNewPolicy:dict, lstNewStatus:list):
         
         '''
         '''
@@ -175,15 +177,101 @@ class SSLProxyPolicySignalHandler:
       
         return ERR_OK
     
+    # 설정 정보의 수집, TODO: 항목이 앞으로 그렇게 많지 않을것 같아, 각각 상태 관리 변수를 생성한다.
+    def __gatherSettingPolicy(self, dictNewPolicy:dict, lstNewStatus:list):
+        
+        '''
+        sslproxy 전달 목적으로 다시 조회 한다.
+        '''
+        
+        '''
+        select `key` as skey, `value` as svalue from app.settings where category = 'file-control'
+        '''
+        dictDBResult = {}
+        sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_select_file_name_block_policy", {}, dictDBResult)
+            
+        #TODO: 많이 중복된 코드로 개발, 우선 무시한다.
+        lstFileBlockInfo:list = dictDBResult.get(DBSQLDefine.QUERY_DATA)
+      
+        for dictFileBlockInfo in lstFileBlockInfo:
+
+            skey:str = dictFileBlockInfo.get("skey")
+            svalue:str = dictFileBlockInfo.get("svalue")
+            
+            # 허용되는 확장자 - , 로 구분한다.
+            if "fileControlAllowedExtensions" == skey:
+                
+                #이름, 보기 편하게
+                dictNewPolicy["file_allow_extension"] = svalue
+                
+                lstNewStatus.append(svalue)                
+                # pass
+                
+            # 최대 크기
+            elif "fileControlMaxSize" == skey:
+                
+                dictNewPolicy["file_control_maxsize"] = svalue 
+                
+                lstNewStatus.append(svalue) #TODO: 설정된 값만 제공한다.                               
+                # pass
+            #pass
+        
+        return ERR_OK
+    
+    # 정책, 변경 여부 확인
+    def __isPolicyChange(self, lstNewAiServiceStatus:list, lstNewSettingStatus:list) -> bool:
+        
+        '''
+        일단 여기만 더럽힌다. 나누지 않는다.
+        '''
+        
+        bPolicyChange:bool = False
+        
+        strNewServiceStatus:str = ",".join(map(str, lstNewAiServiceStatus))
+        
+        # 과거 값과 비교 self.__strLastPolicySummary
+        # strLastStatus:str = self.__dictLastPolicy.get(SSLProxyPolicySignalHandler.EXPORT_SUMMARY)
+        strLastAiServiceStatus:str = self.__strLastAiServicePolicySummary
+                
+        #settings 비교
+        strNewSettingStatus:str = ",".join(map(str, lstNewSettingStatus))
+        
+        strLastSettingStatus:str = self.__strLastSettingPolicySummary
+                
+        LOG().info(f"policy changed, aiService status = {strNewServiceStatus}, setting status = {strNewSettingStatus}")
+                
+        #TODO: 변경여부, 개별로 체크, 각 정책, 달라졌으면 True
+        #TODO: 좋지는 않은 것 같다.
+        
+        #AiService, 달라지면 True
+        if None != strNewServiceStatus and strNewServiceStatus != strLastAiServiceStatus:
+            bPolicyChange = True
+        
+        #Settings, 달라지면 True
+        if None != strNewSettingStatus and strNewSettingStatus != strLastSettingStatus:
+            bPolicyChange = True
+        
+        # 완료되면, 과거 정책 업데이트, 상태의 변경여부와 상관없이, 과거 설정값은 업데이트 한다.
+        # self.__dictLastPolicy = copy.deepcopy(dictNewPolicy)
+        # 구조적으로 부실한 부분이 있으나 감안하고 넘어간다.
+        self.__strLastAiServicePolicySummary = strNewServiceStatus
+        self.__strLastSettingPolicySummary = strNewSettingStatus
+        
+        return bPolicyChange
+    
     #ssl proxy로 signal을 전달한다.
     def __doSignalToSSLProxy(self, dictLocalSignalPolicy:dict, dictNewPolicy:dict):
         
         '''
         '''
         
+        LOG().info("start signal to sslproxy")
+        
         self.__exportPolicyFile(dictLocalSignalPolicy, dictNewPolicy)
         
         self.__signalToSSLProxy(dictLocalSignalPolicy)
+        
+        LOG().info("finish signal to sslproxy")
         
         return ERR_OK
     

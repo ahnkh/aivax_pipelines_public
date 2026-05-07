@@ -202,6 +202,7 @@
         "export_file" : "aivax_policy.json",
 
         "sslproxy_process" : "sslproxy",
-        "redirect_url" : "https://www.naver.com"
+        "redirect_url" : "https://www.naver.com",
+        "block_html_file" : "/home1/aivax/data_resource/block.html"
     }
 }
