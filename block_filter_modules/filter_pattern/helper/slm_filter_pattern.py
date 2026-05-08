@@ -79,7 +79,7 @@ class SLMFilterPattern (FilterPatternBase):
         
         #skip을 설정하고 호출했으면, 로그로 확인이 되어야 한다.
         if CONFIG_OPT_ENABLE == use_skip:
-            LOG().info("skip slm filter")
+            # LOG().info("skip slm filter")
             return ERR_OK
         
         # 요청 패턴, 일단 개발, 향후 개선 (이정도로는 부족)
