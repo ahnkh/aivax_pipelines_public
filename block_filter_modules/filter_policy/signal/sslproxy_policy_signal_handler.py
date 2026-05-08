@@ -293,7 +293,7 @@ class SSLProxyPolicySignalHandler:
         strExportFullPath:str = f"{export_dir}/{export_file}"
         
         # 파일로 저장, 향후 예외처리.
-        JsonHelper.WriteMapToJsonFile(dictNewPolicy, strExportFullPath)
+        JsonHelper.WriteMapToJsonFile(dictNewPolicy, strExportFullPath, bAppendCRLF=False)
         
         return ERR_OK
     
