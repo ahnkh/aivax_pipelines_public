@@ -152,44 +152,50 @@ class OfficeFileAnalyzeHelper:
         # libreoffice를 활용, pdf로 변환한다.
         '''
         
-        # office 파일 경로
-        strOfficeFile:str = parameterItem.file_path
-        
-        # libreoffce, timeout
-        nReadTimeOut:int = parameterItem.read_timeout
+        #TODO: 예외처리, 상세 분석이 안되면, 탐지만 한다.
+        try:
+            
+            # office 파일 경로
+            strOfficeFile:str = parameterItem.file_path
+            
+            # libreoffce, timeout
+            nReadTimeOut:int = parameterItem.read_timeout
 
-        officePath:Path = Path(strOfficeFile).resolve()
+            officePath:Path = Path(strOfficeFile).resolve()
 
-        #파일 추출, 생성, 임시 파일을 사용한다.
-        #접두어 aivax_file_detail (이 하드코딩은 skip)
-        with tempfile.TemporaryDirectory(prefix="aivax_file_detail_") as tmpdir:
+            #파일 추출, 생성, 임시 파일을 사용한다.
+            #접두어 aivax_file_detail (이 하드코딩은 skip)
+            with tempfile.TemporaryDirectory(prefix="aivax_file_detail_") as tmpdir:
+                
+                tmpdir = Path(tmpdir)
+                            
+                # pdf_path = tmpdir / (officePath.stem + ".pdf")
+                pdfFilePath:Path = tmpdir / (officePath.stem + ".pdf")
+                
+                #TOOD: 예외처리 개선, 검토.
+                subprocess.run(
+                    [
+                        "soffice",
+                        "--headless",
+                        "--nologo",
+                        "--nolockcheck",
+                        "--nodefault",
+                        "--nofirststartwizard",
+                        "--norestore",
+                        "--convert-to", "pdf",
+                        "--outdir", str(tmpdir),
+                        str(officePath),
+                    ],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=nReadTimeOut,
+                )
+                
+                self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, dictDetailReason)
             
-            tmpdir = Path(tmpdir)
-                        
-            # pdf_path = tmpdir / (officePath.stem + ".pdf")
-            pdfFilePath:Path = tmpdir / (officePath.stem + ".pdf")
-            
-            #TOOD: 예외처리 개선, 검토.
-            subprocess.run(
-                [
-                    "soffice",
-                    "--headless",
-                    "--nologo",
-                    "--nolockcheck",
-                    "--nodefault",
-                    "--nofirststartwizard",
-                    "--norestore",
-                    "--convert-to", "pdf",
-                    "--outdir", str(tmpdir),
-                    str(officePath),
-                ],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=nReadTimeOut,
-            )
-            
-            self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, dictDetailReason)
+        except Exception as err:
+            LOG().error(traceback.format_exc())
         
         return ERR_OK
     
