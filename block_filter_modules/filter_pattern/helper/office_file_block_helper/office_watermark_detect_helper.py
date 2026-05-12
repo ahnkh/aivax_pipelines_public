@@ -110,49 +110,55 @@ class OfficeWaterMarkDetectHelper:
         watermark는 여러가지 케이스가 있을수 있으며, 각 케이스별로 추출한다.
         일부 custom 성격, config로 제어가 필요할 수 있다.
         TODO: 사용 여부, 안에서 처리한다.
+        TODO: 에러가 발생시, 예외처리, 그대로 True 반환
         '''
         
-        # watermark 사용여부, 설정으로 제어 (향후 정책)
-        
-        #정책, regex 패턴등 필요, 설정 config, 지연된 업데이트 반영.
-        
         # drm을 먼저 탐지, 탐지가 되었으면 탐지로 반환
-        bBlockDRMWaterMark:bool = self.__officeWaterMarkService.DetectRegexBaseIncludeWaterMarkDRM(strOfficeFilePath, self.__cachedRegexBaseDRMParameterItem)
         
-        if True == bBlockDRMWaterMark:
+        try:
             
-            offset:int = self.__cachedRegexBaseDRMParameterItem.offset
-            length:int = self.__cachedRegexBaseDRMParameterItem.length
-            match_text:str = self.__cachedRegexBaseDRMParameterItem.match_text
-            
-            strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_HEADER_DETECT}, offset={offset}/{length}, match={match_text}"
-            
-            # watermark 차단, 업데이트 (이후 summary가 없다. 분기 및 재가공에 대한 고려)
-            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
-            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
-            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
-            return True
+            bBlockDRMWaterMark:bool = self.__officeWaterMarkService.DetectRegexBaseIncludeWaterMarkDRM(strOfficeFilePath, self.__cachedRegexBaseDRMParameterItem)
         
-        # 이후, watermark를 탐지, 탐지가 되었으면 탐지로 반환
-        bBlockOCRWaterMark:bool = self.__officeWaterMarkService.DetectOCRBaseSensitiveWord(strOfficeFilePath, self.__cachedOCRBaseWaterMarkParameterItem)
+            if True == bBlockDRMWaterMark:
+                
+                offset:int = self.__cachedRegexBaseDRMParameterItem.offset
+                length:int = self.__cachedRegexBaseDRMParameterItem.length
+                match_text:str = self.__cachedRegexBaseDRMParameterItem.match_text
+                
+                strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_HEADER_DETECT}, offset={offset}/{length}, match={match_text}"
+                
+                # watermark 차단, 업데이트 (이후 summary가 없다. 분기 및 재가공에 대한 고려)
+                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
+                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
+                return True
+            
+            # 이후, watermark를 탐지, 탐지가 되었으면 탐지로 반환
+            bBlockOCRWaterMark:bool = self.__officeWaterMarkService.DetectOCRBaseSensitiveWord(strOfficeFilePath, self.__cachedOCRBaseWaterMarkParameterItem)
+            
+            if True == bBlockOCRWaterMark:
+                
+                # watermark 차단, 업데이트
+                
+                page_no:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_page_no
+                
+                #OCR 문자, 탐지건수
+                detect_hit_count:int = self.__cachedOCRBaseWaterMarkParameterItem.detect_hit_count
+                hit_max_count:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_max_count
+                
+                
+                strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT}, page={page_no}, hit={hit_max_count} over {detect_hit_count}"
+                
+                dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" 
+                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
+                return True
+            
+            # 미탐
+            return False
+            
+        except Exception as err:
+            LOG().error(traceback.format_exc())
+            return False
         
-        if True == bBlockOCRWaterMark:
-            
-            # watermark 차단, 업데이트
-            
-            page_no:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_page_no
-            
-             #OCR 문자, 탐지건수
-            detect_hit_count:int = self.__cachedOCRBaseWaterMarkParameterItem.detect_hit_count
-            hit_max_count:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_max_count
-            
-            
-            strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT}, page={page_no}, hit={hit_max_count} over {detect_hit_count}"
-            
-            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
-            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" 
-            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
-            return True
         
-        # 미탐
-        return False

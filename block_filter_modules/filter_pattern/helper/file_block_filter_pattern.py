@@ -629,47 +629,55 @@ class FileBlockFilterPattern(FilterPatternBase):
     def __readOfficeFileContents(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
         
         '''
+        TODO: 읽을수 없는 컨텐츠는, 공백 반환
+        다만 로그를 통해 사후 보강은 필요
         '''
         
-        if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
+        try:
+            
+            if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
         
-            # 텍스트 추출, 테스트,word 만 테스트
-            # strContents = docx2txt.process(strFileName)            
-            strContents = self.__officeReader.ReadDocxToText(strFilePath)
+                # 텍스트 추출, 테스트,word 만 테스트
+                # strContents = docx2txt.process(strFileName)            
+                strContents = self.__officeReader.ReadDocxToText(strFilePath)
+                
+            elif FileDefine.MIME_DOC == strMimeType:            
+                strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
+                
+            elif FileDefine.MIME_HWP == strMimeType:
+                strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
+                # pass
             
-        elif FileDefine.MIME_DOC == strMimeType:            
-            strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
+            elif FileDefine.MIME_HWPX == strMimeType:
+                strContents = self.__officeReader.ReadHwpxToText(strFilePath)
+                # pass
+                
+            elif FileDefine.MIME_PDF == strMimeType:
+                strContents = self.__officeReader.ReadPdfToText(strFilePath)
+                
+            elif FileDefine.MIME_PPT == strMimeType:
+                strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
+                
+            elif FileDefine.MIME_PPTX == strMimeType:
+                strContents = self.__officeReader.ReadPPTXToText(strFilePath)
+                
+            elif FileDefine.MIME_XLS == strMimeType:
+                strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
+                
+            elif FileDefine.MIME_XLSX == strMimeType:
+                strContents = self.__officeReader.ReadXlsxToText(strFilePath)
             
-        elif FileDefine.MIME_HWP == strMimeType:
-            strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
-            # pass
-        
-        elif FileDefine.MIME_HWPX == strMimeType:
-            strContents = self.__officeReader.ReadHwpxToText(strFilePath)
-            # pass
+            else:
+                #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
+                # raise Exception (f"unsupported file type {strMimeType}")
+                LOG().error(f"unsupported file type {strMimeType}")
+                return ""
             
-        elif FileDefine.MIME_PDF == strMimeType:
-            strContents = self.__officeReader.ReadPdfToText(strFilePath)
+            return strContents
             
-        elif FileDefine.MIME_PPT == strMimeType:
-            strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
-            
-        elif FileDefine.MIME_PPTX == strMimeType:
-            strContents = self.__officeReader.ReadPPTXToText(strFilePath)
-            
-        elif FileDefine.MIME_XLS == strMimeType:
-            strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
-            
-        elif FileDefine.MIME_XLSX == strMimeType:
-            strContents = self.__officeReader.ReadXlsxToText(strFilePath)
-        
-        else:
-            #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
-            # raise Exception (f"unsupported file type {strMimeType}")
-            LOG().error(f"unsupported file type {strMimeType}")
+        except Exception as err:
+            LOG().error(traceback.format_exc())
             return ""
-        
-        return strContents
     
     # 파일 - 2차 분석, 차단이 발생했으면, 차단 사유에 대해서도 분석 결과를 수집한다.
     def __analyzeFileBlockDetailReason(self, parameterItem: OfficeFileAnalysisParameterItem, dictEachFileOutput:dict):
