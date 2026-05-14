@@ -226,6 +226,9 @@ class Pipeline(PipelineBase):
             strCategory:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_CATEGORY, "") #카테고리
             strScope:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_SCOPE, "") #카테고리
             
+            #TODO: 프롬프트 정책명 생성, 다중 탐지가 되면, 중복되지 않는 최대 2개의 정책명을 표기한다.
+            strBlockPolicyRuleName:str = self.__filterCustomUtil.ConvertBlockPolicyCategory(filterResultItem.detect_rule_list, strPolicyName)
+            
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
             
@@ -238,8 +241,9 @@ class Pipeline(PipelineBase):
                 
                 #정책 카테고리, name만 표기
                 
-                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)                
-                strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
+                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)                                
+                # strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
+                strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strBlockPolicyRuleName)
                 
                 #block 먼저 체크
                 if 0 < nBlockCount:
@@ -277,7 +281,7 @@ class Pipeline(PipelineBase):
                     strMaskedMessage:str = f'''{masked}
 [AIVAX] 프롬프트 마스킹
 다음 정책에 의해 [AIVAX MASKING] 처리되었습니다.
-- 탐지 유형 : {strPolicyName}'''
+- 탐지 유형 : {strBlockPolicyRuleName}'''
                     
                     dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedMessage
 

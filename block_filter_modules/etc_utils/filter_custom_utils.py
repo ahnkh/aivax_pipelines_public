@@ -69,3 +69,37 @@ AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐�
         '''
         
         return strMaskedMessage
+    
+    # 차단된 정책 카테고리명의 반환
+    def ConvertBlockPolicyCategory(self, lstDetectEvidence:list, strPolicyName:str) -> str:
+        
+        '''
+        2개 이상 탐지가 되면, category를 N개로 표기한다.
+        '''
+        
+        # 탐지 개수가 1개이면, 그대로 반환
+        if 1 == len(lstDetectEvidence):
+            
+            return strPolicyName
+        
+        # 2개로 제한
+        strFirstRuleName:str = ""
+        
+        for dictDetectResult in lstDetectEvidence:
+            
+            strRuleName:str = dictDetectResult.get(DBDefine.DB_FIELD_RULE_NAME, "")
+            
+            if 0 == len(strFirstRuleName):
+                strFirstRuleName = strRuleName
+                
+            else: # 2번째면, 종료
+                
+                if strFirstRuleName != strRuleName:
+                    
+                    strFirstRuleName += "," + strRuleName
+                    
+                    return strFirstRuleName
+        
+        
+        # 오면 안되는 구문, 이때는 기본값 반환
+        return strPolicyName
