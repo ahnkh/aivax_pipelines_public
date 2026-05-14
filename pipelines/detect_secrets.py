@@ -278,10 +278,14 @@ class Pipeline(PipelineBase):
                     #❌탐지 유형은 '{strPolicyCategory}'
                     # masked = masked + f"\n(❌탐지 유형 = {strPolicyName})"
                     
-                    strMaskedMessage:str = f'''{masked}
-[AIVAX] 프롬프트 마스킹
-다음 정책에 의해 [AIVAX MASKING] 처리되었습니다.
-- 탐지 유형 : {strBlockPolicyRuleName}'''
+                    # 26.05.14 
+                    # masked만 출력되도록 변경
+#                     strMaskedMessage:str = f'''{masked}
+# [AIVAX] 프롬프트 마스킹
+# 다음 정책에 의해 [AIVAX MASKING] 처리되었습니다.
+# - 탐지 유형 : {strBlockPolicyRuleName}'''
+
+                    strMaskedMessage:str = masked
                     
                     dictOuputResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = strMaskedMessage
 
