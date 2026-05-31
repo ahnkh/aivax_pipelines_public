@@ -156,12 +156,12 @@ class FilterDBPolicyRequestHelper:
           if "fileControlAllowedExtensions" == skey:
             lstExtension:list = svalue.split(",")
             
-            dictFileBlockPolicy[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstExtension
+            dictFileBlockPolicy[FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstExtension
             # pass
           # 최대 크기
           elif "fileControlMaxSize" == skey:
-            dictFileBlockPolicy[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = int(svalue)
-            pass
+            dictFileBlockPolicy[FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = int(svalue)
+            # pass
           #pass
       
       

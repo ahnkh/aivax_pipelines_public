@@ -125,18 +125,18 @@
         "attach_file_base_dir" : "/home1/aivax/data_resource/attach_file",
         "file_read_timeout" : 60,
 
-        "file_allow_ext" : ["doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx"],
+        "file_allow_ext" : ["txt", "doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx", "bmp", "jpeg", "jpg", "png", "avif"],
         "file_max_size" : 10000000,
 
-        "content_chunk_size" : 256,
+        "content_chunk_size" : 512,
 
         "office_watermark_filter":
         {
             "desc":[
                 "DRMONE[\\s\\x00]+.{0,256}Fasoo[\\s\\x00]+DRM flag:18 (IGNORE + ALL)"
             ],
-            "use_regex_base_drm" : 1,
-            "use_ocr_base_watermark" : 1,
+            "use_regex_base_drm" : false,
+            "use_ocr_base_watermark" : false,
 
             "drm_detect_pattern" : "DRMONE\\s+This\\s+Document\\s+is\\s+encrypted\\s+and\\s+protected\\s+by\\s+Fasoo\\s+DRM",
             "drm_pattern_flag" : 18,

@@ -214,18 +214,18 @@ class FilterPolicySignalItem(BaseModel):
     pass
 
 
-# file 분석, parameterItem
-class OfficeFileAnalysisParameterItem(BaseModel):
+# # file 분석, parameterItem
+# class OfficeFileAnalysisParameterItem(BaseModel):
     
-    file_path:str = Field(default="", description="office 파일 경로")
+#     file_path:str = Field(default="", description="office 파일 경로")
     
-    mime_type:str = Field(default=FileDefine.FILE_EXT_UNKNOWN, description="office 파일 Mime type")
+#     mime_type:str = Field(default=FileDefine.FILE_EXT_UNKNOWN, description="office 파일 Mime type")
     
-    read_timeout : Optional[int] = Field(default=60, description=" 파일 read timeout")
+#     read_timeout : Optional[int] = Field(default=60, description=" 파일 read timeout")
     
-    regex_pattern:dict = Field(default={}, description="정책 패턴") 
+#     regex_pattern:dict = Field(default={}, description="정책 패턴") 
     
-    pass
+#     pass
 
 
 #FilterConfig, Pipeline별 세부 정책

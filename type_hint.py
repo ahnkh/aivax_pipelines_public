@@ -8,7 +8,7 @@ from api_modules.models.schemas import (
     OpenAIChatMessage, OpenAIChatCompletionForm, 
     FilterForm, AddPipelineForm, 
     DeletePipelineForm, VariantFilterForm,OutputFilterItem,
-    FilterRuleTestItem, FileAttachItem, OfficeFileAnalysisParameterItem,
+    FilterRuleTestItem, FileAttachItem,
     PipelineCustomFilterConfigItem, RegexPatternDetectFilterParameterItem, RegexPaternDetectFilterResultItem,
     FilterPolicySignalItem, EventAlarmMessage
 )

@@ -1,7 +1,6 @@
 
 import re
 
-#외부 라이브러리
 from lib_include import *
 
 from type_hint import *
@@ -12,6 +11,8 @@ from service_modules.model_item.service_model_item import (
     OfficeRegexBaseDRMDetectItem,
     OfficeOCRBaseWaterMarkDetectItem
 )
+
+from service_modules.office_service.local_etc_common.local_define import *
 
 '''
 office 문서 watermark 추출
@@ -57,8 +58,8 @@ class OfficeWaterMarkDetectHelper:
         
         # 사용여부
         # TODO: 미사용이면, 그대로 skip 한다.
-        use_regex_base_drm:int = dictWatermarkPolicy.get("use_regex_base_drm")
-        use_ocr_base_watermark:int = dictWatermarkPolicy.get("use_ocr_base_watermark")
+        use_regex_base_drm:bool = dictWatermarkPolicy.get("use_regex_base_drm")
+        use_ocr_base_watermark:bool = dictWatermarkPolicy.get("use_ocr_base_watermark")
         
         # drm, regex 패턴
         #TODO: regex 패턴, 변환후 업데이트
@@ -125,7 +126,7 @@ class OfficeWaterMarkDetectHelper:
                 length:int = self.__cachedRegexBaseDRMParameterItem.length
                 match_text:str = self.__cachedRegexBaseDRMParameterItem.match_text
                 
-                strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_HEADER_DETECT}, offset={offset}/{length}, match={match_text}"
+                strReason:str = f"{FilePolicyDefine.BLOCK_REASON_WATER_MARK_HEADER_DETECT}, offset={offset}/{length}, match={match_text}"
                 
                 # watermark 차단, 업데이트 (이후 summary가 없다. 분기 및 재가공에 대한 고려)
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
@@ -147,7 +148,7 @@ class OfficeWaterMarkDetectHelper:
                 hit_max_count:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_max_count
                 
                 
-                strReason:str = f"{FileDefine.BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT}, page={page_no}, hit={hit_max_count} over {detect_hit_count}"
+                strReason:str = f"{FilePolicyDefine.BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT}, page={page_no}, hit={hit_max_count} over {detect_hit_count}"
                 
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" 

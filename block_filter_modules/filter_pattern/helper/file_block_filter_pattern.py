@@ -1,40 +1,34 @@
 
 import hashlib
 import re
-# docx 파싱, 빠른 속도
-# import docx2txt
 
-import magic
+# import magic
 
-# import os
-# import fitz  # PyMuPDF
+# # import os
+# # import fitz  # PyMuPDF
 
-# 느린 속도, 제거
-# from docx import Document
-from pptx import Presentation
-from openpyxl import load_workbook
-# import olefile
+# # from docx import Document
+# from pptx import Presentation
+# from openpyxl import load_workbook
+# # import olefile
 
-from multiprocessing import Pool, cpu_count
+# from multiprocessing import Pool, cpu_count
 
-#외부 라이브러리
 from lib_include import *
 
 from type_hint import *
 
 from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
 
-# 그룹별 regex filter
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
 
-# 별도 helper
 from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy_generate_helper import RegexPolicygenerateHelper
-
-from block_filter_modules.local_define.office_document_reader_ex import OfficeDocumentReaderEx
 
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_file_analyze_helper import OfficeFileAnalyzeHelper
 
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_watermark_detect_helper import OfficeWaterMarkDetectHelper
+
+from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_detect_service_ex import OfficeDetectServiceEx
 
 '''
 file filter 패턴, 
@@ -72,26 +66,19 @@ class FileBlockFilterPattern(FilterPatternBase):
         - detect secret을 그대로 사용하되, 기존 span,masking을 분리하자.   
         '''
         
-        #regex 패턴, scope 단위로 관리
         self.__dictDBScopeRegexPattern:dict = None
         
-        #helper 추가
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None    
         
-        #file Filter
-        self.__officeReader:OfficeDocumentReaderEx = None
-        
-        # local 설정값.
         self.__dictFileBlockInfoLocalConfig:dict = None
-        
-        # file 설정, 제한값, DB에서 가져온다. local 설정의 업데이트는 하지 않는다. (참조만)
+       
         self.__dictFileBlockDBConfig:dict = None
         
-        # office file - 상세 분석 모듈
         self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = None
         
-        # office file - watermark 처리 모듈
         self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = None
+        
+        self.__officeDetectService:OfficeDetectServiceEx = None        
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -113,21 +100,18 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
         
-        self.__officeReader:OfficeDocumentReaderEx = OfficeDocumentReaderEx()
-        
         self.__officeFileAnalyzeHelper:OfficeFileAnalyzeHelper = OfficeFileAnalyzeHelper()
         self.__officeFileAnalyzeHelper.Initialize()
         
         self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = OfficeWaterMarkDetectHelper()
         self.__officeWaterMarkDetectHelper.Initialize()
         
-        #local 설정 정보, 읽어온다.
+        self.__officeDetectService:OfficeDetectServiceEx = OfficeDetectServiceEx()
+        self.__officeDetectService.Initialize()
+                        
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
         
-        # watermark 탐지 heper, 
-        # 우선 local 정책으로 만든다.
         self.__readWatermarkLocalConfig(dictJsonLocalConfigRoot, self.__officeWaterMarkDetectHelper)
-        
         
         return ERR_OK
     
@@ -173,9 +157,6 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         lstFileStatus:list = []
         
-        #파일의 실제 경로, 설정 정보와 조합한다.
-        # strAttachFileRealPath:str = ""
-        
         # attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
         file_read_timeout:int = self.__dictFileBlockInfoLocalConfig.get("file_read_timeout")
         content_chunk_size:int = self.__dictFileBlockInfoLocalConfig.get("content_chunk_size")
@@ -191,10 +172,14 @@ class FileBlockFilterPattern(FilterPatternBase):
             if 0 == len(id) or 0 == len(strFileName):
                 continue
             
+            #파일, 존재 여부 체크, 없으면 skip
+            if False == os.path.isfile(id):
+                LOG().error(f"file {id} is not exist, skip")
+                continue
+            
             # 사양변경,id가 실제 파일 경로 이 로직은 불필요
             #strAttachFileRealPath = f"{attach_file_base_dir}/{strFileName}"
-                        
-            # 각 파일별 결과, list가 낫겠다. => TODO: UI에서는 ACCEPT로 바라본다.
+                                    
             dictEachFileOutput:dict = {
                 ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_BLANK, #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
                 ApiParameterDefine.FILE_NAME : strFileName,
@@ -294,41 +279,36 @@ class FileBlockFilterPattern(FilterPatternBase):
         '''
         '''
         
-        lstFileBlockAllowExt:list = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
-        nFileBlockMaxSize:int = dictFileBlockPolicy.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE, -1)
-        
-        # 기본 예외처리만, 아무것도 허용 안할수도 있다.
+        lstFileBlockAllowExt:list = dictFileBlockPolicy.get(FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
+        nFileBlockMaxSize:int = dictFileBlockPolicy.get(FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE, -1)
+                
         if None == lstFileBlockAllowExt or 0 > nFileBlockMaxSize:
             # TODO: Log Queue, 한번만 출력하는 로거 추가, 이후 로그 정리.
             # LOG().error(f"invalid file block policy, no allow ext and max size, skip")
             return ERR_OK
         
         # 확장자, 제한값, 기본값 추가, 설정이 잘못되면, 모두 차단이다.
-        self.__dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstFileBlockAllowExt
-        self.__dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = nFileBlockMaxSize
+        self.__dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = lstFileBlockAllowExt
+        self.__dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = nFileBlockMaxSize
         
         return ERR_OK
     
     ####################################### private
-    
-    # 최종 정책의 반영, UI 용도, sslproxy도 동일 연산으로 제공
+        
     def __decideFinalPolicyAction(self, lstFileStatus:list):
         
         '''
         '''
-        
-        #TODO: 집계쪽이 낫겠다.
+                
         dictDetectPolicy:dict = {}
         
         for dictEachFileOutput in lstFileStatus:
             
             strPolicyAction:str = dictEachFileOutput.get(ApiParameterDefine.OUT_ACTION)
-            
-            # 향후를 위해 추가, 일단 케이스가 많지 않다.
+                
             dictDetectPolicy[strPolicyAction] = dictEachFileOutput
             #pass
-            
-        #일단 이렇게 작성.. 향후 개선
+                    
         dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_BLOCK)
         
         if None != dictRule:
@@ -344,13 +324,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         if None != dictRule:
             return dictRule
         
-        # 기존 regex 패턴과 동일한 방식, 다만 재사용을 고려할 코드는 아니다.
-        #allow 는 없으면 공백 반환
         dictRule:dict = dictDetectPolicy.get(PipelineFilterDefine.ACTION_ALLOW, {})
         
         return dictRule
         
-        # return ERR_OK
     
     def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int):
         
@@ -361,16 +338,14 @@ class FileBlockFilterPattern(FilterPatternBase):
         이후 regex 정책으로 테스트 한다. 정책은 default만 지원, uuid, servicetype을 알수 없다.
         '''
         
-        strMimeType:str = magic.from_file(strFilePath, mime=True)
-        
-        #file 유형, 파일 확장자가 아닌, mimetype으로 분기, dict
-        
+        # strMimeType:str = magic.from_file(strFilePath, mime=True)
+        (strMimeType, strFileExt) = self.__officeDetectService.GetFileMimeType(strFilePath)
+                
         #TODO: 기타 정보 수집
-        #TODO: 리펙토링은 나중, 우선 만들어 보자.
         
         stat = os.stat(strFilePath)
         
-        strFileExt:str = FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN)
+        # strFileExt:str = FileDefine.FILE_EXT.get(strMimeType, FileDefine.FILE_EXT_UNKNOWN)
         nFileSize:int = stat.st_size
         
         dictEachFileOutput[ApiParameterDefine.FILE_INFO] = {
@@ -380,7 +355,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             "hash" : hashlib.sha256(open(strFilePath,'rb').read()).hexdigest()
         }
         
-        #TODO: 여기 지저분, 나중에 개선, 분리는 필요.
+        # 파일 확장자, 사이즈 제한
         bAllowFileExt:bool = True
         strReason:str = ""
         
@@ -396,19 +371,19 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # self.__detectGetFileType(strFileName)
         
-        #TODO: size가 방대하여, 정규식을 사용할수 없는지 확인 필요. 1차는 미확인
         # strContents:str = ""
                 
-        strContents:str = self.__readOfficeFileContents(strMimeType, strFilePath, nFileReadTimeout)
+        # strContents:str = self.__readOfficeFileContents(strMimeType, strFilePath, nFileReadTimeout)
+        
+        strContents:str = self.__officeDetectService.ReadOfficeFileContents(strFilePath, strMimeType, nFileReadTimeout)
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
-        
-        # 수집이 되던, 안되던, chunk 저장, 256 byte
+                
         strChunk:str = strContents[:nContentChunkSize]
+        
         dictEachFileOutput[ApiParameterDefine.FILE_INFO]["chunk"] = strChunk
         
-        # 여기서 정규식 매칭.
-        # 우선 테스트
+        # 여기서 정규식 매칭.        
         # nContentsLen:int = len(strContents)        
         # LOG().info(f"read document contents, len = {nContentsLen}")
         
@@ -421,44 +396,39 @@ class FileBlockFilterPattern(FilterPatternBase):
         # 내부에서 MimeType으로 가능한 컨텐츠를 식별한다. (doc, docx, 등등)
         # pdf 분석단계가 있어 세부 조정이 필요하다. => 별도의 helper
         
-        parameterItem = OfficeFileAnalysisParameterItem(
-                file_path = strFilePath,
-                mime_type = strMimeType,
-                read_timeout = nFileReadTimeout
-            )
+        # parameterItem = OfficeFileAnalysisParameterItem(
+        #         file_path = strFilePath,
+        #         mime_type = strMimeType,
+        #         read_timeout = nFileReadTimeout
+        #     )
         
         # 정규 표현식, TODO: 차단, 탐지만 확인하면 된다.        
-        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput, parameterItem)
+        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput, strFilePath, strMimeType, nFileReadTimeout)
         
         return ERR_OK
     
-    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strPromptText:str, dictEachFileOutput: dict, parameterItem: OfficeFileAnalysisParameterItem):
+    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strContents:str, dictEachFileOutput:dict, strFilePath:str, strMimeType:str, nFileReadTimeout:int):
         
         '''
         '''
         
         for dictDBPattern in listDBRegexPattern:
             
-            bBlockContent:bool = self.__detectFilterPatternAt(strPromptText, dictEachFileOutput, dictDBPattern)
-            
-            # 정책에 걸렸으면, 그 DB 정책을 patareterItem에 추가해서 상세 분석 요청
+            bBlockContent:bool = self.__detectFilterPatternAt(strContents, dictEachFileOutput, dictDBPattern)
+                        
             if True == bBlockContent:
+                                
+                # parameterItem.regex_pattern = dictDBPattern
                 
-                #테스트
-                # LOG().info(f"block contents")
-                parameterItem.regex_pattern = dictDBPattern
-                
-                self.__analyzeFileBlockDetailReason(parameterItem, dictEachFileOutput)
+                self.__analyzeFileBlockDetailReason(strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput)
                 return True
         
         return False
     
-    #개별 dictionary 별 정책 조회
+    #개별 패턴 정책 별 파일 탐지
     def __detectFilterPatternAt(self, strPromptText:str, dictEachFileOutput:dict, dictDBPattern:dict) -> bool:
 
-        '''
-        TODO: 하나라도 걸리면, 차단이다.
-        
+        '''        
         '''
 
         # 정책
@@ -467,11 +437,11 @@ class FileBlockFilterPattern(FilterPatternBase):
 
         #차단, 마스킹 무시 향후 비활성화면 검토
         action:str = dictDBPattern.get("action")
-        rule:str = dictDBPattern.get("rule")
+        # rule:str = dictDBPattern.get("rule")
         
         # regex_flag:int = int(dictDBPattern.get("regex_flag"))
-        regex_group:int = (dictDBPattern.get("regex_group"))
-        regex_group_val:str = dictDBPattern.get("regex_group_val")
+        # regex_group:int = (dictDBPattern.get("regex_group"))
+        # regex_group_val:str = dictDBPattern.get("regex_group_val")
 
         regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
 
@@ -570,8 +540,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         '''
         
         # 사이즈, 확장자 체크 => 일단 메모리 연산이니, 가독성 차원에서 이정도 비용은 감수한다.
-        lstFileBlockAllowExt:list = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
-        nFileBlockMaxSize:int = self.__dictFileBlockDBConfig.get(FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
+        lstFileBlockAllowExt:list = self.__dictFileBlockDBConfig.get(FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT)
+        nFileBlockMaxSize:int = self.__dictFileBlockDBConfig.get(FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE)
         
         # bBlock:bool = False
         strReason:str = "" #사유, 일단 임의의 문자열
@@ -579,12 +549,12 @@ class FileBlockFilterPattern(FilterPatternBase):
         # File 확장자 제한
         if not (strFileExt in lstFileBlockAllowExt):
             # strExtension = ",".join(lstFileBlockAllowExt)
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strFileExt})"
+            strReason = f"{FilePolicyDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strFileExt})"
             return (False, strReason)
         
         # file size 제한
         if nFileBlockMaxSize < nFileSize:
-            strReason = f"{FileDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileSize} / {nFileBlockMaxSize})"
+            strReason = f"{FilePolicyDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileSize} / {nFileBlockMaxSize})"
             return (False, strReason)
         
         return (True,"")
@@ -604,8 +574,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         file_max_size:list = file_block_filter_module.get("file_max_size", 0)
         
         # 확장자, 제한값, 기본값 추가, 설정이 잘못되면, 모두 차단이다.
-        dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = file_allow_ext
-        dictFileBlockDBConfig[FileDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = file_max_size
+        dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = file_allow_ext
+        dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = file_max_size
         
         return ERR_OK
     
@@ -624,72 +594,76 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         return ERR_OK
     
-    
-    # # 파일을 읽는 로직 분리,mimetype에 따른 분기, string 참조의 전달은.. 감수하자.
-    def __readOfficeFileContents(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
-        
-        '''
-        TODO: 읽을수 없는 컨텐츠는, 공백 반환
-        다만 로그를 통해 사후 보강은 필요
-        '''
-        
-        try:
-            
-            if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
-        
-                # 텍스트 추출, 테스트,word 만 테스트
-                # strContents = docx2txt.process(strFileName)            
-                strContents = self.__officeReader.ReadDocxToText(strFilePath)
-                
-            elif FileDefine.MIME_DOC == strMimeType:            
-                strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
-                
-            elif FileDefine.MIME_HWP == strMimeType:
-                strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
-                # pass
-            
-            elif FileDefine.MIME_HWPX == strMimeType:
-                strContents = self.__officeReader.ReadHwpxToText(strFilePath)
-                # pass
-                
-            elif FileDefine.MIME_PDF == strMimeType:
-                strContents = self.__officeReader.ReadPdfToText(strFilePath)
-                
-            elif FileDefine.MIME_PPT == strMimeType:
-                strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
-                
-            elif FileDefine.MIME_PPTX == strMimeType:
-                strContents = self.__officeReader.ReadPPTXToText(strFilePath)
-                
-            elif FileDefine.MIME_XLS == strMimeType:
-                strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
-                
-            elif FileDefine.MIME_XLSX == strMimeType:
-                strContents = self.__officeReader.ReadXlsxToText(strFilePath)
-            
-            else:
-                #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
-                # raise Exception (f"unsupported file type {strMimeType}")
-                LOG().error(f"unsupported file type {strMimeType}")
-                return ""
-            
-            return strContents
-            
-        except Exception as err:
-            LOG().error(traceback.format_exc())
-            return ""
-    
     # 파일 - 2차 분석, 차단이 발생했으면, 차단 사유에 대해서도 분석 결과를 수집한다.
-    def __analyzeFileBlockDetailReason(self, parameterItem: OfficeFileAnalysisParameterItem, dictEachFileOutput:dict):
+    def __analyzeFileBlockDetailReason(self, strFilePath:str, strMimeType:str, nFileReadTimeout:int, dictDBPattern:dict, dictEachFileOutput:dict):
         
         '''
         파일에 대해서, pdf를 변환후, 분석된 컨텐츠 위치를 찾는다.
         최초 확인된 정책, 정규식을 다시 적용한다.        
         '''
         
-        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(parameterItem, dictEachFileOutput)
+        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput, self.__officeDetectService)
         
         return ERR_OK
+    
+    
+    # # 파일을 읽는 로직 분리,mimetype에 따른 분기, string 참조의 전달은.. 감수하자.
+    # def __readOfficeFileContents(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
+        
+    #     '''
+    #     TODO: 읽을수 없는 컨텐츠는, 공백 반환
+    #     다만 로그를 통해 사후 보강은 필요
+    #     '''
+        
+        
+        
+    #     try:
+            
+    #         if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
+        
+    #             # 텍스트 추출, 테스트,word 만 테스트
+    #             # strContents = docx2txt.process(strFileName)            
+    #             strContents = self.__officeReader.ReadDocxToText(strFilePath)
+                
+    #         elif FileDefine.MIME_DOC == strMimeType:            
+    #             strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
+                
+    #         elif FileDefine.MIME_HWP == strMimeType:
+    #             strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
+    #             # pass
+            
+    #         elif FileDefine.MIME_HWPX == strMimeType:
+    #             strContents = self.__officeReader.ReadHwpxToText(strFilePath)
+    #             # pass
+                
+    #         elif FileDefine.MIME_PDF == strMimeType:
+    #             strContents = self.__officeReader.ReadPdfToText(strFilePath)
+                
+    #         elif FileDefine.MIME_PPT == strMimeType:
+    #             strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
+                
+    #         elif FileDefine.MIME_PPTX == strMimeType:
+    #             strContents = self.__officeReader.ReadPPTXToText(strFilePath)
+                
+    #         elif FileDefine.MIME_XLS == strMimeType:
+    #             strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
+                
+    #         elif FileDefine.MIME_XLSX == strMimeType:
+    #             strContents = self.__officeReader.ReadXlsxToText(strFilePath)
+            
+    #         else:
+    #             #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
+    #             # raise Exception (f"unsupported file type {strMimeType}")
+    #             LOG().error(f"unsupported file type {strMimeType}")
+    #             return ""
+            
+    #         return strContents
+            
+    #     except Exception as err:
+    #         LOG().error(traceback.format_exc())
+    #         return ""
+    
+    
     
 
 

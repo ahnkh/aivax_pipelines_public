@@ -221,8 +221,7 @@ class SSLProxyPolicySignalHandler:
     # 정책, 변경 여부 확인
     def __isPolicyChange(self, lstNewAiServiceStatus:list, lstNewSettingStatus:list) -> bool:
         
-        '''
-        일단 여기만 더럽힌다. 나누지 않는다.
+        '''        
         '''
         
         bPolicyChange:bool = False

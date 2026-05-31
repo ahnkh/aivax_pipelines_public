@@ -1,6 +1,6 @@
 
 curl -X 'POST' \
-  'http://127.0.0.1:9099/v1/filter/multiple_filter' \
+  'http://127.0.0.1:7000/v1/filter/multiple_filter' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -9,7 +9,7 @@ curl -X 'POST' \
     "secret_filter",
     "slm_filter"
   ],
-  "prompt": "프롬프트 테스트 IP 127.0.0.1 이메일 ghahn@wins21.co.kr",
+  "prompt": "프롬프트 테스트 010-1111-1111",
   "encoding": false,
   "user_id": "ghahn@wins21.co.kr",
   "email": "ghahn@wins21.co.kr",
@@ -24,9 +24,9 @@ curl -X 'POST' \
       "mime_type": ""
     }
   ],
-  "message_id": "c_d9b4beb201ac86ac_1765879292"
+  "message_id": "c_d9b4beb201ac86ac_1765879292", "debug":true
 }'
-
+exit
 curl -X 'POST' \
   'http://127.0.0.1:7000/v1/filter/output_filter' \
   -H 'accept: application/json' \
