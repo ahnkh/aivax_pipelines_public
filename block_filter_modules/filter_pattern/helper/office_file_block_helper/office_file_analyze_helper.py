@@ -33,7 +33,7 @@ class OfficeFileAnalyzeHelper:
     
     
     # file 분석 - 상세 분석 결과, 페이지, 라인번호등의 반환
-    def AnalyzeFileBlockDetailReason(self, strFilePath:str, strMimeType:str, nFileReadTimeout:int, dictRegexPattern:dict, dictEachFileOutput:dict, officeDetectService:OfficeDetectServiceEx):
+    def AnalyzeFileBlockDetailReason(self, strDetailTempDir:str, strOfficeFilePath:str, strMimeType:str, nFileReadTimeout:int, dictRegexPattern:dict, dictEachFileOutput:dict, officeDetectService:OfficeDetectServiceEx):
         
         '''
         정규 표현식, 정책 번호등 상세 정보의 수집이 필요하다.
@@ -43,16 +43,7 @@ class OfficeFileAnalyzeHelper:
         분석 결과, dictionary로 정의, 우선 opensearch를 활용한다.
         '''
         
-        # file mimetype
-        # strMimeType:str = parameterItem.mime_type
-        
-        # dictRegexPattern:dict = parameterItem.regex_pattern
-        
-        # strFilePath:str = parameterItem.file_path
-        
         regexPattern:re.Pattern = dictRegexPattern.get("regex_pattern")
-        
-        # regexPattern:re.Pattern = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_REGEX_PATTERN)
         
         # id:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE_ID)
         rule:str = dictRegexPattern.get(DBDefine.DB_FIELD_RULE)
@@ -103,163 +94,11 @@ class OfficeFileAnalyzeHelper:
         # 한글 문서 => pdf 변환도 다시 고려
         
         # 여기는 분기 필요
-        officeDetectService.GenerateRegexBaseEvidence(strFilePath, strMimeType, regexPattern, lstDetailReason)
-        
-        # if strMimeType in (FileDefine.MIME_XLS,
-        #     FileDefine.MIME_XLSX,):
-            
-        #     #xls, skip 한다.
-        #     pass
-        
-        # elif strMimeType in (FileDefine.MIME_PDF):
-            
-        #     #pdf, 그대로 분석
-        #     self.__readPdfAndDetectFileInfo(parameterItem, dictDetailReason)
-        #     # pass     
-                   
-        # elif strMimeType in (FileDefine.MIME_DOC,
-        #     FileDefine.MIME_DOCX,
-        #     FileDefine.MIME_DOCX_V2,
-        #     FileDefine.MIME_HWP,
-        #     FileDefine.MIME_DOCX_V2,
-        #     FileDefine.MIME_HWPX,
-        #     FileDefine.MIME_PPT,
-        #     FileDefine.MIME_PPTX
-        #     ):
-            
-        #     self.__extractToPdfAndDetectFileInfo(parameterItem, dictDetailReason)
-            
-        # else:
-        #     #TODO: 감사로그 추가 필요
-        #     LOG().error(f"unsupport mime type {strMimeType}")
+        officeDetectService.GenerateRegexBaseEvidence(strDetailTempDir, strOfficeFilePath, strMimeType, regexPattern, nFileReadTimeout, lstDetailReason)
                     
         dictEachFileOutput["detail_reason"] = dictDetailReason
-                                
-        # return results            
-        # LOG().debug(f"read office {strOfficeFile}, page and line = {results}")
         
         return ERR_OK
     
     ############################################### private
-    
-    # def __readPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
-        
-    #     '''
-    #     '''
-        
-    #     # office 파일 경로, pdf 이다.
-    #     strOfficeFile:str = parameterItem.file_path
-        
-    #     officePath:Path = Path(strOfficeFile).resolve()
-        
-    #     self.__detectFileInfoFromPattern(officePath, parameterItem, dictDetailReason)
-        
-    #     return ERR_OK
-    
-    # def __extractToPdfAndDetectFileInfo(self, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
-        
-    #     '''
-    #     # 정규 표현식 외.
-    #     # regex_pattern:re.Pattern = dictDBPattern.get("regex_pattern")
-    #     # for m in regex_pattern.finditer(strPromptText):
-        
-    #     # libreoffice를 활용, pdf로 변환한다.
-    #     '''
-        
-    #     #TODO: 예외처리, 상세 분석이 안되면, 탐지만 한다.
-    #     try:
-            
-    #         # office 파일 경로
-    #         strOfficeFile:str = parameterItem.file_path
-            
-    #         # libreoffce, timeout
-    #         nReadTimeOut:int = parameterItem.read_timeout
-
-    #         officePath:Path = Path(strOfficeFile).resolve()
-
-    #         #파일 추출, 생성, 임시 파일을 사용한다.
-    #         #접두어 aivax_file_detail (이 하드코딩은 skip)
-    #         with tempfile.TemporaryDirectory(prefix="aivax_file_detail_") as tmpdir:
-                
-    #             tmpdir = Path(tmpdir)
-                            
-    #             # pdf_path = tmpdir / (officePath.stem + ".pdf")
-    #             pdfFilePath:Path = tmpdir / (officePath.stem + ".pdf")
-                
-    #             #TOOD: 예외처리 개선, 검토.
-    #             subprocess.run(
-    #                 [
-    #                     "soffice",
-    #                     "--headless",
-    #                     "--nologo",
-    #                     "--nolockcheck",
-    #                     "--nodefault",
-    #                     "--nofirststartwizard",
-    #                     "--norestore",
-    #                     "--convert-to", "pdf",
-    #                     "--outdir", str(tmpdir),
-    #                     str(officePath),
-    #                 ],
-    #                 check=True,
-    #                 stdout=subprocess.DEVNULL,
-    #                 stderr=subprocess.DEVNULL,
-    #                 timeout=nReadTimeOut,
-    #             )
-                
-    #             self.__detectFileInfoFromPattern(pdfFilePath, parameterItem, dictDetailReason)
-            
-    #     except Exception as err:
-    #         LOG().error(traceback.format_exc())
-        
-    #     return ERR_OK
-    
-    # # 텍스트, 정규표현식 분석 및 이력 저장
-    # def __detectFileInfoFromPattern(self, pdfFilePath:Path, parameterItem: OfficeFileAnalysisParameterItem, dictDetailReason: dict):
-        
-    #     '''
-    #     '''
-        
-    #     dictRegexPattern:dict = parameterItem.regex_pattern
-        
-    #     regexPattern:re.Pattern = dictRegexPattern.get("regex_pattern")
-    #     # strRule:str = dictRegexPattern.get("rule")
-        
-    #     lstDetailReason:list = dictDetailReason.get("evidence")
-        
-    #     with pdfplumber.open(pdfFilePath) as pdf:
-            
-    #         # 탐지 번호    
-    #         nDetectNo:int = 0
-            
-    #         for nPageIndex, page in enumerate(pdf.pages, start=1):
-    #             words = page.extract_words(use_text_flow=True)
-
-    #             # 줄 단위 그룹핑 (Y 좌표 기준)
-    #             lines = {}
-    #             for w in words:
-    #                 y = round(w["top"], 1)
-    #                 lines.setdefault(y, []).append(w["text"])
-
-    #             #TODO: 필요한지 확인.
-    #             sorted_lines = sorted(lines.items())
-
-    #             for line_no, (y, texts) in enumerate(sorted_lines, start=1):
-    #                 line_text = " ".join(texts)
-                    
-    #                 #TODO: 정규표현식 부분, 다시 개선 필요.
-    #                 for m in regexPattern.finditer(line_text):
-                        
-    #                     # 탐지된 컨텐츠는 모두 추가.
-    #                     nDetectNo += 1
-    #                     lstDetailReason.append({
-    #                         "no" : nDetectNo,
-    #                         # "pattern": strRule,
-    #                         "page_no": nPageIndex,
-    #                         "line_no": line_no,
-    #                         # "y_position": y, #TODO: 필요한지.
-    #                         "context": line_text.strip()
-    #                     })        
-    #     return ERR_OK
-        
-    
     

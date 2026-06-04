@@ -199,36 +199,15 @@ class FilterDetectDefine:
     SCOPE_GROUP = "group"
     SCOPE_SERVICE = "service"
     SCOPE_DEFAULT = "default"    
+    # pass
+
+class RegexPolicyDefine:
+    
+    BLOCK_REASON_PROMPT_LIMIT = "prompt size exceeds limit"
+    
     pass
 
-#TODO: 기능별 분리.
 class FilePolicyDefine:
-    
-    # MIME_DOC = "application/msword"
-    # MIME_DOCX = "application/octet-stream"
-    # MIME_DOCX_V2 = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    # MIME_HWP = "application/x-hwp"
-    # MIME_HWPX = "application/zip"
-    # MIME_PDF = "application/pdf"
-    # MIME_PPT = "application/vnd.ms-powerpoint"
-    # MIME_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    # MIME_XLS = "application/vnd.ms-excel"
-    # MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    
-    # FILE_EXT = {
-    #     MIME_DOC : "doc",
-    #     MIME_DOCX : "docx",
-    #     MIME_DOCX_V2 : "docx",
-    #     MIME_HWP : "hwp",
-    #     MIME_HWPX : "hwpx",
-    #     MIME_PDF : "pdf",
-    #     MIME_PPT : "ppt",
-    #     MIME_PPTX : "pptx",
-    #     MIME_XLS : "xls",
-    #     MIME_XLSX : "xlsx",
-    # }
-    
-    # FILE_EXT_UNKNOWN = "unknown"
     
     DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext"
     DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size"
@@ -236,14 +215,13 @@ class FilePolicyDefine:
     BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
     BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit"
     BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header"
-    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"
-    
-    pass
+    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"    
+    # pass
     
 
 class APIServerDefine:
     SESSION_COOKIE = "session_id"
-    pass    
+    # pass    
 
 TRACE_LOG_PATH = "./trace-log"
 TRACE_PREFIX = "pipe_line"  

@@ -26,8 +26,6 @@ class Pipeline(PipelineBase):
         self.id = "file_block_filter"
         self.name = "file_block_filter"
         
-        #TODO: values는 필요하다고 판단되면 추가, 우선 추가하지 않는다.
-        
         # 공용 helper
         self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()        
         pass
@@ -36,9 +34,7 @@ class Pipeline(PipelineBase):
     #pipeline, inlet, outlet 중 inlet 만 가져간다.
     async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
-        '''
-        TODO: 이 기능은 multiple filter 에서만 호출한다.
-        TODO: prompt 대신, filer 정보가 넘어온다., 데이터는 body 에서 수집되어서 broad cast하도록 구성한다.
+        '''              
         '''
         
         # 응답처리

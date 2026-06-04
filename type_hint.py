@@ -10,7 +10,7 @@ from api_modules.models.schemas import (
     DeletePipelineForm, VariantFilterForm,OutputFilterItem,
     FilterRuleTestItem, FileAttachItem,
     PipelineCustomFilterConfigItem, RegexPatternDetectFilterParameterItem, RegexPaternDetectFilterResultItem,
-    FilterPolicySignalItem, EventAlarmMessage
+    FilterPolicySignalItem, EventAlarmMessage, RegexPatternFilterConfig
 )
      
 # #TODO: typehint 제공

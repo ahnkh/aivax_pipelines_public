@@ -55,7 +55,10 @@ class DetectSecretFilterPattern (FilterPatternBase):
         self.re_hex_shape = None
         
         #helper 추가
-        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None        
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None    
+        
+        # regex filter pattern
+        self.__regexFilterConfig:RegexPatternFilterConfig = None    
         # pass
 
     #초기화 로직, 상태, 정책이 존재하며, 정책은 향후 detect_secret policy로 이동한다.
@@ -86,6 +89,9 @@ class DetectSecretFilterPattern (FilterPatternBase):
         self.re_hex_shape = re.compile(r"^[A-Fa-f0-9]+$")
 
         # self.__initializeRegexPattern()
+        
+        self.__regexFilterConfig = RegexPatternFilterConfig()
+        self.__initializeLocalConfig(dictJsonLocalConfigRoot, self.__regexFilterConfig)
 
         return ERR_OK
 
@@ -206,9 +212,21 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
     ################################################# private
     
-
-    # filter 처리 리펙토링, 탐지 기능 재구현
-    # def __detectFilterFromDB(self, text:str, valves:Any, strUserID:str, strUUID:str, nServiceType:int):
+    def __initializeLocalConfig(self, dictJsonLocalConfigRoot:dict, regexFilterConfig:RegexPatternFilterConfig):
+        
+        '''
+        '''
+        
+        regex_pipeliline_filter_module:dict = dictJsonLocalConfigRoot.get("regex_pipeliline_filter_module")
+        
+        prompt_size_limit:int = regex_pipeliline_filter_module.get("prompt_size_limit")
+        
+        # prompt size 제한
+        regexFilterConfig.prompt_size_limit = prompt_size_limit
+        
+        return ERR_OK
+    
+    
     def __detectFilterFromDB(self, filterPatternItem:RegexPatternDetectFilterParameterItem):
 
         '''
@@ -245,6 +263,12 @@ class DetectSecretFilterPattern (FilterPatternBase):
         
         filterResultItem = RegexPaternDetectFilterResultItem()
         
+        # 프롬프트 검사, TODO: 향후 분리
+        bPromptValidate:bool = self.__checkPromptValidate(text, filterResultItem)
+        
+        if False == bPromptValidate:
+            return filterResultItem
+        
         #순차적으로, scope 별로 조회
         #scope 순서는 user, service, group, default 정책이다.
         #service 타입, user 필드에 따른 서비스별 분기가 있기에, 각각 만들어야 한다.
@@ -280,6 +304,35 @@ class DetectSecretFilterPattern (FilterPatternBase):
 
         # return (spans, counts, dictFinalRulePolicy)
         return filterResultItem
+    
+    def __checkPromptValidate(self, strPromptText:str, filterResultItem:RegexPaternDetectFilterResultItem) -> bool:
+        
+        '''
+        TODO: 반환값에 대한 처리 필요.
+        '''
+        
+        #size 제한
+        nPromptLen:int = len(strPromptText)
+        
+        if self.__regexFilterConfig.prompt_size_limit < nPromptLen:
+                        
+            LOG().error(f"promt size limit, size = {nPromptLen}/{self.__regexFilterConfig.prompt_size_limit}")
+            
+            dictPromptDetectPolicy:dict = filterResultItem.dictDetectRule
+            
+            # dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_ID] = strRuleID 
+            dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_NAME] = RegexPolicyDefine.BLOCK_REASON_PROMPT_LIMIT
+            dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            filterResultItem.counts[PipelineFilterDefine.ACTION_BLOCK] = 1
+            
+            # dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+            # dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_CATEGORY] = strCategory
+            
+            # dictPromptDetectPolicy[DBDefine.DB_FIELD_RULE_SCOPE] = strScope            
+            return False
+        
+        return True
     
     
     # def __detectLinkedRegexPatternList(self, dictDBScopeRegexPattern:dict, strPromptText:str, spans: List[Tuple[int, int]], counts:dict, dictDetectRule: dict, 
@@ -551,31 +604,6 @@ class DetectSecretFilterPattern (FilterPatternBase):
         })
         
         return ERR_OK
-
-    # #최초 탐지된 룰 정보 할당.
-    # def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str, strTarget:str):
-
-    #     '''
-    #     사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
-    #     '''
-        
-    #     dictEachActionPolicy = dictDetectRule.get(strAction, {})
-        
-    #     #최초 탐지되면, 추가 (TODO: 리펙토링)
-    #     if 0 == len(dictEachActionPolicy):
-    #         #test
-    #         LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
-    #         # dictEachActionPolicy["id"] = strRuleID 
-    #         # dictEachActionPolicy["name"] = strRuleName
-    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ID] = strRuleID 
-    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_NAME] = strRuleName
-    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
-    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
-            
-    #         dictDetectRule[strAction] = dictEachActionPolicy
-
-    #     return ERR_OK
-
 
     def __decideFinalPolicyAction(self, dictDetectRule:dict) -> dict:
         
@@ -859,5 +887,29 @@ class DetectSecretFilterPattern (FilterPatternBase):
     #     #     ("ak_tk_token", re.compile(r"\b(?P<VAL>(?:ak|tk)-[a-f0-9]{16,}(?:-(?:dev|test)[a-z0-9]*)?)\b"), "VAL"),
 
     #     # ]
+    
+    # #최초 탐지된 룰 정보 할당.
+    # def __assignFirstDetectedRule(self, dictDetectRule:dict, strRuleID:str, strRuleName:str, strAction:str, strTarget:str):
+
+    #     '''
+    #     사양 변경, 각 action 별로 탐지되는 룰을 저장한다.
+    #     '''
+        
+    #     dictEachActionPolicy = dictDetectRule.get(strAction, {})
+        
+    #     #최초 탐지되면, 추가 (TODO: 리펙토링)
+    #     if 0 == len(dictEachActionPolicy):
+    #         #test
+    #         LOG().debug(f"assign first detect rule, id = {strRuleID}, name = {strRuleName}")
+    #         # dictEachActionPolicy["id"] = strRuleID 
+    #         # dictEachActionPolicy["name"] = strRuleName
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ID] = strRuleID 
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_NAME] = strRuleName
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_ACTION] = strAction
+    #         dictEachActionPolicy[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+            
+    #         dictDetectRule[strAction] = dictEachActionPolicy
+
+    #     return ERR_OK
 
 

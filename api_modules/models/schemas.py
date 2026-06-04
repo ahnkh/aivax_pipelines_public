@@ -64,7 +64,7 @@ class VariantFilterForm(BaseModel):
     - regex_filter : 정규표현식 기반 필터
     - file_block_filter : 파일 분석 필터
     - input_filter : opensearch 저장 (프롬프트)
-    - output_filter : opensearch 저장 (LLM 응답)    
+    - output_filter : opensearch 저장 (LLM 응답)
     
     prompt : 프롬프트 문자열 (예: 프롬프트를 입력해주세요)
     
@@ -83,7 +83,7 @@ class VariantFilterForm(BaseModel):
     '''
     
     # filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter"] #차단 필터 리스트, 기본값 secret_filter
-    filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "slm_filter"] #테스트
+    filter_list: Optional[List[str]] = ["input_filter", "secret_filter", "file_block_filter", "slm_filter"] #테스트
     
     # prompt: str = "프롬프트를 입력해주세요" #
     prompt: str = Field(default="", description="입력 프롬프트")
@@ -344,7 +344,7 @@ class RegexPaternDetectFilterResultItem:
     detect_rule_list: List = field(default_factory=list)    
     pass
 
-# # event 알람 메시지 관련
+# event 알람 메시지 관련
 @dataclass(slots=True)
 class EventAlarmMessage:
     
@@ -364,4 +364,14 @@ class EventAlarmMessage:
     prompt: str
     mode : str
     output_text : str    
+    # pass
+    
+# regex 패턴, db등 별도 설정 관리
+@dataclass(slots=True)    
+class RegexPatternFilterConfig:
+    
+    '''
+    '''
+    
+    prompt_size_limit:int =  1024 * 1024 # 프롬프트 사이즈 제한 (기본값 1MB)
     # pass

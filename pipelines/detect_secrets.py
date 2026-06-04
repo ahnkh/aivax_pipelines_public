@@ -232,8 +232,9 @@ class Pipeline(PipelineBase):
             # 이제는 span 과 action을 같이 본다.
             #action, block 과 masking 만 차단이고, 나머지는 아니다.
             
-            if spans and (strPolicyAction in (PipelineFilterDefine.ACTION_BLOCK, PipelineFilterDefine.ACTION_MASKING)):
-                
+            # span 대신 action으로 제어
+            # if spans and (strPolicyAction in (PipelineFilterDefine.ACTION_BLOCK, PipelineFilterDefine.ACTION_MASKING)):
+            if strPolicyAction in (PipelineFilterDefine.ACTION_BLOCK, PipelineFilterDefine.ACTION_MASKING):                
                 #TODO: 우선 개발, counts의 필드에 따른 분기, 우선 수정후 2차 리펙토링시 개선한다.                
                 # nAcceptCount = counts.get("accept")
                 nBlockCount = counts.get("block")

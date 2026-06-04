@@ -112,6 +112,11 @@
         "use" : 0
     },
 
+    "regex_pipeliline_filter_module":
+    {
+        "prompt_size_limit" : 10
+    },
+
     "slm_pipeline_filter_module":
     {
         "use_skip" : 1,
@@ -128,7 +133,8 @@
         "file_allow_ext" : ["txt", "doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx", "bmp", "jpeg", "jpg", "png", "avif"],
         "file_max_size" : 10000000,
 
-        "content_chunk_size" : 512,
+        "content_chunk_size" : 0,
+        "detail_reason_temp_dir" : "/home1/aivax/data_resource/.tmp_detail_dir",
 
         "office_watermark_filter":
         {

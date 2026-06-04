@@ -17,33 +17,33 @@ class RouterCustomHelper:
         
         pass
     
-    #filter 메시지, 프롬프트 convert    
-    def ConvertPromptMessage(self, modelItem: VariantFilterForm) -> str:
+    # #filter 메시지, 프롬프트 convert    
+    # def ConvertPromptMessage(self, modelItem: VariantFilterForm) -> str:
         
-        '''
-        프롬프트 관리, 입력값을 변환하여, pipeline filter에서 사용가능한 프롬프트로 변환한다.
-        향후 입력값의 사양이 변경되어도, 프롬프트 메시지는 여기서 처리한다.
-        user, contents 구조등, 사양이 변경되어도 여기서 처리.
-        인코딩 옵션 추가, base64 인코딩 처리
+    #     '''
+    #     프롬프트 관리, 입력값을 변환하여, pipeline filter에서 사용가능한 프롬프트로 변환한다.
+    #     향후 입력값의 사양이 변경되어도, 프롬프트 메시지는 여기서 처리한다.
+    #     user, contents 구조등, 사양이 변경되어도 여기서 처리.
+    #     인코딩 옵션 추가, base64 인코딩 처리
         
-        우선 multiple_filter 만 대상
-        '''
+    #     우선 multiple_filter 만 대상
+    #     '''
         
-        bEncoding:bool = modelItem.encoding
+    #     strPromptMessage:str = modelItem.prompt
         
-        strPromptMessage:str = modelItem.prompt
-        
-        if True == bEncoding:
+    #     # 아예 제거
+    #     # bEncoding:bool = modelItem.encoding
+    #     # if True == bEncoding:
             
-            #base64 인코딩 처리한다. 인코딩 오류가 발생하면, 예외 발생 (api에서 처리)
+    #     #     #base64 인코딩 처리한다. 인코딩 오류가 발생하면, 예외 발생 (api에서 처리)
             
-            bytebase64DecodePlainPrompt:bytes = base64.b64decode(strPromptMessage)
+    #     #     bytebase64DecodePlainPrompt:bytes = base64.b64decode(strPromptMessage)
             
-            strPromptMessage = bytebase64DecodePlainPrompt.decode('utf-8')
+    #     #     strPromptMessage = bytebase64DecodePlainPrompt.decode('utf-8')
             
-            LOG().debug(f"decode prompt, plain message = {strPromptMessage}")
+    #     #     LOG().debug(f"decode prompt, plain message = {strPromptMessage}")
         
-        return strPromptMessage
+    #     return strPromptMessage
     
     #inlet으로 filter함수를 통일하고, body 요청 메시지를 생성한다. 
     def GenerateInletBodyParameter(self, modelItem: VariantFilterForm) -> dict:
@@ -66,7 +66,7 @@ class RouterCustomHelper:
         role 하드코딩은 나중에 수정
         '''
         
-        strPromptMessage:str = self.ConvertPromptMessage(modelItem)
+        # strPromptMessage:str = self.ConvertPromptMessage(modelItem)
                 
         # #TODO: file 분석시 다시 확인, prompt가 없을 수 있다. => modelItem에서 예외처리 된다. 없을경우 공백 상태로 그대로 동작한다.
         # if None == strPromptMessage or 0 == len(strPromptMessage):
@@ -87,7 +87,7 @@ class RouterCustomHelper:
             
             #TODO: 이 구조를 변경하면, 약간의 성능 개선 기대.
             ApiParameterDefine.MESSAGES: [
-                {"role":"user", ApiParameterDefine.MESSAGE_PROMPT : strPromptMessage}
+                {"role":"user", ApiParameterDefine.MESSAGE_PROMPT : modelItem.prompt}
             ],
             
             #file 정보, 별도로 추가, 여러개일수 있다. modelitem에서 전달되는 file명을 전달한다.

@@ -15,5 +15,3 @@ class OfficeDetectServiceEx(OfficeFileDetectService):
         pass
     
     
-    
-    

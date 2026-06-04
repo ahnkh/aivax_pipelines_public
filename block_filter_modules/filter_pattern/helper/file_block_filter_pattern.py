@@ -1,18 +1,7 @@
 
+from pathlib import Path
 import hashlib
 import re
-
-# import magic
-
-# # import os
-# # import fitz  # PyMuPDF
-
-# # from docx import Document
-# from pptx import Presentation
-# from openpyxl import load_workbook
-# # import olefile
-
-# from multiprocessing import Pool, cpu_count
 
 from lib_include import *
 
@@ -40,7 +29,6 @@ TODO: 기존 pipeline 패턴과 동일 패턴으로, 신규 추가
 - 결과는 기존 BlockFilter과 유사 패턴으로 제공한다.
 
 TODO: 파일명 체크, 절대 경로이면 그대로 사용하고, 상대경로이면 지정된 경로에서 가져온다.
-- 1차 개발은 절대 경로로 지정한다.
 '''
 
 class FileBlockFilterPattern(FilterPatternBase):
@@ -159,7 +147,11 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
         file_read_timeout:int = self.__dictFileBlockInfoLocalConfig.get("file_read_timeout")
+        
         content_chunk_size:int = self.__dictFileBlockInfoLocalConfig.get("content_chunk_size")
+        
+        #세부 정보, 임시 경로
+        detail_reason_temp_dir:int = self.__dictFileBlockInfoLocalConfig.get("detail_reason_temp_dir")
         
         # for strFileName in lstAttachFile:
         for dictFileInfo in lstAttachFile:
@@ -210,7 +202,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                 pass
             else: #watermark가 아닌 파일만 탐지, 여기는 나중에 다시 개선
             
-                self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size)
+                self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size, detail_reason_temp_dir)
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
@@ -329,7 +321,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         return dictRule
         
     
-    def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int):
+    def __detectEachFileAt(self, strFilePath:str, dictEachFileOutput:dict, nFileReadTimeout:int, nContentChunkSize:int, strDetailTempDir:str):
         
         '''
         파일 타입을 읽고, 그 파일에 따라 파일을 읽는 모듈을 분기한다.
@@ -379,9 +371,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         # 텍스트에 대해서, 정책을 반영한다. 우선 틀을 잡고 향후 DB에 반영
                 
-        strChunk:str = strContents[:nContentChunkSize]
-        
-        dictEachFileOutput[ApiParameterDefine.FILE_INFO]["chunk"] = strChunk
+        #chunk 기능 옵션화, 0이면 미사용
+        if 0 < nContentChunkSize:
+            strChunk:str = strContents[:nContentChunkSize]        
+            dictEachFileOutput[ApiParameterDefine.FILE_INFO]["chunk"] = strChunk
         
         # 여기서 정규식 매칭.        
         # nContentsLen:int = len(strContents)        
@@ -403,11 +396,11 @@ class FileBlockFilterPattern(FilterPatternBase):
         #     )
         
         # 정규 표현식, TODO: 차단, 탐지만 확인하면 된다.        
-        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput, strFilePath, strMimeType, nFileReadTimeout)
+        self.__detectDefaultRegexPattern(listDefaultPattern, strContents, dictEachFileOutput, strDetailTempDir, strFilePath, strMimeType, nFileReadTimeout)
         
         return ERR_OK
     
-    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strContents:str, dictEachFileOutput:dict, strFilePath:str, strMimeType:str, nFileReadTimeout:int):
+    def __detectDefaultRegexPattern(self, listDBRegexPattern:list, strContents:str, dictEachFileOutput:dict, strDetailTempDir:str, strFilePath:str, strMimeType:str, nFileReadTimeout:int):
         
         '''
         '''
@@ -420,7 +413,7 @@ class FileBlockFilterPattern(FilterPatternBase):
                                 
                 # parameterItem.regex_pattern = dictDBPattern
                 
-                self.__analyzeFileBlockDetailReason(strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput)
+                self.__analyzeFileBlockDetailReason(strDetailTempDir, strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput)
                 return True
         
         return False
@@ -577,6 +570,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_ALLOW_EXT] = file_allow_ext
         dictFileBlockDBConfig[FilePolicyDefine.DB_POLICY_FILE_BLOCK_MAX_SIZE] = file_max_size
         
+        #상세 정보, 임시 경로 추가
+        detail_reason_temp_dir:str = file_block_filter_module.get("detail_reason_temp_dir")
+        Path(detail_reason_temp_dir).mkdir(parents=True, exist_ok=True)
+        
         return ERR_OK
     
     # watermark에 대한 정책,우선 local로 설정하고, 향후 DB, UI 정책으로 만든다.
@@ -595,75 +592,16 @@ class FileBlockFilterPattern(FilterPatternBase):
         return ERR_OK
     
     # 파일 - 2차 분석, 차단이 발생했으면, 차단 사유에 대해서도 분석 결과를 수집한다.
-    def __analyzeFileBlockDetailReason(self, strFilePath:str, strMimeType:str, nFileReadTimeout:int, dictDBPattern:dict, dictEachFileOutput:dict):
+    def __analyzeFileBlockDetailReason(self, strDetailTempDir:str, strFilePath:str, strMimeType:str, nFileReadTimeout:int, dictDBPattern:dict, dictEachFileOutput:dict):
         
         '''
         파일에 대해서, pdf를 변환후, 분석된 컨텐츠 위치를 찾는다.
         최초 확인된 정책, 정규식을 다시 적용한다.        
         '''
         
-        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput, self.__officeDetectService)
+        self.__officeFileAnalyzeHelper.AnalyzeFileBlockDetailReason(strDetailTempDir, strFilePath, strMimeType, nFileReadTimeout, dictDBPattern, dictEachFileOutput, self.__officeDetectService)
         
         return ERR_OK
-    
-    
-    # # 파일을 읽는 로직 분리,mimetype에 따른 분기, string 참조의 전달은.. 감수하자.
-    # def __readOfficeFileContents(self, strMimeType:str, strFilePath:str, nFileReadTimeout:int) -> str:
-        
-    #     '''
-    #     TODO: 읽을수 없는 컨텐츠는, 공백 반환
-    #     다만 로그를 통해 사후 보강은 필요
-    #     '''
-        
-        
-        
-    #     try:
-            
-    #         if FileDefine.MIME_DOCX == strMimeType or FileDefine.MIME_DOCX_V2 == strMimeType:
-        
-    #             # 텍스트 추출, 테스트,word 만 테스트
-    #             # strContents = docx2txt.process(strFileName)            
-    #             strContents = self.__officeReader.ReadDocxToText(strFilePath)
-                
-    #         elif FileDefine.MIME_DOC == strMimeType:            
-    #             strContents = self.__officeReader.ReadDocToText(strFilePath, nFileReadTimeout)
-                
-    #         elif FileDefine.MIME_HWP == strMimeType:
-    #             strContents = self.__officeReader.ReadHwpToText(strFilePath, nFileReadTimeout)
-    #             # pass
-            
-    #         elif FileDefine.MIME_HWPX == strMimeType:
-    #             strContents = self.__officeReader.ReadHwpxToText(strFilePath)
-    #             # pass
-                
-    #         elif FileDefine.MIME_PDF == strMimeType:
-    #             strContents = self.__officeReader.ReadPdfToText(strFilePath)
-                
-    #         elif FileDefine.MIME_PPT == strMimeType:
-    #             strContents = self.__officeReader.ReadLegacyPowerPointToText(strFilePath)
-                
-    #         elif FileDefine.MIME_PPTX == strMimeType:
-    #             strContents = self.__officeReader.ReadPPTXToText(strFilePath)
-                
-    #         elif FileDefine.MIME_XLS == strMimeType:
-    #             strContents = self.__officeReader.ReadLegacyExcelToText(strFilePath)
-                
-    #         elif FileDefine.MIME_XLSX == strMimeType:
-    #             strContents = self.__officeReader.ReadXlsxToText(strFilePath)
-            
-    #         else:
-    #             #TODO: 에러를 발생하면 안되고, 공백으로 반환한다.
-    #             # raise Exception (f"unsupported file type {strMimeType}")
-    #             LOG().error(f"unsupported file type {strMimeType}")
-    #             return ""
-            
-    #         return strContents
-            
-    #     except Exception as err:
-    #         LOG().error(traceback.format_exc())
-    #         return ""
-    
-    
     
 
 
