@@ -114,7 +114,7 @@
 
     "regex_pipeliline_filter_module":
     {
-        "prompt_size_limit" : 10
+        "prompt_size_limit" : 1048576
     },
 
     "slm_pipeline_filter_module":
@@ -196,7 +196,7 @@
 
         "ui_alarm_event":
         {
-            "url" : "http://127.0.0.1:3001/api/notification/event",
+            "url" : "http://127.0.0.1:3001/api/v1/notification/event",
             "timeout" : 10
         }
 

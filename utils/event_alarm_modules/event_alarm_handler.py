@@ -144,7 +144,7 @@ class EventAlarmHandler:
             #여기는 어쩔수 없다. 이벤트를 만들어서 버린다.
             lstHttpEvent.append({
                 "timestamp" : eventAlarmMessage.time_stamp,
-                "messageid" : eventAlarmMessage.messageid,
+                "messageId" : eventAlarmMessage.messageid,
                 "user": {
                     "id" : eventAlarmMessage.user_id,
                     "role" : eventAlarmMessage.user_role,
