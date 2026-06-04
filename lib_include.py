@@ -212,6 +212,8 @@ class FilePolicyDefine:
     DB_POLICY_FILE_BLOCK_ALLOW_EXT = "allow_ext"
     DB_POLICY_FILE_BLOCK_MAX_SIZE = "max_size"
     
+    LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE = "use_file_block_bypass_mode"
+    
     BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
     BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit"
     BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header"

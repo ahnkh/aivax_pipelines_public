@@ -127,6 +127,7 @@
 
     "file_block_filter_module":
     {
+        "use_file_block_bypass_mode" : true,
         "attach_file_base_dir" : "/home1/aivax/data_resource/attach_file",
         "file_read_timeout" : 60,
 

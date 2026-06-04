@@ -143,6 +143,12 @@ class FileBlockFilterPattern(FilterPatternBase):
         # TODO: 정책의 구조는 기존과 동일하되, 파일 분석 시점에는 uuid, service type을 알수 없어서
         # default 정책만 설정 가능하도록 설정한다.
         
+        # 이미지, bypass 모드 추가
+        bFileBlockBypassMode:bool = self.__dictFileBlockInfoLocalConfig.get(FilePolicyDefine.LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE)
+        
+        if True == bFileBlockBypassMode:
+            return ERR_OK
+        
         lstFileStatus:list = []
         
         # attach_file_base_dir:str = self.__dictFileBlockInfoLocalConfig.get("attach_file_base_dir")
@@ -573,6 +579,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         #상세 정보, 임시 경로 추가
         detail_reason_temp_dir:str = file_block_filter_module.get("detail_reason_temp_dir")
         Path(detail_reason_temp_dir).mkdir(parents=True, exist_ok=True)
+        
+        #file 차단, bypass모드 추가, 인증용도
+        use_bypass_mode:bool = file_block_filter_module.get("use_bypass_mode")
+        dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE] = use_bypass_mode
         
         return ERR_OK
     
