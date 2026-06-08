@@ -19,6 +19,8 @@ from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_
 
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_detect_service_ex import OfficeDetectServiceEx
 
+from block_filter_modules.filter_pattern.helper.attach_file_manage.attach_file_backup_helper import AttachFileBackupHelper
+
 '''
 file filter 패턴, 
 TODO: 기존 pipeline 패턴과 동일 패턴으로, 신규 추가
@@ -66,7 +68,9 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = None
         
-        self.__officeDetectService:OfficeDetectServiceEx = None        
+        self.__officeDetectService:OfficeDetectServiceEx = None  
+        
+        self.__attachFileBackupHelper:AttachFileBackupHelper = None      
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -96,10 +100,15 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         self.__officeDetectService:OfficeDetectServiceEx = OfficeDetectServiceEx()
         self.__officeDetectService.Initialize()
+        
+        self.__attachFileBackupHelper:AttachFileBackupHelper = AttachFileBackupHelper()
                         
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
         
         self.__readWatermarkLocalConfig(dictJsonLocalConfigRoot, self.__officeWaterMarkDetectHelper)
+        
+        
+        self.__attachFileBackupHelper.Initialize(self.__dictFileBlockDBConfig)
         
         return ERR_OK
     
@@ -160,7 +169,8 @@ class FileBlockFilterPattern(FilterPatternBase):
         detail_reason_temp_dir:int = self.__dictFileBlockInfoLocalConfig.get("detail_reason_temp_dir")
         
         #읽은 파일의 백업 경로
-        file_block_min_backup_dir:int = self.__dictFileBlockInfoLocalConfig.get(FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_MIN_BACKUP_DIR)
+        # file_block_temp_backup_dir:int = self.__dictFileBlockInfoLocalConfig.get(FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_TEMP_BACKUP_DIR)
+        # file_block_backup_dir:int = self.__dictFileBlockInfoLocalConfig.get(FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_BACKUP_DIR)
         
         # for strFileName in lstAttachFile:
         for dictFileInfo in lstAttachFile:
@@ -184,6 +194,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             dictEachFileOutput:dict = {
                 ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_BLANK, #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
                 ApiParameterDefine.FILE_NAME : strFileName,
+                ApiParameterDefine.FILE_BACKUP_PATH : "", 
                 
                 ApiParameterDefine.POLICY_ID : "",
                 ApiParameterDefine.POLICY_NAME : "",
@@ -212,13 +223,15 @@ class FileBlockFilterPattern(FilterPatternBase):
             else: #watermark가 아닌 파일만 탐지, 여기는 나중에 다시 개선
             
                 self.__detectEachFileAt(strRealOfficeFilePath, dictEachFileOutput, file_read_timeout, content_chunk_size, detail_reason_temp_dir)
+                
+            #파일의 백업
+            # self.__backupAttachFile(strRealOfficeFilePath, strFileName, file_block_temp_backup_dir)
+            # self.__backupAttachFile(strRealOfficeFilePath, strFileName, file_block_backup_dir)
+            strDestFileFullPath:str = self.__attachFileBackupHelper.BackupAttachFile(strRealOfficeFilePath, strFileName)
+            dictEachFileOutput[ApiParameterDefine.FILE_BACKUP_PATH] = strDestFileFullPath
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
-            
-            #파일의 백업
-            self.__backupAttachFile(strRealOfficeFilePath, strFileName, file_block_min_backup_dir)
-            
             
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = lstFileStatus
         
@@ -301,10 +314,11 @@ class FileBlockFilterPattern(FilterPatternBase):
     ####################################### private
     
     # 첨부파일의 백업
-    def __backupAttachFile(self, strRealOfficeFilePath:str, strFileName:str, strFileBackupMinDir:str):
+    def __backupAttachFile(self, strRealOfficeFilePath:str, strFileName:str, strFileBackupDir:str):
         
         '''
-        sslproxy와 pipeline의 파일의 동시 접근 최소화 목적
+        
+        
         '''
         
         #파일의 식별을 위해서, 파일명을 접두어로 추가한다.
@@ -313,10 +327,12 @@ class FileBlockFilterPattern(FilterPatternBase):
         strSrcFileID:str = os.path.basename(strRealOfficeFilePath)
         
         #파일명, 무난하게 _로 구문
-        strDestFileFullPath:str = f"{strFileBackupMinDir}/{strFileName}_{strSrcFileID}"
+        #경로, 파일명 마다 만들어야 하는 문제, 스레드
+        #별도의 스레드, N일치까지 디렉토리를 자동으로 생성한다.        
+        strDestFileFullPath:str = f"{strFileBackupDir}/{strFileName}_{strSrcFileID}"
         
         #파일 이동
-        os.replace(strRealOfficeFilePath, strDestFileFullPath)
+        # os.replace(strRealOfficeFilePath, strDestFileFullPath)
         
         return ERR_OK
         
@@ -611,9 +627,13 @@ class FileBlockFilterPattern(FilterPatternBase):
         use_bypass_mode:bool = file_block_filter_module.get("use_bypass_mode")
         dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE] = use_bypass_mode
         
-        # file backup, 1분 백업 경로, local config 관리
-        file_block_min_backup_dir:str = file_block_filter_module.get("file_block_min_backup_dir")
-        dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_MIN_BACKUP_DIR] = file_block_min_backup_dir
+        # file backup, 백업 경로, local config 관리
+        # file_block_temp_backup_dir:str = file_block_filter_module.get("file_block_temp_backup_dir")
+        file_block_backup_dir:str = file_block_filter_module.get("file_block_backup_dir")
+        
+        # dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_TEMP_BACKUP_DIR] = file_block_temp_backup_dir
+        dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_BACKUP_DIR] = file_block_backup_dir
+        Path(file_block_backup_dir).mkdir(parents=True, exist_ok=True)
         
         return ERR_OK
     

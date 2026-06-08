@@ -214,7 +214,8 @@ class FilePolicyDefine:
     
     LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE = "use_file_block_bypass_mode"
     
-    LOCAL_CONFIG_FILE_BLOCK_MIN_BACKUP_DIR = "file_block_min_backup_dir"
+    LOCAL_CONFIG_FILE_BLOCK_TEMP_BACKUP_DIR = "file_block_temp_backup_dir"
+    LOCAL_CONFIG_FILE_BLOCK_BACKUP_DIR = "file_block_backup_dir"
     
     BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
     BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit"

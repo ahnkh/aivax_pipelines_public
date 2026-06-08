@@ -55,6 +55,7 @@ class ApiParameterDefine:
     ATTACH_FILE = "attach_file"
     
     FILE_NAME = "file_name"
+    FILE_BACKUP_PATH = "file_backup_path"
     FILE_SUMMARY = "file_summary" #파일 차단, 요약 (TODO: 별도로 분리해야 한다.)
     # FILE_DETAIL = "file_detail" #파일 차단, 상세
     FILE_INFO = "file_info" #파일 속성, 부가정보
