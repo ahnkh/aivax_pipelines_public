@@ -159,12 +159,15 @@ class FileBlockFilterPattern(FilterPatternBase):
         #세부 정보, 임시 경로
         detail_reason_temp_dir:int = self.__dictFileBlockInfoLocalConfig.get("detail_reason_temp_dir")
         
+        #읽은 파일의 백업 경로
+        file_block_min_backup_dir:int = self.__dictFileBlockInfoLocalConfig.get(FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_MIN_BACKUP_DIR)
+        
         # for strFileName in lstAttachFile:
         for dictFileInfo in lstAttachFile:
             
             id:str = dictFileInfo.get("id") #TODO: 실제 파일 경로
             # dictFileInfo.get("size") #TODO: 불필요 => 실제 파일 사이즈
-            strFileName:str = dictFileInfo.get("name") # File Alias
+            strFileName:str = dictFileInfo.get("name") # File 명
             # dictFileInfo.get("mime_type") #TODO: 불필요
             
             if 0 == len(id) or 0 == len(strFileName):
@@ -212,6 +215,10 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             # 개별 차단 결과의 저장 (모든 파일에 대해서는 탐지를 수행한다. (파일 개수에 다른 병렬처리 검토)
             lstFileStatus.append(dictEachFileOutput)
+            
+            #파일의 백업
+            self.__backupAttachFile(strRealOfficeFilePath, strFileName, file_block_min_backup_dir)
+            
             
         dictOuputResponse[ApiParameterDefine.FILE_SUMMARY] = lstFileStatus
         
@@ -292,6 +299,26 @@ class FileBlockFilterPattern(FilterPatternBase):
         return ERR_OK
     
     ####################################### private
+    
+    # 첨부파일의 백업
+    def __backupAttachFile(self, strRealOfficeFilePath:str, strFileName:str, strFileBackupMinDir:str):
+        
+        '''
+        sslproxy와 pipeline의 파일의 동시 접근 최소화 목적
+        '''
+        
+        #파일의 식별을 위해서, 파일명을 접두어로 추가한다.
+        
+        #strRealOfficeFilePath[strRealOfficeFilePath.rfind('/')+1:]
+        strSrcFileID:str = os.path.basename(strRealOfficeFilePath)
+        
+        #파일명, 무난하게 _로 구문
+        strDestFileFullPath:str = f"{strFileBackupMinDir}/{strFileName}_{strSrcFileID}"
+        
+        #파일 이동
+        os.replace(strRealOfficeFilePath, strDestFileFullPath)
+        
+        return ERR_OK
         
     def __decideFinalPolicyAction(self, lstFileStatus:list):
         
@@ -583,6 +610,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         #file 차단, bypass모드 추가, 인증용도
         use_bypass_mode:bool = file_block_filter_module.get("use_bypass_mode")
         dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_USE_FILE_BLOCK_BYPASS_MODE] = use_bypass_mode
+        
+        # file backup, 1분 백업 경로, local config 관리
+        file_block_min_backup_dir:str = file_block_filter_module.get("file_block_min_backup_dir")
+        dictFileBlockDBConfig[FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_MIN_BACKUP_DIR] = file_block_min_backup_dir
         
         return ERR_OK
     

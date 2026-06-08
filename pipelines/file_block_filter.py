@@ -30,7 +30,6 @@ class Pipeline(PipelineBase):
         self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()        
         pass
     
-    
     #pipeline, inlet, outlet 중 inlet 만 가져간다.
     async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
         
@@ -174,7 +173,6 @@ class Pipeline(PipelineBase):
         else:
             
             dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
-            # dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = ""
         
         return ERR_OK
     

@@ -1,9 +1,3 @@
-# filters/regex_and_entropy_secret_filter.py
-# OpenWebUI Pipelines - Filter
-# 목적: 유저 프롬프트(content)에서
-#   1) 알려진 시크릿 패턴(AWS/Azure/Base64HighEntropy/BasicAuth/Cloudant/Discord/GitHub/JWT/Keyword/Mailchimp/PrivateKey/Slack/Stripe/Twilio)
-#   2) 엔트로피 높은 토큰(완화 임계치)
-# 를 탐지하여 해당 "토큰/값"만 [MASKING]으로 치환
 
 import copy
 
@@ -197,9 +191,7 @@ class Pipeline(PipelineBase):
             strLocalContents:str = copy.deepcopy(content)
             
             masked:str = ""
-            
-            #TOOD: 전달인자, 호출 인자, 다시 정의해서 전달되어야 한다.
-            #요청 파라미터도 최소화 한다.
+                        
             filterPatternItem:RegexPatternDetectFilterParameterItem = RegexPatternDetectFilterParameterItem(
                 contents = strLocalContents,
                 user_id = user_id,
@@ -209,22 +201,18 @@ class Pipeline(PipelineBase):
                 regex_fullscan_flag = full_scan_flag
             )
                        
-            # valves = self.valves
-            # (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(strLocalContents, valves, user_id, uuid, ai_service_type)
-            # (spans, counts, dictDetectedRule) = detectSecretFilterPattern.DetectPattern(filterPatternItem)            
             filterResultItem:RegexPaternDetectFilterResultItem = detectSecretFilterPattern.DetectPattern(filterPatternItem)
             
             dictDetectedRule = filterResultItem.dictDetectRule
             counts = filterResultItem.counts
             spans = filterResultItem.spans
-                        
-            #정책ID, 정책명을 차단 메시지에 추가 (너무 길다, 리펙토링 필요)
+                                    
             strPolicyID:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ID, "")
             strPolicyName:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_NAME, "")
             strPolicyAction:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_ACTION, "")
             strTarget:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_TARGET, "") #카테고리, TODO: 삭제 예정
             strCategory:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_CATEGORY, "") #카테고리
-            strScope:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_SCOPE, "") #카테고리
+            strScope:str = dictDetectedRule.get(DBDefine.DB_FIELD_RULE_SCOPE, "")
             
             #TODO: 프롬프트 정책명 생성, 다중 탐지가 되면, 중복되지 않는 최대 2개의 정책명을 표기한다.
             strBlockPolicyRuleName:str = self.__filterCustomUtil.ConvertBlockPolicyCategory(filterResultItem.detect_rule_list, strPolicyName)
@@ -240,10 +228,7 @@ class Pipeline(PipelineBase):
                 nBlockCount = counts.get("block")
                 nMaskingCount = counts.get("masking")
                 
-                #정책 카테고리, name만 표기
-                
-                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)                                
-                # strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
+                #정책 카테고리, name만 표기                
                 strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strBlockPolicyRuleName)
                 
                 #block 먼저 체크
@@ -469,7 +454,8 @@ class Pipeline(PipelineBase):
                            
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
                 
-                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
+                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)
+                strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
                 dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
                 
             elif 0 < nMaskingCount:
@@ -480,7 +466,9 @@ class Pipeline(PipelineBase):
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = masked
 
                 #TODO: 여기서부터는 협의 필요                    
-                strBlockMessage:str = self.__customBlockMessage(strPolicyName)
+                # strBlockMessage:str = self.__customBlockMessage(strPolicyName)
+                strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
+                
                 dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
             
         else:
@@ -531,21 +519,21 @@ class Pipeline(PipelineBase):
         
         return "".join(out)
     
-    #차단 메시지, 우선 하드코딩, 향후 ouput 데이터의 처리 모듈을 개발한다.
-    def __customBlockMessage(self, strBlockCategory:str) -> str:
+#     #차단 메시지, 우선 하드코딩, 향후 ouput 데이터의 처리 모듈을 개발한다.
+#     def __customBlockMessage(self, strBlockCategory:str) -> str:
         
-        '''
-        시연용 하드코딩
-        '''
+#         '''
+#         시연용 하드코딩
+#         '''
         
-        strBlockMessage:str = f'''[AIVAX] 프롬프트 차단
-AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
-❌탐지 유형은 '{strBlockCategory}' 입니다.
-민감 정보를 전송할 경우, 기밀 정보 또는 개인 정보 유출등의 피해가 발생할 수 있으니 각별한 주의를 부탁드려요
-요청하신 프롬프트는 AIVAX에 의해서 요청이 차단되었습니다.
-세부 지침 사항은 관리자에게 문의해주세요
-        '''
+#         strBlockMessage:str = f'''[AIVAX] 프롬프트 차단
+# AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
+# ❌탐지 유형은 '{strBlockCategory}' 입니다.
+# 민감 정보를 전송할 경우, 기밀 정보 또는 개인 정보 유출등의 피해가 발생할 수 있으니 각별한 주의를 부탁드려요
+# 요청하신 프롬프트는 AIVAX에 의해서 요청이 차단되었습니다.
+# 세부 지침 사항은 관리자에게 문의해주세요
+#         '''
         
-        return strBlockMessage
+#         return strBlockMessage
     
     
