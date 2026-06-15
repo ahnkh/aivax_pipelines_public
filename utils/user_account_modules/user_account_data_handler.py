@@ -284,10 +284,32 @@ class UserAccountDataHandler:
         dictDBResult:dict = {}
         sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_insert_update_ai_user_account", dictDBInfo, dictDBResult)
         
+        # 에러체크, insert가 안되는 경우가 있을수 있다.
+        nErrorCode:int = dictDBResult.get(DBSQLDefine.QUERY_ERR_CODE)
+        
+        if ERR_OK != nErrorCode:
+            
+            # 3회 재시도
+            for attempt in range(3):
+                
+                dictDBResult:dict = {}
+                sqlprintf(DBSQLDefine.BASE_CATEGORY_RDB, "rdb_insert_update_ai_user_account", dictDBInfo, dictDBResult)
+                
+                nErrorCode:int = dictDBResult.get(DBSQLDefine.QUERY_ERR_CODE)
+                
+                # 성공하면 중단
+                if ERR_OK == nErrorCode:
+                    break
+                
+                #pass
+                
+            # 3회를 시도했는데 에러코드가 오류이면 수집오류, 재시도
+            if ERR_OK != nErrorCode:     
+                LOG().error(f"fail insert user account, mail = {email}, aiservice = {ai_service}")           
+                return ERR_FAIL
+        
         #신규 사용자가 등록되면, email과 서비스 id를 지정한다.
         #우선 테스트
-        
-        nErrorCode:int = dictDBResult.get(DBSQLDefine.QUERY_ERR_CODE)
         
         default_server_ip:str = dictDBApiServer.get("default_server_ip")
         default_server_port:str = dictDBApiServer.get("default_server_port")
@@ -300,11 +322,6 @@ class UserAccountDataHandler:
         }
         
         self.__requestToSimpleJsonRequest(strURL, post)
-
-        # 응답값의 반환        
-        if 0 != nErrorCode:
-            LOG().error(f"fail insert user account, mail = {email}, service = {ai_service}")
-            return ERR_FAIL
         
         return ERR_OK
         
