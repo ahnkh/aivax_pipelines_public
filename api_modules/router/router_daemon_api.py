@@ -149,6 +149,7 @@ async def write_ouput_response(modelItem: OutputFilterItem, request: Request):
 #정책 추가 인터페이스, 정책에 대한 테스트와 응답 결과만 반환한다.
 @app.post("/v1/filter/testrule")
 async def testFilterRule(modelItem: FilterRuleTestItem, request: Request) -> dict:
+# async def testFilterRule(modelItem: FilterRuleTestItem) -> dict:
     '''
     '''
     
@@ -338,11 +339,11 @@ async def doTestFilterRule(modelItem: FilterRuleTestItem, request: Request) -> d
     향후 사용자별 정책등을 고려할때 재검토. 전달 인터페이스만 제공한다.
     '''
     
-    from mainapp.pipeline_main_app import PipeLineMainApp
+    # from mainapp.pipeline_main_app import PipeLineMainApp
 
-    mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
+    # mainApp:PipeLineMainApp = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)
     
-    dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
+    # dictPipelineMap:dict = mainApp.GetMainAppLinkedPipelineModules()
     
     #시나리오, pipeline 리스트를 여러개 가져온다.
     #호출시 pipeline 전달은 크게 문제가 안되며, pipeline으로 전달되는 filter 자체를 고치는 부분과
@@ -355,6 +356,15 @@ async def doTestFilterRule(modelItem: FilterRuleTestItem, request: Request) -> d
     #차단 메시지와, API 포맷의 메시지를 전달하는 방안으로 고려한다.
     #http 헤더도 필요하며, 데이터의 크기문제로 allow 시점에는 전달하지 않는다.
     #helper 모듈의 개발을 검토한다.
+    
+    # 26.06.22 사양 변경, regex, slm (=symantic)으로 분기
+    # regex_filter, slm_filter
+    
+    #TODO: command로 이동
+    
+    mainApp:Any = app.GetState(ApiRouterEx.STATE_KEY_MAINAPP)    
+    return await command.doTestFilterApiRouter(mainApp, modelItem, request)
+    
     
     #일단, detect secret으로 통일
     strPipelineFilterName:str = "secret_filter"

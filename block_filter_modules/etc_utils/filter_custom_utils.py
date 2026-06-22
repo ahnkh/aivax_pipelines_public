@@ -41,7 +41,7 @@ class FilterCustomUtils:
     
     
     # 사용자 메시지 처리, 우선 하드코딩, 단순 패턴일때는 category 1개로 표기
-    def CustomBlockMessages(self, strPolicyCategory) -> str:
+    def CustomBlockMessages(self, strPolicyCategory:str) -> str:
         
         '''
         '''
@@ -56,15 +56,82 @@ AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐�
         
         return strBlockMessage
     
+    # 사용자 메시지 처리, SLM, 문구 변경
+    def CustomSLMBlockMessage(self, lstEvidence:list):
+        
+        '''
+        TODO: Evidence, Wins 모델에서만 지원한다.
+        [{\"type\": \"PHONE\", \"value\": \"010-1234-5678\"}, {\"type\": \"EMAIL\", \"value\": \"test@example.com\"}]
+        '''
+        
+        strDetectType:str = ""        
+        strDetectValue:str = ""
+        
+        if 1 == len(lstEvidence):
+            
+            dictEvidence:dict = lstEvidence[0]
+            
+            strDetectType = dictEvidence.get("type")
+            strDetectValue = dictEvidence.get("value")
+            
+        elif 2 <= len(lstEvidence):
+            
+            strDetectType = ",".join(item["type"] for item in lstEvidence)
+            strDetectValue = ",".join(item["value"] for item in lstEvidence)
+            
+        else: #탐지 사유가 없는 경우
+            
+            strDetectType = "nodetect"
+            strDetectValue = "unknown"            
+            # pass
+                
+        
+        strBlockMessage:str = f'''[AIVAX] 프롬프트 차단
+SLM 필터 정책에 의해 민감정보가 프롬프트 문맥에 포함된 것으로 탐지되었습니다.
+❌탐지 유형은 '{strDetectType}' 입니다.
+❌탐지된 내용은 '{strDetectValue}' 입니다.
+민감 정보를 전송할 경우, 기밀 정보 또는 개인 정보 유출등의 피해가 발생할 수 있으니 각별한 주의를 부탁드려요
+요청하신 프롬프트는 AIVAX에 의해서 요청이 차단되었습니다.
+세부 지침 사항은 관리자에게 문의해주세요
+        '''
+        
+        return strBlockMessage
+        
+        
+    
     # SLM 시점의 사용자 masking 문자열, 우선 하드코딩, 향후 UI에서 제어
-    def CustomMaskMessageOfSLM(self, strPolicyCategory) -> str:
+    def CustomMaskMessageOfSLM(self, lstEvidence:list) -> str:
         
         '''
         '''
+        
+        # TODO: 중복된 코드, 향후 정규화 + 개선
+        strDetectType:str = ""        
+        strDetectValue:str = ""
+        
+        if 1 == len(lstEvidence):
+            
+            dictEvidence:dict = lstEvidence[0]
+            
+            strDetectType = dictEvidence.get("type")
+            strDetectValue = dictEvidence.get("value")
+            
+        elif 2 <= len(lstEvidence):
+            
+            strDetectType = ",".join(item["type"] for item in lstEvidence)
+            strDetectValue = ",".join(item["value"] for item in lstEvidence)
+            
+        else: #탐지 사유가 없는 경우
+            
+            strDetectType = "nodetect"
+            strDetectValue = "unknown"            
+            # pass
         
         strMaskedMessage:str = f'''[AIVAX] 프롬프트 마스킹
-AIVAX 정책에 의해 민감정보가 프롬프트에 포함된 것으로 탐지되었습니다.
-❌탐지 유형은 '{strPolicyCategory}' 입니다.
+SLM 필터 정책에 의해 민감정보가 프롬프트 문맥에 포함된 것으로 탐지되었습니다.
+❌탐지 유형은 '{strDetectType}' 입니다.
+❌탐지된 내용은 '{strDetectValue}' 입니다.
+
 세부 지침 사항은 관리자에게 문의해주세요
         '''
         

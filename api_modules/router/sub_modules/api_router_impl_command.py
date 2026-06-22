@@ -7,6 +7,7 @@ from api_modules.helper.router_custom_helper import RouterCustomHelper
 
 from api_modules.router.sub_modules.filter_pipeline_command import FilterPipelineCommand
 from api_modules.router.sub_modules.output_pipeline_command import OutputPipelineCommand
+from api_modules.router.sub_modules.test_pipeline_command import TestPipelineCommand
 
 '''
 fast api, ipc 각각 사용, 재활용이 필요하여 클래스, 모듈화
@@ -21,6 +22,8 @@ class ApiRouterImplCommand:
         
         self.__filterPipelineCommand = FilterPipelineCommand()
         self.__outputPipelineCommand = OutputPipelineCommand()
+        
+        self.__testPipelineCommand = TestPipelineCommand()
         pass
     
     #api, FastApi Router - 재사용
@@ -184,7 +187,6 @@ class ApiRouterImplCommand:
     
         return dictFilterOutput
     
-    
     #api, FastApi Router - 재사용
     #TODO: 비동기 코드, fast api에서는 비동기로 호출하고, ipc등 동기 상황은 ayncio로 호출 필요
     async def doOutputApiRouter(self, _mainApp:Any, modelItem: OutputFilterItem, request: Request = None) -> dict:
@@ -198,6 +200,16 @@ class ApiRouterImplCommand:
         # LOG().info(f"run api output command, user = {modelItem.user_id}, email = {modelItem.email}, ai_service = {modelItem.ai_service}, client_host = {modelItem.client_host}, message_id = {modelItem.message_id}, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
+    
+    # test 명령, filter 추가
+    async def doTestFilterApiRouter(self, _mainApp:Any, modelItem: FilterRuleTestItem, request: Request = None) -> dict:
+        
+        '''
+        '''
+        
+        routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
+        
+        return await self.__testPipelineCommand.doTestApiRouter(_mainApp, modelItem, request, routerCustomHelper)
     
     ################################################### private
     

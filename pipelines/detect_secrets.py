@@ -449,7 +449,7 @@ class Pipeline(PipelineBase):
                 masked = self.__maskSpans(strPrompt, spans)     
                 
                 strCustomContent:str = '''
-                허용되지 않은 프롬프트가 포함되어 요청이 차단되었습니다. 
+허용되지 않은 프롬프트가 포함되어 요청이 차단되었습니다. 
                 '''
                            
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent

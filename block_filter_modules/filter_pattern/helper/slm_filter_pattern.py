@@ -21,6 +21,11 @@ class SLMFilterPattern (FilterPatternBase):
     
     POLICY_FILTER_KEY = DBDefine.FILTER_KEY_SLM
     
+    # SLM 모델 버전
+    MODEL_VERSION_MTM_CPU = 1
+    MODEL_VERSION_MTM_GPU = 2
+    MODEL_VERSION_WINS_GPU = 3
+    
     def __init__(self):
         
         super().__init__()
@@ -82,36 +87,61 @@ class SLMFilterPattern (FilterPatternBase):
             # LOG().info("skip slm filter")
             return ERR_OK
         
-        # 요청 패턴, 일단 개발, 향후 개선 (이정도로는 부족)
-        post:dict = {
-            "model" : "cipherguard01",
-            "messages" : [
-                {
-                    "role" : "user",
-                    "content" : strPrompt    
-                }                
-            ],
-            "temperature" : 0.0,
-            "max_tokens" : 2048
-        }
-        
-        header:dict = {
-            "Content-Type" : "application/json"
-        }
-        
-        dictSLMHttpResponse:dict = self.__requestToSLM(strURL, post, request_timeout, header)
-        
-        if None == dictSLMHttpResponse:
-            LOG().info("fail request to slm, skip slm filter")
-            return ERR_FAIL
-        
         #TODO: 정책의 개입, 업데이트
         #TODO: 정책, 차단이 되면, 처음 탐지되는 정책으로 업데이트 한다.
-
-        if 2 == model_version:
-            self.__parseSLMReponseV2(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
-        else:
+        
+        if SLMFilterPattern.MODEL_VERSION_MTM_CPU == model_version:
+            
+            # # 요청 패턴, 일단 개발, 향후 개선 (이정도로는 부족)
+            # post:dict = {
+            #     "model" : "cipherguard01", #TODO: 스마트엠투엠만 사용하는 model, 응답값이 같다.
+            #     "messages" : [
+            #         {
+            #             "role" : "user",
+            #             "content" : strPrompt    
+            #         }                
+            #     ],
+            #     "temperature" : 0.0,
+            #     "max_tokens" : 2048
+            # }
+            
+            # header:dict = {
+            #     "Content-Type" : "application/json"
+            # }
+            
+            # dictSLMHttpResponse:dict = self.__requestToSLM(strURL, post, request_timeout, header)
+            
+            dictSLMHttpResponse:dict = self.__requestSmartMTMType(strURL, strPrompt, request_timeout)
+            
+            if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+                LOG().info("fail request to slm, skip slm filter")
+                return ERR_FAIL
+        
             self.__parseSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+            
+        elif SLMFilterPattern.MODEL_VERSION_MTM_GPU == model_version:
+            
+            #TODO: 스마트엠투엠 model은 요청 방식이 같다. 나중에 공통화
+            
+            dictSLMHttpResponse:dict = self.__requestSmartMTMType(strURL, strPrompt, request_timeout)
+            
+            if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+                LOG().info("fail request to slm, skip slm filter")
+                return ERR_FAIL
+            
+            self.__parseSLMReponseV2(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+            
+        elif SLMFilterPattern.MODEL_VERSION_WINS_GPU == model_version:
+            
+            dictSLMHttpResponse:dict = self.__requestWinsType(strURL, strPrompt, request_timeout)
+            
+            if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+                LOG().info("fail request to slm, skip slm filter")
+                return ERR_FAIL
+            
+            self.__parseWinsGPUSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+            pass
+    
         
         return ERR_OK
     
@@ -169,6 +199,70 @@ class SLMFilterPattern (FilterPatternBase):
         
         # 이값, 그대로 활용한다.
         dictFilterLocalConfig.update(slm_pipeline_filter_module)
+        
+        return ERR_OK
+    
+    # TODO: 그냥 반환하자.
+    def __requestSmartMTMType(self, strURL:str, strPrompt:str, nRequestTimeOut:int):
+        
+        '''
+        '''
+        
+        post:dict = {
+            "model" : "cipherguard01", 
+            "messages" : [
+                {
+                    "role" : "user",
+                    "content" : strPrompt    
+                }                
+            ],
+            "temperature" : 0.0,
+            "max_tokens" : 2048
+        }
+        
+        header:dict = {
+            "Content-Type" : "application/json"
+        }
+        
+        dictSLMHttpResponse:dict = self.__requestToSLM(strURL, post, nRequestTimeOut, header)
+        
+        if None == dictSLMHttpResponse:
+            LOG().info("fail request to slm, skip slm filter")
+            return None
+        
+        return dictSLMHttpResponse
+    
+    def __requestWinsType(self, strURL:str, strPrompt:str, nRequestTimeOut:int):
+        
+        '''
+        '''
+        
+        post:dict = {
+            
+            "messages" : [
+                {
+                    "role" : "user",
+                    "content" : strPrompt    
+                }                
+            ],
+            "temperature" : 0,
+            "max_tokens" : 3000,
+            "repeat_penalty" : 1.15
+        }
+        
+        header:dict = {
+            "Content-Type" : "application/json"
+        }
+        
+        dictSLMHttpResponse:dict = self.__requestToSLM(strURL, post, nRequestTimeOut, header)
+        
+        if None == dictSLMHttpResponse:
+            LOG().info("fail request to slm, skip slm filter")
+            return None
+        
+        return dictSLMHttpResponse
+        
+        
         
         return ERR_OK
     
@@ -242,8 +336,7 @@ class SLMFilterPattern (FilterPatternBase):
     
     def __parseSLMReponseV2(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
         
-        '''
-        
+        '''        
         '''
         
         if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
@@ -305,6 +398,87 @@ class SLMFilterPattern (FilterPatternBase):
             #pass
         
         return ERR_OK
+    
+    
+    def __parseWinsGPUSLMReponse(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
+        
+        '''
+        "choices": [
+            {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "{\"has_pii\": false, \"is_abuse\": false, \"items\": []}"
+                }
+            }
+        ]
+        '''
+        
+        choices:list = dictSLMHttpResponse.get(PipelineFilterDefine.SLM_RESONSE_CHOICE, [])
+        
+        if 0 == len(choices):
+            return ERR_OK
+       
+        dictChoice:dict = choices[0]
+        
+        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
+        
+        # TOOD: json 타입 문자열
+        content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
+        
+        dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
+        
+        #TOOD: 오류 발생시, 예외처리 구간으로 빠진다. 별도 에외처리 안한다.
+        dictContents:dict = json.loads(content)
+        
+        # 수집원본, 그대로 저장한다.
+        
+        has_pii:bool = dictContents.get("has_pii")
+        # is_abuse:bool = dictContents.get("is_abuse")
+        
+        # #TODO: 탐지가 되면 존재한다.
+        
+        # if 0 < len(items):
+            
+        #     for dictItem in items:
+                
+        #         type:str = dictItem.get("type")
+        #         value:str = dictItem.get("type")
+        
+        # TODO: 차단 시점의 로직 체크 필요
+        if True == has_pii:
+
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            if 0 < len(lstDBPattern):
+                
+                # 정책이 존재하면, 첫번째 정책으로 업데이트.
+                dictDBPattern:dict = lstDBPattern[0]
+                
+                # 전부 불필요
+                # id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+                # name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+                # targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+                # category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+
+                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                
+                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
+                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
+                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+
+                # evidence 추가, 응답 메시지에 출력
+                # items:list = dictContents.get("items")
+                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
+        
+        return ERR_OK
+    
     
     # SLM, API 요청
     def __requestToSLM(self, strURL:str, dictJsonTypePost:dict, nRequestTimeOut:int, dictHeader:dict) -> dict:

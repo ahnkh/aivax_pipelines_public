@@ -176,6 +176,7 @@ class DBDefine:
     DB_FIELD_RULE_ID = "id"
     DB_FIELD_RULE_REGEX_PATTERN = "regex_pattern"
     DB_FIELD_RULE_REGEX_FLAG = "regex_flag"
+    
     DB_FIELD_RULE_NAME = "name"
     DB_FIELD_RULE = "rule"
     DB_FIELD_RULE_ACTION = "action"    
@@ -200,12 +201,20 @@ class FilterDetectDefine:
     SCOPE_SERVICE = "service"
     SCOPE_DEFAULT = "default"    
     # pass
+    
+class SLMDetectDefine:
+    
+    SLM_EVIDENCE = "slm_evidence"
+    
+    # pass
+    
 
 class RegexPolicyDefine:
     
     BLOCK_REASON_PROMPT_LIMIT = "prompt size exceeds limit"
     
     pass
+
 
 class FilePolicyDefine:
     

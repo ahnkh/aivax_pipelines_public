@@ -202,7 +202,11 @@ class FilterRuleTestItem(BaseModel):
     prompt: str = Field(default="", description="입력 프롬프트")
     
     rule:str = Field(default="", description="정책 Rule")
-    action:str = Field(default="", description="action (block/masking)")    
+    action:str = Field(default="", description="action (block/masking)")   
+    
+    # test 구분 필드
+    typeMask:int = Field(default=1, description="1: regex, 2:slm, 3:regex+slm")   
+     
     pass
 
 class FilterPolicySignalItem(BaseModel):
