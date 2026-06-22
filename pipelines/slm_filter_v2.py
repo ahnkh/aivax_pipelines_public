@@ -99,7 +99,7 @@ class Pipeline(PipelineBase):
         slmFilterPattern.DetectPattern(strPrompt, dictOuputResponse, dictSLMPolicyResult)
         
         # 차단결과 => 정책에 등록된 SLM, 논리가 비약하다..
-        # strSLMAction:str = dictSLMPolicyResult.get(ApiParameterDefine.OUT_ACTION)
+        strSLMAction:str = dictSLMPolicyResult.get(ApiParameterDefine.OUT_ACTION)
         
         #TODO 다중으로 출력, Wins모델로 결정되어, 탐지된 컨텐츠를 여러개 표시한다.
         # strPolicyName:str = dictSLMPolicyResult.get(DBDefine.DB_FIELD_RULE_NAME, "") => 불필요, 제거        
@@ -110,9 +110,11 @@ class Pipeline(PipelineBase):
         
         # self.__updateApiOutResponse(strAction, lstEvidence, dictOuputResponse)
         
-        if PipelineFilterDefine.ACTION_BLOCK == strAction:
+        if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
             
-            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            # action 값은 넘어온 값으로 반환
+            # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
             
             strCustomContent:str = '''
 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 차단되었습니다. 
@@ -130,12 +132,14 @@ class Pipeline(PipelineBase):
 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 마스킹 되었습니다. 
 '''
             
-            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+            # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
             
             dictTestOutResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = self.__filterCustomUtil.CustomMaskMessageOfSLM(lstEvidence)
         
         else:
             
+            # 탐지가 안되었으면 undetect
             dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_UNDETECTED
             # dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
         
