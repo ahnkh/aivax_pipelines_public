@@ -175,7 +175,7 @@
 
         "regex_full_scan_flag" : true,
 
-        "next_detect_after_block" : true
+        "next_detect_after_block" : false
 
     },
 
