@@ -435,7 +435,7 @@ class SLMFilterPattern (FilterPatternBase):
         # 수집원본, 그대로 저장한다.
         
         has_pii:bool = dictContents.get("has_pii")
-        # is_abuse:bool = dictContents.get("is_abuse")
+        is_abuse:bool = dictContents.get("is_abuse")
         
         # #TODO: 탐지가 되면 존재한다.
         
@@ -447,11 +447,16 @@ class SLMFilterPattern (FilterPatternBase):
         #         value:str = dictItem.get("type")
         
         # TODO: 차단 시점의 로직 체크 필요
-        if True == has_pii:
+        if True == has_pii or True == is_abuse:
 
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             
             lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            # evidence는 항상 추가
+            # evidence 추가, 응답 메시지에 출력
+            # items:list = dictContents.get("items")
+            dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
             
             if 0 < len(lstDBPattern):
                 
@@ -465,17 +470,19 @@ class SLMFilterPattern (FilterPatternBase):
                 # category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
 
                 action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
-                
+
+                # db정책, 불필요                
                 # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
                 # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
                 # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
                 # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
                 
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
-
-                # evidence 추가, 응답 메시지에 출력
-                # items:list = dictContents.get("items")
-                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
+                
+            else: #정책이 없으면, 무조건 차단
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                
         
         return ERR_OK
     
