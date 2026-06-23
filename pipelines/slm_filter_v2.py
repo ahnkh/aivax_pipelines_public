@@ -108,42 +108,93 @@ class Pipeline(PipelineBase):
         #TODO: 26.06.22 evidence 추가
         #TODO: 같이 사용하지 못한다. 중복이지만 별도로 작성한다.
         
+        # 테스트, 코드, evidence는 남기자.
+        
+        content:str = dictOuputResponse.get(ApiParameterDefine.OUT_SLM_CONTENT)
+        
+        LOG().info(f"test slm, prompt = {strPrompt}, action = {strSLMAction}, content = {content}")
+        
         # self.__updateApiOutResponse(strAction, lstEvidence, dictOuputResponse)
         
+        # 과거 소스, 주석 처리        
+#         if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
+            
+#             # action 값은 넘어온 값으로 반환
+#             # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+#             dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+            
+#             strCustomContent:str = '''
+# 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 차단되었습니다. 
+# '''
+                           
+#             dictTestOutResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
+            
+#             dictTestOutResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = self.__filterCustomUtil.CustomSLMBlockMessage(lstEvidence)
+            
+#         elif PipelineFilterDefine.ACTION_MASKING == strAction:
+            
+#             #TODO: masking은 없다. 동일 메시지로..
+            
+#             strCustomContent:str = '''
+# 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 마스킹 되었습니다. 
+# '''
+            
+#             # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+#             dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+            
+#             dictTestOutResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = self.__filterCustomUtil.CustomMaskMessageOfSLM(lstEvidence)
+        
+#         else:
+            
+#             # 탐지가 안되었으면 undetect
+#             dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_UNDETECTED
+#             # dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
+        
+#         #TODO:저장외 동일하다... => 공통화 필요
+        
+        
+        # 사양 변경, 차단이 되면, UI의 설정에 따라서 행위가 온다.
         if PipelineFilterDefine.ACTION_BLOCK == strSLMAction:
             
-            # action 값은 넘어온 값으로 반환
-            # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
-            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+            # UI의 설정, 차단이면 차단으로 반환
+            if PipelineFilterDefine.ACTION_BLOCK == strAction:
+                
+                dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
             
-            strCustomContent:str = '''
+                strCustomContent:str = '''
 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 차단되었습니다. 
 '''
                            
-            dictTestOutResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
+                dictTestOutResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
+                
+                dictTestOutResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = self.__filterCustomUtil.CustomSLMBlockMessage(lstEvidence)
+                # pass
             
-            dictTestOutResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = self.__filterCustomUtil.CustomSLMBlockMessage(lstEvidence)
-            
-        elif PipelineFilterDefine.ACTION_MASKING == strAction:
-            
-            #TODO: masking은 없다. 동일 메시지로..
-            
-            strCustomContent:str = '''
+            elif PipelineFilterDefine.ACTION_MASKING == strAction:
+                
+                strCustomContent:str = '''
 허용되지 않은 프롬프트 문맥이 SLM에 의해 탐지되어 요청이 마스킹 되었습니다. 
 '''
             
-            # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
-            dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+                # dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
+                dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+                
+                dictTestOutResponse[ApiParameterDefine.OUT_CONTENT] = strCustomContent
+                
+                dictTestOutResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = self.__filterCustomUtil.CustomMaskMessageOfSLM(lstEvidence)
+                
+                # pass
             
-            dictTestOutResponse[ApiParameterDefine.OUT_MASKED_CONTENTS] = self.__filterCustomUtil.CustomMaskMessageOfSLM(lstEvidence)
-        
+            else: # 탐지, 아무 행위 없다.
+                dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = strAction
+                pass
+            
         else:
             
             # 탐지가 안되었으면 undetect
             dictTestOutResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_UNDETECTED
             # dictOuputResponse[ApiParameterDefine.OUT_ACTION_CODE] = PipelineFilterDefine.CODE_ALLOW
         
-        #TODO:저장외 동일하다... => 공통화 필요
         
         return ERR_OK            
         

@@ -462,14 +462,22 @@ class Pipeline(PipelineBase):
                 
                 # dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_MASKING
                 
+                
                 masked = self.__maskSpans(strPrompt, spans)                
                 dictOuputResponse[ApiParameterDefine.OUT_CONTENT] = masked
-
+                
+                '''
                 #TODO: 여기서부터는 협의 필요                    
                 # strBlockMessage:str = self.__customBlockMessage(strPolicyName)
                 strBlockMessage:str = self.__filterCustomUtil.CustomBlockMessages(strPolicyName)
                 
                 dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = strBlockMessage
+                '''
+                
+                # 사양 변경, block message에 통일하여 메시지를 출력한다.
+                # masekd 메시지는 제공하지 않는다.
+                dictOuputResponse[ApiParameterDefine.OUT_BLOCK_MESSAGE] = masked
+                
             
         else:
             LOG().info("No secrets detected (regex+entropy).")
