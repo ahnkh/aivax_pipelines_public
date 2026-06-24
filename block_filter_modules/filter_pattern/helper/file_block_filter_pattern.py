@@ -241,13 +241,29 @@ class FileBlockFilterPattern(FilterPatternBase):
         dictDetectPolicy:dict = self.__decideFinalPolicyAction(lstFileStatus)
         
         # 일단 PolicyAction을 반영한다.
-        strPolicyAction:str = dictDetectPolicy.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
-        strPolicyID:str = dictDetectPolicy.get(ApiParameterDefine.POLICY_ID, "")
-        strPolicyName:str = dictDetectPolicy.get(ApiParameterDefine.POLICY_NAME, "")
+        strPolicyAction:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        strPolicyID:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_ID, "")
+        strPolicyName:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_NAME, "")
+        
+        strTarget:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_TARGET, "")
+        strCategory:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_CATEGORY, "")
+        strScope:str = dictDetectPolicy.get(DBDefine.DB_FIELD_RULE_SCOPE, "")
         
         dictOuputResponse[ApiParameterDefine.OUT_ACTION] = strPolicyAction
+        
+        # 이건 유지
         dictOuputResponse[ApiParameterDefine.POLICY_ID] = strPolicyID
         dictOuputResponse[ApiParameterDefine.POLICY_NAME] = strPolicyName
+        
+        # 정책 - 최종 탐지 결과
+        dictOuputResponse[DBDefine.DB_FIELD_RULE_ID] = strPolicyID
+        dictOuputResponse[DBDefine.DB_FIELD_RULE_NAME] = strPolicyName
+        
+        dictOuputResponse[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+        dictOuputResponse[DBDefine.DB_FIELD_RULE_CATEGORY] = strCategory
+        dictOuputResponse[DBDefine.DB_FIELD_RULE_SCOPE] = strScope
+        
+        
         
         return ERR_OK
     
@@ -474,12 +490,17 @@ class FileBlockFilterPattern(FilterPatternBase):
         '''
 
         # 정책
-        id:str = dictDBPattern.get("id")
-        name:str = dictDBPattern.get("name")
+        id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+        name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+        
+        targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+        category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
 
         #차단, 마스킹 무시 향후 비활성화면 검토
-        action:str = dictDBPattern.get("action")
+        action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
         # rule:str = dictDBPattern.get("rule")
+        
+        scope:str = FilterDetectDefine.SCOPE_DEFAULT
         
         # regex_flag:int = int(dictDBPattern.get("regex_flag"))
         # regex_group:int = (dictDBPattern.get("regex_group"))
@@ -550,10 +571,18 @@ class FileBlockFilterPattern(FilterPatternBase):
             # self.__assignFirstDetectedRule(dictDetectRule, id, name)
             
             # 차단 시점의 정책 추가
-            dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = action #DB에 저장된 action
-            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id
-            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_ID] = id
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = name
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_ACTION] = action #DB에 저장된 action
+            
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = scope
             # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
+            
+            # 정책 탐지 테스트
+            # TODO: regex의 변경사양, 확인 !!!
+            LOG().debug(f"detect pattern, action = {action}, id = {id}, name = {name}, target = {targets}, category = {category}, scope = {scope}")
             
             return True
 

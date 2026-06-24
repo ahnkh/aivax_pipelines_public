@@ -61,7 +61,29 @@ class Pipeline(PipelineBase):
         # 응답 데이터 처리, 우선 개발후 정리
         # strAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
         
+        # dictOuputResponse[ApiParameterDefine.POLICY_ID] = strPolicyID
+        # dictOuputResponse[ApiParameterDefine.POLICY_NAME] = strPolicyName
+        
+        # 정책 - 최종 탐지 결과
+        # dictOuputResponse[DBDefine.DB_FIELD_RULE_ID] = strPolicyID
+        # dictOuputResponse[DBDefine.DB_FIELD_RULE_NAME] = strPolicyName
+        
+        # dictOuputResponse[DBDefine.DB_FIELD_RULE_TARGET] = strTarget
+        # dictOuputResponse[DBDefine.DB_FIELD_RULE_CATEGORY] = strCategory
+        # dictOuputResponse[DBDefine.DB_FIELD_RULE_SCOPE] = strScope
+        
         strPolicyAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+        strPolicyID:str = dictOuputResponse.get(DBDefine.DB_FIELD_RULE_ID, "")
+        
+        strPolicyName:str = dictOuputResponse.get(DBDefine.DB_FIELD_RULE_NAME, "")
+        
+        strTarget:str = dictOuputResponse.get(DBDefine.DB_FIELD_RULE_TARGET, "")
+        strCategory:str = dictOuputResponse.get(DBDefine.DB_FIELD_RULE_CATEGORY, "")
+        strScope:str = dictOuputResponse.get(DBDefine.DB_FIELD_RULE_SCOPE, "")
+        
+        strPolicyAction:str = dictOuputResponse.get(ApiParameterDefine.OUT_ACTION, PipelineFilterDefine.ACTION_BLANK)
+
+        
         # strPolicyID:str = dictOuputResponse.get(ApiParameterDefine.POLICY_ID, "")
         # strPolicyName:str = dictOuputResponse.get(ApiParameterDefine.POLICY_NAME, "")
         
@@ -130,9 +152,12 @@ class Pipeline(PipelineBase):
         dictLogBuffer[DBDefine.DB_FIELID_FILTER_DETECT].append({
             "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
             "mode": strPolicyAction, #DB상의 action으로 교체
-            # "policy_id" : strPolicyID,
-            # "policy_name" : strPolicyName,
-            # "target": strTarget,
+            
+            "policy_id" : strPolicyID,
+            "policy_name" : strPolicyName,
+            "target": strTarget,
+            "category": strCategory,
+            "scope": strScope,
             
             ApiParameterDefine.FILE_SUMMARY : dictOuputResponse.get(ApiParameterDefine.FILE_SUMMARY)            
         })
