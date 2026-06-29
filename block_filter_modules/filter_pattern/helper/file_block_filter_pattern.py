@@ -573,6 +573,10 @@ class FileBlockFilterPattern(FilterPatternBase):
             # 차단 시점의 정책 추가
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_ID] = id
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = name
+            
+            #TODO: action 값, File 차단일때는 강제로 Block으로 변경한다.
+            action = PipelineFilterDefine.ACTION_BLOCK
+            
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_ACTION] = action #DB에 저장된 action
             
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
