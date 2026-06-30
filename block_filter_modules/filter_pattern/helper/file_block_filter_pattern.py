@@ -499,7 +499,10 @@ class FileBlockFilterPattern(FilterPatternBase):
         name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
         
         targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
-        category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+        
+        #TODO: 파일분석의 카테고리는 고정해보자. (향후 옵션화)        
+        # category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+        category:str = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
 
         #차단, 마스킹 무시 향후 비활성화면 검토
         action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
@@ -568,7 +571,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         #         return True
         #         # pass
                 
-        for m in regex_pattern.finditer(strPromptText):
+        for match in regex_pattern.finditer(strPromptText):
             # self.__add_span(spans, m.start(), m.end())
             # counts[action] += 1
             # dictCount[action] = dictCount.get(action,0) + 1
@@ -584,7 +587,9 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_ACTION] = action #DB에 저장된 action
             
-            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
+            #TODO: target에 탐지된 문자열을 추가해보자.            
+            # dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = match.group()
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = category
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = scope
             # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule

@@ -93,7 +93,7 @@ class OfficeFileAnalyzeHelper:
         
         # 한글 문서 => pdf 변환도 다시 고려
         
-        # 여기는 분기 필요
+        # 여기는 분기 필요        
         officeDetectService.GenerateRegexBaseEvidence(strDetailTempDir, strOfficeFilePath, strMimeType, regexPattern, nFileReadTimeout, lstDetailReason)
                     
         dictEachFileOutput["detail_reason"] = dictDetailReason
