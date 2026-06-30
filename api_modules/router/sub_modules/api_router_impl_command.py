@@ -167,7 +167,7 @@ class ApiRouterImplCommand:
         # return apiResponseHandler.outResponse()
         # # return dictApiOutResponse
         
-        # LOG().info(f"run api block command, id = {modelItem.message_id}, email = {modelItem.email}, client = {modelItem.client_host}, ai.service = {modelItem.ai_service}, prompt = {modelItem.prompt}")
+        LOG().debug(f"run api block command, id = {modelItem.message_id}, email = {modelItem.email}, client = {modelItem.client_host}, ai.service = {modelItem.ai_service}, prompt = {modelItem.prompt}, attachment = {modelItem.attachments}")
         
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
@@ -197,7 +197,7 @@ class ApiRouterImplCommand:
         routerCustomHelper:RouterCustomHelper = self.__routerCustomHelper
         
         # OUTPUT 프롬프트        
-        # LOG().info(f"run api output command, user = {modelItem.user_id}, email = {modelItem.email}, ai_service = {modelItem.ai_service}, client_host = {modelItem.client_host}, message_id = {modelItem.message_id}, output = {modelItem.llm_output}")
+        LOG().debug(f"run api output command, user = {modelItem.user_id}, email = {modelItem.email}, ai_service = {modelItem.ai_service}, client_host = {modelItem.client_host}, message_id = {modelItem.message_id}, output = {modelItem.llm_output}")
         
         return await self.__outputPipelineCommand.doOutputApiRouter(_mainApp, modelItem, request, routerCustomHelper)
     

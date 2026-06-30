@@ -229,7 +229,10 @@ class FilePolicyDefine:
     BLOCK_REASON_FILE_EXT_LIMIT = "not allowed file extension"
     BLOCK_REASON_FILE_SIZE_LIMIT = "file size exceeds limit"
     BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header"
-    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"    
+    BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"
+    
+    BLOCK_CATEGORY_WATER_MARK_FILE_DETECT = "유해/민감 정보 파일"
+    BLOCK_MESSAGE_WATER_MARK_FILE_DETECT = "watermark/민감정보 포함 파일의 차단"    
     # pass
     
 

@@ -145,8 +145,8 @@
             "desc":[
                 "DRMONE[\\s\\x00]+.{0,256}Fasoo[\\s\\x00]+DRM flag:18 (IGNORE + ALL)"
             ],
-            "use_regex_base_drm" : false,
-            "use_ocr_base_watermark" : false,
+            "use_regex_base_drm" : true,
+            "use_ocr_base_watermark" : true,
 
             "drm_detect_pattern" : "DRMONE\\s+This\\s+Document\\s+is\\s+encrypted\\s+and\\s+protected\\s+by\\s+Fasoo\\s+DRM",
             "drm_pattern_flag" : 18,

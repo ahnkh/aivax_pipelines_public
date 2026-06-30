@@ -131,7 +131,16 @@ class OfficeWaterMarkDetectHelper:
                 # watermark 차단, 업데이트 (이후 summary가 없다. 분기 및 재가공에 대한 고려)
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
-                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
+                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = FilterDetectDefine.SCOPE_DEFAULT
+                
+                
+                #TODO: 감사로그
+                LOG().error(f"block watermark drm file, reason = {strReason}, category = {FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT}")
                 return True
             
             # 이후, watermark를 탐지, 탐지가 되었으면 탐지로 반환
@@ -147,12 +156,18 @@ class OfficeWaterMarkDetectHelper:
                 detect_hit_count:int = self.__cachedOCRBaseWaterMarkParameterItem.detect_hit_count
                 hit_max_count:int = self.__cachedOCRBaseWaterMarkParameterItem.hit_max_count
                 
-                
                 strReason:str = f"{FilePolicyDefine.BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT}, page={page_no}, hit={hit_max_count} over {detect_hit_count}"
                 
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" 
-                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
+                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = FilterDetectDefine.SCOPE_DEFAULT
+                
+                LOG().error(f"block watermark ocr file, reason = {strReason}, category = {FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT}")
                 return True
             
             # 미탐
