@@ -160,9 +160,9 @@ class OfficeWaterMarkDetectHelper:
                 
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" 
-                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = FilePolicyDefine.BLOCK_MESSAGE_OCR_SENSITIVE_FILE_DETECT
                 
-                dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
+                dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = FilePolicyDefine.BLOCK_MESSAGE_OCR_SENSITIVE_FILE_DETECT                
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = FilterDetectDefine.SCOPE_DEFAULT

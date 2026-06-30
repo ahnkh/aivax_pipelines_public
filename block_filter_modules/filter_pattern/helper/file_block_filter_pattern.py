@@ -424,6 +424,11 @@ class FileBlockFilterPattern(FilterPatternBase):
             dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
             dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
             
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = strReason
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = FilterDetectDefine.SCOPE_DEFAULT
+            
             return ERR_OK
         
         # self.__detectGetFileType(strFileName)
@@ -624,12 +629,12 @@ class FileBlockFilterPattern(FilterPatternBase):
         # File 확장자 제한
         if not (strFileExt in lstFileBlockAllowExt):
             # strExtension = ",".join(lstFileBlockAllowExt)
-            strReason = f"{FilePolicyDefine.BLOCK_REASON_FILE_EXT_LIMIT} ({strFileExt})"
+            strReason = f"{FilePolicyDefine.BLOCK_MESSAGE_FILE_EXT_LIMIT} ({strFileExt})"
             return (False, strReason)
         
         # file size 제한
         if nFileBlockMaxSize < nFileSize:
-            strReason = f"{FilePolicyDefine.BLOCK_REASON_FILE_SIZE_LIMIT} ({nFileSize} / {nFileBlockMaxSize})"
+            strReason = f"{FilePolicyDefine.BLOCK_MESSAGE_FILE_SIZE_LIMIT} ({nFileSize}byte)"
             return (False, strReason)
         
         return (True,"")

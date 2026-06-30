@@ -231,8 +231,15 @@ class FilePolicyDefine:
     BLOCK_REASON_WATER_MARK_HEADER_DETECT = "watermark validation in header"
     BLOCK_REASON_WATER_MARK_OCR_TEXT_DETECT = "ocr sensitive watermark text"
     
+    # 유해/민감 정보 파일, 카테고리
     BLOCK_CATEGORY_WATER_MARK_FILE_DETECT = "유해/민감 정보 파일"
-    BLOCK_MESSAGE_WATER_MARK_FILE_DETECT = "watermark/민감정보 포함 파일의 차단"    
+    
+    # 파일분석, 정책 명
+    BLOCK_MESSAGE_WATER_MARK_FILE_DETECT = "민감정보 - DRM Watermark 포함 파일의 차단"
+    BLOCK_MESSAGE_OCR_SENSITIVE_FILE_DETECT = "민감정보 - 반출 불가 문서의 차단"
+    
+    BLOCK_MESSAGE_FILE_SIZE_LIMIT = "파일 사이즈 제한"
+    BLOCK_MESSAGE_FILE_EXT_LIMIT = "파일 확장자 제한"
     # pass
     
 
