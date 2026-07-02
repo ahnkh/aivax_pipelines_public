@@ -91,11 +91,6 @@ class Pipeline(PipelineBase):
         uuid:str = ""
         client_host:str = ""
         
-        nClientHostCIDR:int = 0
-        
-        if 0 < len(client_host):        
-            nClientHostCIDR = int(ipaddress.ip_address(client_host.strip()))
-        
         #__user__ 거슬린다.
         # dictUserInfo:dict = __user__
         
@@ -122,6 +117,11 @@ class Pipeline(PipelineBase):
         # client_ip = ""
         
         (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
+        
+        nClientHostCIDR:int = 0
+        
+        if 0 < len(client_host):        
+            nClientHostCIDR = int(ipaddress.ip_address(client_host.strip()))
 
         # 저장 문서  
         '''
