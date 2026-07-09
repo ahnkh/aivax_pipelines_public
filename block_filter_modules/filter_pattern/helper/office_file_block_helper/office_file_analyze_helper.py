@@ -14,7 +14,7 @@ from service_modules.office_service.local_etc_common.local_define import (
     FileDefine
 )
 
-from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_detect_service_ex import OfficeDetectServiceEx
+from service_modules.office_service.office_file_detect_service import OfficeFileDetectService
 
 '''
 office file, 상세 분석
@@ -33,7 +33,7 @@ class OfficeFileAnalyzeHelper:
     
     
     # file 분석 - 상세 분석 결과, 페이지, 라인번호등의 반환
-    def AnalyzeFileBlockDetailReason(self, strDetailTempDir:str, strOfficeFilePath:str, strMimeType:str, nFileReadTimeout:int, dictRegexPattern:dict, dictEachFileOutput:dict, officeDetectService:OfficeDetectServiceEx):
+    def AnalyzeFileBlockDetailReason(self, strDetailTempDir:str, strOfficeFilePath:str, strMimeType:str, nFileReadTimeout:int, dictRegexPattern:dict, dictEachFileOutput:dict, officeDetectService:OfficeFileDetectService):
         
         '''
         정규 표현식, 정책 번호등 상세 정보의 수집이 필요하다.

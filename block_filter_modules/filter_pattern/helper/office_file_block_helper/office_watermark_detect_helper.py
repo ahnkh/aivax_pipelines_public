@@ -130,6 +130,7 @@ class OfficeWaterMarkDetectHelper:
                 
                 # watermark 차단, 업데이트 (이후 summary가 없다. 분기 및 재가공에 대한 고려)
                 dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                
                 dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
                 dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = FilePolicyDefine.BLOCK_MESSAGE_WATER_MARK_FILE_DETECT
                 
@@ -137,7 +138,6 @@ class OfficeWaterMarkDetectHelper:
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT
                 dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = FilterDetectDefine.SCOPE_DEFAULT
-                
                 
                 #TODO: 감사로그
                 LOG().error(f"block watermark drm file, reason = {strReason}, category = {FilePolicyDefine.BLOCK_CATEGORY_WATER_MARK_FILE_DETECT}")

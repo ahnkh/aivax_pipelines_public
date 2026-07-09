@@ -151,13 +151,14 @@ class Pipeline(PipelineBase):
         
         dictLogBuffer[DBDefine.DB_FIELID_FILTER_DETECT].append({
             "filter" : PipelineFilterDefine.FILTER_STAGE_FILE_BLOCK,
-            "mode": strPolicyAction, #DB상의 action으로 교체
+            DBDefine.DB_FIELID_MODE : strPolicyAction, #DB상의 action으로 교체
             
-            "policy_id" : strPolicyID,
-            "policy_name" : strPolicyName,
-            "target": strTarget,
-            "category": strCategory,
-            "scope": strScope,
+            ApiParameterDefine.POLICY_ID : strPolicyID,
+            ApiParameterDefine.POLICY_NAME : strPolicyName,
+            
+            DBDefine.DB_FIELD_RULE_TARGET : strTarget,
+            DBDefine.DB_FIELD_RULE_CATEGORY : strCategory,
+            DBDefine.DB_FIELD_RULE_SCOPE : strScope,
             
             ApiParameterDefine.FILE_SUMMARY : dictOuputResponse.get(ApiParameterDefine.FILE_SUMMARY)            
         })

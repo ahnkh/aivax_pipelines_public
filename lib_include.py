@@ -213,6 +213,8 @@ class DBDefine:
     DB_FIELD_RULE_CATEGORY = "category"
     DB_FIELD_RULE_SCOPE = "scope"
     
+    DB_FIELD_PATTERN_MATCH = "pattern_match" #26.07.02 패턴에 걸린 문자열
+    
     DB_FIELID_FILTER_DETECT = "filter_detect"
     DB_FIELID_MODE = "mode"
     DB_FIELID_POLICY = "policy"

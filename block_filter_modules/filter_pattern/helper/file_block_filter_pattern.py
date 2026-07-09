@@ -7,6 +7,8 @@ from lib_include import *
 
 from type_hint import *
 
+from service_modules.office_service.office_file_detect_service import OfficeFileDetectService
+
 from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
 
 from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
@@ -16,8 +18,6 @@ from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_file_analyze_helper import OfficeFileAnalyzeHelper
 
 from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_watermark_detect_helper import OfficeWaterMarkDetectHelper
-
-from block_filter_modules.filter_pattern.helper.office_file_block_helper.office_detect_service_ex import OfficeDetectServiceEx
 
 from block_filter_modules.filter_pattern.helper.attach_file_manage.attach_file_backup_helper import AttachFileBackupHelper
 
@@ -68,7 +68,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         
         self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = None
         
-        self.__officeDetectService:OfficeDetectServiceEx = None  
+        self.__officeDetectService:OfficeFileDetectService = None  
         
         self.__attachFileBackupHelper:AttachFileBackupHelper = None      
         pass
@@ -98,7 +98,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         self.__officeWaterMarkDetectHelper:OfficeWaterMarkDetectHelper = OfficeWaterMarkDetectHelper()
         self.__officeWaterMarkDetectHelper.Initialize()
         
-        self.__officeDetectService:OfficeDetectServiceEx = OfficeDetectServiceEx()
+        self.__officeDetectService:OfficeFileDetectService = OfficeFileDetectService()
         self.__officeDetectService.Initialize()
         
         self.__attachFileBackupHelper:AttachFileBackupHelper = AttachFileBackupHelper()
@@ -106,8 +106,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         self.__readLocalConfig(dictJsonLocalConfigRoot, self.__dictFileBlockInfoLocalConfig, self.__dictFileBlockDBConfig)
         
         self.__readWatermarkLocalConfig(dictJsonLocalConfigRoot, self.__officeWaterMarkDetectHelper)
-        
-        
+                
         self.__attachFileBackupHelper.Initialize(self.__dictFileBlockDBConfig)
         
         return ERR_OK
@@ -193,11 +192,18 @@ class FileBlockFilterPattern(FilterPatternBase):
                                     
             dictEachFileOutput:dict = {
                 ApiParameterDefine.OUT_ACTION : PipelineFilterDefine.ACTION_BLANK, #TODO: 정책, 탐지되지 않았으면 공백이다. accept, block, masking은 정책으로 탐지한다.
-                ApiParameterDefine.FILE_NAME : strFileName,
-                ApiParameterDefine.FILE_BACKUP_PATH : "", 
-                
                 ApiParameterDefine.POLICY_ID : "",
                 ApiParameterDefine.POLICY_NAME : "",
+                
+                ApiParameterDefine.FILE_NAME : strFileName,
+                ApiParameterDefine.FILE_BACKUP_PATH : "", #opensearch에 저장할 백업 경로, 백업수행 시점에 업데이트 하며, 각 파일별로 업데이트 한다.
+                
+                DBDefine.DB_FIELD_RULE_NAME : "",
+                DBDefine.DB_FIELD_RULE_TARGET : "",
+                DBDefine.DB_FIELD_RULE_CATEGORY : "",
+                DBDefine.DB_FIELD_RULE_SCOPE : "",
+                
+                DBDefine.DB_FIELD_RULE_REGEX_PATTERN : "" #패턴에 걸린 문자열, 신규 추가
             }
             
             strRealOfficeFilePath:str = id #변수 가독성, 별도 변수로 선언
@@ -329,28 +335,26 @@ class FileBlockFilterPattern(FilterPatternBase):
     
     ####################################### private
     
-    # 첨부파일의 백업
-    def __backupAttachFile(self, strRealOfficeFilePath:str, strFileName:str, strFileBackupDir:str):
+    # # 첨부파일의 백업
+    # def __backupAttachFile(self, strRealOfficeFilePath:str, strFileName:str, strFileBackupDir:str):
         
-        '''
+    #     '''
+    #     '''
         
+    #     #파일의 식별을 위해서, 파일명을 접두어로 추가한다.
         
-        '''
+    #     #strRealOfficeFilePath[strRealOfficeFilePath.rfind('/')+1:]
+    #     strSrcFileID:str = os.path.basename(strRealOfficeFilePath)
         
-        #파일의 식별을 위해서, 파일명을 접두어로 추가한다.
+    #     #파일명, 무난하게 _로 구문
+    #     #경로, 파일명 마다 만들어야 하는 문제, 스레드
+    #     #별도의 스레드, N일치까지 디렉토리를 자동으로 생성한다.        
+    #     strDestFileFullPath:str = f"{strFileBackupDir}/{strFileName}_{strSrcFileID}"
         
-        #strRealOfficeFilePath[strRealOfficeFilePath.rfind('/')+1:]
-        strSrcFileID:str = os.path.basename(strRealOfficeFilePath)
+    #     #파일 이동
+    #     # os.replace(strRealOfficeFilePath, strDestFileFullPath)
         
-        #파일명, 무난하게 _로 구문
-        #경로, 파일명 마다 만들어야 하는 문제, 스레드
-        #별도의 스레드, N일치까지 디렉토리를 자동으로 생성한다.        
-        strDestFileFullPath:str = f"{strFileBackupDir}/{strFileName}_{strSrcFileID}"
-        
-        #파일 이동
-        # os.replace(strRealOfficeFilePath, strDestFileFullPath)
-        
-        return ERR_OK
+    #     return ERR_OK
         
     def __decideFinalPolicyAction(self, lstFileStatus:list):
         
@@ -421,6 +425,7 @@ class FileBlockFilterPattern(FilterPatternBase):
         if False == bAllowFileExt:
         
             dictEachFileOutput[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
             dictEachFileOutput[ApiParameterDefine.POLICY_ID] = "" #정책은 없다.
             dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = strReason
             
@@ -579,8 +584,13 @@ class FileBlockFilterPattern(FilterPatternBase):
             # self.__assignFirstDetectedRule(dictDetectRule, id, name)
             
             # 차단 시점의 정책 추가
+            # TODO: 이름 변경이 되었으면, 확인후 제거
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_ID] = id
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_NAME] = name
+            
+            # UI에서 이 값을 바라본다..
+            dictEachFileOutput[ApiParameterDefine.POLICY_ID] = id 
+            dictEachFileOutput[ApiParameterDefine.POLICY_NAME] = name
             
             #TODO: action 값, File 차단일때는 강제로 Block으로 변경한다.
             action = PipelineFilterDefine.ACTION_BLOCK
@@ -592,6 +602,8 @@ class FileBlockFilterPattern(FilterPatternBase):
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = match.group()
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = category
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = scope
+            
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_REGEX_PATTERN] = match.group()
             # dictEachFileOutput[ApiParameterDefine.POLICY_RULE] = rule
             
             # 정책 탐지 테스트
