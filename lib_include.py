@@ -146,7 +146,7 @@ class AI_SERVICE_DEFINE:
     NAME_SERVICE_PERPLEXITY = "Perplexity"
     
     NAME_SERVICE_NOTION_AI = "Notion AI"
-    NAME_SERVICE_WORKS_AI = "웍스 AI"
+    NAME_SERVICE_WORKS_AI = "Works AI"
     NAME_SERVICE_CLAUDE_CODE = "claude.code"
     
     NAME_SERVICE_OPENAPI_COPILOT = "openapi.copilot"    
@@ -221,6 +221,7 @@ class DBDefine:
     DB_FIELID_POLICY_ID = "policy_id"
     DB_FIELID_POLICY_NAME = "policy_name"
     DB_FIELID_MASKED_CONTENTS = "masked_contents"
+    # pass
 
     
 class FilterDetectDefine:
@@ -235,16 +236,14 @@ class FilterDetectDefine:
     
 class SLMDetectDefine:
     
-    SLM_EVIDENCE = "slm_evidence"
-    
+    SLM_EVIDENCE = "slm_evidence"    
     # pass
     
 
 class RegexPolicyDefine:
     
-    BLOCK_REASON_PROMPT_LIMIT = "prompt size exceeds limit"
-    
-    pass
+    BLOCK_REASON_PROMPT_LIMIT = "prompt size exceeds limit"    
+    # pass
 
 
 class FilePolicyDefine:

@@ -262,9 +262,7 @@ class SLMFilterPattern (FilterPatternBase):
         
         return dictSLMHttpResponse
         
-        
-        
-        return ERR_OK
+        # return ERR_OK
     
     #데이터 추출, 우선 여기 개발후 리펙토링
     def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
