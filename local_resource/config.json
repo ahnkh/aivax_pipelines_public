@@ -138,7 +138,7 @@
         "detail_reason_temp_dir" : "/home1/aivax/data_resource/.tmp_detail_dir",
 
         "file_block_temp_backup_dir" : "/home1/aivax/data_resource/.file_block_temp_backup",
-        "file_block_backup_dir" : "/backup/attach_file_backup",
+        "file_block_backup_dir" : "/data/backup/attach_file_backup",
 
         "office_watermark_filter":
         {
