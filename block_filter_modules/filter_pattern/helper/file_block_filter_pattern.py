@@ -598,8 +598,8 @@ class FileBlockFilterPattern(FilterPatternBase):
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_ACTION] = action #DB에 저장된 action
             
             #TODO: target에 탐지된 문자열을 추가해보자.            
-            # dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
-            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = match.group()
+            dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = targets
+            # dictEachFileOutput[DBDefine.DB_FIELD_RULE_TARGET] = match.group()
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_CATEGORY] = category
             dictEachFileOutput[DBDefine.DB_FIELD_RULE_SCOPE] = scope
             
@@ -608,7 +608,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             # 정책 탐지 테스트
             # TODO: regex의 변경사양, 확인 !!!
-            LOG().debug(f"detect pattern, action = {action}, id = {id}, name = {name}, target = {targets}, category = {category}, scope = {scope}")
+            LOG().debug(f"detect regex pattern, action = {action}, id = {id}, name = {name}, target = {targets}, category = {category}, scope = {scope}")
             
             return True
 
