@@ -25,6 +25,9 @@ class SLMFilterPattern (FilterPatternBase):
     MODEL_VERSION_MTM_CPU = 1
     MODEL_VERSION_MTM_GPU = 2
     MODEL_VERSION_WINS_GPU = 3
+    MODEL_VERSION_WINS_GPU_V4 = 4 #2026.07.13 모델 v4 추가 (사양 변경됨)
+    
+    GUARD_RAIL_DEFAULT = "NONE"
     
     def __init__(self):
         
@@ -141,6 +144,18 @@ class SLMFilterPattern (FilterPatternBase):
             
             self.__parseWinsGPUSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
             pass
+        
+        # 모델 v4, 일부 중복된 코드가 있으나, 공통화로 보완하되, 코드는 분리한다.
+        elif SLMFilterPattern.MODEL_VERSION_WINS_GPU_V4 == model_version:
+            
+            dictSLMHttpResponse:dict = self.__requestWinsType(strURL, strPrompt, request_timeout)
+            
+            if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+                LOG().info("fail request to slm, skip slm filter")
+                return ERR_FAIL
+            
+            self.__parseWinsGPUV4SLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+            
     
         
         return ERR_OK
@@ -481,6 +496,100 @@ class SLMFilterPattern (FilterPatternBase):
                 
                 dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 
+        
+        return ERR_OK
+    
+    
+    # Wins Model - V4 버전 (26.07.13)
+    def __parseWinsGPUV4SLMReponse(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
+        
+        '''
+        {
+            "has_pii" : true,
+            "is_abuse" : false,
+            "guardrail" : "NONE",
+            "items: : [
+                {
+                    "type" : "PASSWORD",
+                    "value" : "service!!"
+                }
+            ]
+        }
+        '''
+        
+        #TODO: 중복된 코드, 나중에 개선
+        
+        choices:list = dictSLMHttpResponse.get(PipelineFilterDefine.SLM_RESONSE_CHOICE, [])
+        
+        if 0 == len(choices):
+            return ERR_OK
+       
+        dictChoice:dict = choices[0]
+        
+        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
+        
+        # TOOD: json 타입 문자열
+        content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
+        
+        dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
+        
+        #TOOD: 오류 발생시, 예외처리 구간으로 빠진다. 별도 에외처리 안한다.
+        dictContents:dict = json.loads(content)
+        
+        # 수집원본, 그대로 저장한다.
+        
+        has_pii:bool = dictContents.get("has_pii")
+        is_abuse:bool = dictContents.get("is_abuse")
+        
+        #TODO: PII일때만 items 값이 수집된다.
+        
+        # 위반시 프롬프트 인젝션으로 표기된다.
+        guardrail:str = dictContents.get("guardrail") #실제 guard rail 카테고리가 추출된다. (어떻게 표현할지는 향후 고민)
+        
+        # PII 위반, 또는 guard rail
+        if True == has_pii or True == is_abuse or SLMFilterPattern.GUARD_RAIL_DEFAULT != guardrail:
+
+            #pii, 악성/욕설/유해, guardrail 이면 차단
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            # evidence는 항상 추가
+            # evidence 추가, 응답 메시지에 출력
+            # items:list = dictContents.get("items")
+            
+            lstPiiItem:list = dictContents.get("items")
+            
+            if 0 < len (lstPiiItem):
+            
+                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
+                
+            elif None != guardrail and 0 < len(guardrail):
+                
+                # guard rail 일때, evidence를 맞춰 준다.
+                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = [
+                    {
+                        "type" : guardrail,
+                        "value" : "" 
+                    }
+                ]
+            
+            # else:
+            #     # 없을수 있다.
+            
+            if 0 < len(lstDBPattern):
+                
+                # 정책이 존재하면, 첫번째 정책으로 업데이트.
+                dictDBPattern:dict = lstDBPattern[0]
+
+                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+                
+            else: #정책이 없으면, 무조건 차단
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                # pass
         
         return ERR_OK
     

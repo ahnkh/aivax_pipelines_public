@@ -600,6 +600,7 @@ class DetectSecretFilterPattern (FilterPatternBase):
             DBDefine.DB_FIELD_RULE_TARGET : strTarget,
             DBDefine.DB_FIELD_RULE_CATEGORY : strCategory,
             DBDefine.DB_FIELD_RULE_SCOPE : strScope,
+            #TODO: file 분석과 regex 분석의 증적 방식이 다르다. 이건 나중에 맞춰 보도록 한다.
             FilterDetectDefine.DETECT_REGEX_MATCH : f"{match.group()} ({match.start()},{match.end()})",            
         })
         

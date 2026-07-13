@@ -33,9 +33,8 @@ class AttachFileBackupHelper:
         strFileBackupDir:str = dictFileBlockDBConfig.get(FilePolicyDefine.LOCAL_CONFIG_FILE_BLOCK_BACKUP_DIR)
         
         #TODO: 현재 경로, 스레드 검토.
-        #yyyymmdd/hh => 1분 스레드, 꼭 바로 맞지 않아도 된다.
         
-        thread = threading.Thread(name="ipc socket thread", target=self.ThreadHandlerProc, daemon=True, args=(strFileBackupDir,))
+        thread = threading.Thread(name="attach file backup thread", target=self.ThreadHandlerProc, daemon=True, args=(strFileBackupDir,))
         thread.start()
         
         return ERR_OK
@@ -82,7 +81,7 @@ class AttachFileBackupHelper:
         return strDestFileFullPath
         
     
-    # 파일명 생성
+    # 파일명, 경로 생성
     def ThreadHandlerProc(self, strFileBackupDir:str):
         
         '''
@@ -102,6 +101,7 @@ class AttachFileBackupHelper:
             
             strNextDatePath:str = time.strftime("%Y%m%d/%H", time.localtime(now + 3600))
             
+            # 매시간 단위, 현재시간, 다음시간 디렉토리 생성, 주기적 검사
             os.makedirs(f"{strFileBackupDir}/{strCurrentDatePath}", exist_ok=True)
             os.makedirs(f"{strFileBackupDir}/{strNextDatePath}", exist_ok=True)
             
@@ -111,9 +111,9 @@ class AttachFileBackupHelper:
             
             # Path(self.__strAttachFileDestDir).mkdir(parents=True, exist_ok=True)
             
-            time.sleep(60)
+            # 10분 정도 단위 검사
+            time.sleep(60*10)
             # pass
-            
         
         # return ERR_OK
     
@@ -127,11 +127,12 @@ class AttachFileBackupHelper:
         '''
         
         try:
+            #TODO: 복사가 실패하면 예외가 발생한다. 예외가 발생하면, 우선 백업 미수행으로, 공백으로 로그에 저장한다.
             shutil.copyfile(strSrcFile, strDstFile)
             
-            #사후 처리, 일단 고려하지 않는다.
-            # src_size = os.path.getsize(strSrcFile)
-            # dst_size = os.path.getsize(strDstFile)
+            #사후 처리, 일단 고려하지 않는다. => 성능 이슈 => 그래도 체크, 0바이트에 대한 체크
+            nSrcFileSize:int = os.path.getsize(strSrcFile)
+            nDestFileSize:int = os.path.getsize(strDstFile)
 
             # if src_size != dst_size:
                 
@@ -144,8 +145,20 @@ class AttachFileBackupHelper:
             #         dst,
             #         dst_size
             #     )
+            
+            if nSrcFileSize != nDestFileSize:
+                LOG().error(f"file copy error (mismatch), src file = {strSrcFile}, src size = {nSrcFileSize}, dest size = {nDestFileSize}")
+                return False
+            
+            # TODO: 0바이트에 대한 대응, 둘의 사이즈 보다는 원본이 0 또는 대상이 0인지를 확인한다.
+            if 0 == nSrcFileSize or 0 == nDestFileSize:
+                LOG().error(f"file size error (zero size), src file = {strSrcFile}, src size = {nSrcFileSize}, dest size = {nDestFileSize}")
+                #TODO: 감사로그
+                return False
                 
             # os.unlink(strSrcFile)
+            #TODO: 디버그를 위한 원본 유지, 일단 기본으로는 이동, 문제 발생시 분석용으로 주석으로 하자.
+            #백업 성공시에만 제거, 아닐경우에는 2차 스케쥴러에서 디스크 감시만 하고 이동한다. (이러면 UI에서 보이지 않는 문제는 있다.)
             os.remove(strSrcFile)
             return True
 
