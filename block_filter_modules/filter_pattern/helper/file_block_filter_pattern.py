@@ -184,7 +184,7 @@ class FileBlockFilterPattern(FilterPatternBase):
             
             #파일, 존재 여부 체크, 없으면 skip
             if False == os.path.isfile(id):
-                LOG().error(f"file {id} is not exist, skip")
+                LOG().error(f"file {id} is not exist, name = {strFileName}, skip")
                 continue
             
             # 사양변경,id가 실제 파일 경로 이 로직은 불필요
