@@ -21,6 +21,8 @@ class UserAccountDataHandler:
     USER_QUEUE_LIMIT = 500 #Queue 제한값 지정, 최대 500명이 쌓여있으면 장애이다.
     USER_QUEUE_DELETE_COUNT = 100
     
+    DB_SUCCESS = 0
+    
     def __init__(self):
         
         #최초에 가지고 있고, 저장할 데이터
@@ -287,7 +289,7 @@ class UserAccountDataHandler:
         # 에러체크, insert가 안되는 경우가 있을수 있다.
         nErrorCode:int = dictDBResult.get(DBSQLDefine.QUERY_ERR_CODE)
         
-        if ERR_OK != nErrorCode:
+        if UserAccountDataHandler.DB_SUCCESS != nErrorCode:
             
             # 3회 재시도
             for attempt in range(3):
@@ -298,14 +300,14 @@ class UserAccountDataHandler:
                 nErrorCode:int = dictDBResult.get(DBSQLDefine.QUERY_ERR_CODE)
                 
                 # 성공하면 중단
-                if ERR_OK == nErrorCode:
+                if UserAccountDataHandler.DB_SUCCESS == nErrorCode:
                     break
                 
                 #pass
                 
             # 3회를 시도했는데 에러코드가 오류이면 수집오류, 재시도
-            if ERR_OK != nErrorCode:     
-                LOG().error(f"fail insert user account, mail = {email}, aiservice = {ai_service}")           
+            if UserAccountDataHandler.DB_SUCCESS != nErrorCode:     
+                LOG().error(f"fail insert user account, mail = {email}, aiservice = {ai_service}, error code = {nErrorCode}")           
                 return ERR_FAIL
         
         #신규 사용자가 등록되면, email과 서비스 id를 지정한다.

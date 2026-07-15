@@ -122,6 +122,11 @@ class LogMergeQueue:
             output_text = dictPromptLog.get("output_text"),
         )
         
+        #TODO: 예외처리, prompt, mode값이 None이면 전송하지 않고 버린다.
+        if None == eventAlarmMessage.prompt or None == eventAlarmMessage.mode:
+            LOG().error(f"invalid alarm message, skip add message")
+            return ERR_FAIL
+        
         self.__eventAlarmHandlerRef.AddEventMessage(eventAlarmMessage)
         
         return ERR_OK
