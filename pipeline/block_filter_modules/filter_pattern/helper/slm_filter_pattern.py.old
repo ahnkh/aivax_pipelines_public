@@ -1,0 +1,262 @@
+
+from lib_include import *
+
+from type_hint import *
+
+from block_filter_modules.filter_pattern.helper.filter_pattern_base import FilterPatternBase
+
+from block_filter_modules.filter_policy.groupfilter.filter_policy_group_data import FilterPolicyGroupData
+
+from block_filter_modules.filter_pattern.helper.regex_policy_helper.regex_policy_generate_helper import RegexPolicygenerateHelper
+
+'''
+slm 정책
+'''
+
+class SLMFilterPattern (FilterPatternBase):
+    
+    POLICY_FILTER_KEY = DBDefine.FILTER_KEY_SLM
+    
+    def __init__(self):
+        
+        super().__init__()
+        
+        self.__dictDBScopeRegexPattern:dict = None
+        
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = None
+        
+        self.__dictFilterLocalConfig:dict = None
+        pass
+    
+    def Initialize(self, dictJsonLocalConfigRoot:dict):
+        
+        '''
+        '''
+        
+        self.__dictDBScopeRegexPattern:dict = {
+            DBDefine.POLICY_FILTER_SCOPE_USER : [],
+            DBDefine.POLICY_FILTER_SCOPE_SERVICE : [],
+            DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
+            DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
+        }
+        
+        self.__regexPolicyGenerateHelper:RegexPolicygenerateHelper = RegexPolicygenerateHelper()
+        
+        self.__dictFilterLocalConfig:dict = {}
+        
+        self.__initializeLocalConfig(dictJsonLocalConfigRoot, self.__dictFilterLocalConfig)
+        
+        return ERR_OK
+    
+    def DetectPattern(self, strPrompt:str, dictOuputResponse:dict, dictSLMPolicyResult:dict):
+        
+        '''
+        '''
+                
+        strURL:str = self.__dictFilterLocalConfig.get("slm_url")
+        request_timeout:int = int(self.__dictFilterLocalConfig.get("request_timeout"))
+        
+        use_skip:int = int(self.__dictFilterLocalConfig.get("use_skip"))
+        model_version:int = int(self.__dictFilterLocalConfig.get("model_version"))
+        
+        if CONFIG_OPT_ENABLE == use_skip:
+            LOG().info("skip slm filter")
+            return ERR_OK
+        
+        post = {
+            "model" : "cipherguard01",
+            "messages" : [
+                {
+                    "role" : "user",
+                    "content" : strPrompt    
+                }                
+            ],
+            "temperature" : 0.0,
+            "max_tokens" : 2048
+        }
+        
+        header:dict = {
+            "Content-Type" : "application/json"
+        }
+        
+        resp = requests.post(strURL, json=post, timeout=request_timeout, headers=header)
+        resp.raise_for_status()
+        
+        dictSLMHttpResponse:dict = resp.json()
+        
+
+        if 2 == model_version:
+            self.__parseSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+        else:
+            self.__parseSLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
+        
+        return ERR_OK
+        
+    def notifyUpdateDBPatternPolicy(self, filterPolicyGroupData:FilterPolicyGroupData, dictOutputResponse:dict) -> int:
+        
+        '''
+        '''
+        
+        strFilterKey:str = SLMFilterPattern.POLICY_FILTER_KEY
+        
+        dictPolicyRuleScopeMap:dict = filterPolicyGroupData.GetPolicyRule(strFilterKey)
+        
+        bFilterChanged:bool = self.IsScopeBasedFilterPolicyChanged(dictPolicyRuleScopeMap)
+        
+        if FilterPatternBase.POLICY_CHANGED == bFilterChanged:
+            
+            nRuleCount = filterPolicyGroupData.GetRuleCount(strFilterKey)
+            LOG().info(f"filter pattern policy is changed, filter = {strFilterKey}, rule count = {nRuleCount}")
+            
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is changed, rule count = {nRuleCount}"
+            
+            self.__dictDBScopeRegexPattern:dict = {
+                DBDefine.POLICY_FILTER_SCOPE_USER : [],
+                DBDefine.POLICY_FILTER_SCOPE_SERVICE : [],
+                DBDefine.POLICY_FILTER_SCOPE_GROUP : [],
+                DBDefine.POLICY_FILTER_SCOPE_DEFAULT : []
+            }
+            
+            self.UpdateBaseDBFilterPolicy(dictPolicyRuleScopeMap)
+            
+            self.__regexPolicyGenerateHelper.GenerateRegexGroupPolicy(dictPolicyRuleScopeMap, self.__dictDBScopeRegexPattern)
+            #pass
+            
+        else:
+            dictOutputResponse[strFilterKey] = f"filter pattern policy is equal (no changed)" 
+        
+        return ERR_OK
+    
+    
+    ################################################ private
+    
+    # local config, 설정 정보 업데이트
+    def __initializeLocalConfig(self, dictJsonLocalConfigRoot:dict, dictFilterLocalConfig:dict):
+        
+        '''
+        '''
+        
+        slm_pipelie_filter_module:dict = dictJsonLocalConfigRoot.get("slm_pipelie_filter_module")
+        
+        dictFilterLocalConfig.update(slm_pipelie_filter_module)
+        
+        return ERR_OK
+    
+    def __parseSLMReponse(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
+        
+        '''
+        
+        '''
+        
+        if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+            LOG().error("invalid slm response, skip, pass allow")
+            return ERR_FAIL
+        
+        choices:list = dictSLMHttpResponse.get(PipelineFilterDefine.SLM_RESONSE_CHOICE, [])
+        
+        if 0 == len(choices):
+            return ERR_OK
+       
+        dictChoice:dict = choices[0]
+        
+        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
+        content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
+        
+        dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
+        
+        
+        if PipelineFilterDefine.SLM_RESPONSE_UNSAFE in content:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            if 0 < len(lstDBPattern):
+                dictDBPattern:dict = lstDBPattern[0]
+                
+                id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+                name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+                targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+                category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+
+                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+                # pass
+            #pass
+        
+        return ERR_OK
+    
+    def __parseSLMReponseV2(self, dictSLMHttpResponse:dict, dictOuputResponse:dict, dictSLMPolicyResult:dict):
+        
+        '''
+        
+        '''
+        
+        if None == dictSLMHttpResponse or 0 == len(dictSLMHttpResponse):
+            LOG().error("invalid slm response, skip, pass allow")
+            return ERR_FAIL
+        
+        choices:list = dictSLMHttpResponse.get(PipelineFilterDefine.SLM_RESONSE_CHOICE, [])
+        
+        if 0 == len(choices):
+            return ERR_OK
+       
+        dictChoice:dict = choices[0]
+        
+        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
+        content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
+        
+        dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
+        
+        strJsonContents:str = content.replace("```json", "").replace("```", "").strip()
+        
+        dictContents:dict = json.loads(strJsonContents)
+        
+        detected_items:list = dictContents.get("detected_items")
+        
+        bUnsafe:bool = False
+        
+        dictDetectedItem:dict = detected_items[0]
+        
+        dictDetectedItem.get("item")
+        category:str = dictDetectedItem.get("category")
+        confidence:int = dictDetectedItem.get("confidence")
+        
+        if not "없음" in category and 0.0 < confidence:
+            bUnsafe = True
+                
+        if True == bUnsafe:
+            
+            dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            if 0 < len(lstDBPattern):
+                dictDBPattern:dict = lstDBPattern[0]
+                
+                id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+                name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+                targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+                category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+
+                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+                
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+                # pass
+            #pass
+        
+        return ERR_OK
+        
+        
+        

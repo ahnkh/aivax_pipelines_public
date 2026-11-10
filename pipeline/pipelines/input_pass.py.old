@@ -1,0 +1,101 @@
+import ipaddress
+from typing import Optional, Dict, Any, List, Union
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+
+from lib_include import *
+
+from type_hint import *
+
+from block_filter_modules.etc_utils.filter_custom_utils import FilterCustomUtils
+
+'''
+'''
+
+class Pipeline(PipelineBase):
+    
+    def __init__(self):
+        '''
+        '''
+        super().__init__()
+        
+        self.type = "filter"
+        self.id = "input_filter"
+        self.name = "input_filter"
+
+        class Valves(BaseModel):
+            pipelines: List[str] = Field(default_factory=lambda: ["*"])
+            priority: int = 0
+            enabled: bool = True
+
+            default_channel: str = "web"
+            default_user_role: Optional[str] = None
+
+        self.valves = Valves()
+        
+        self.__filterCustomUtil:FilterCustomUtils = FilterCustomUtils()
+
+    async def on_startup(self):
+        pass
+
+    async def on_shutdown(self):
+        pass
+
+    async def on_valves_updated(self):
+        pass
+
+    async def inlet(self, body: Dict[str, Any], __user__: Optional[dict] = None, customFilterConfigItem : PipelineCustomFilterConfigItem = None, dictLogBuffer:dict = None, dictOuputResponse:dict = None, __request__: Optional[Request] = None) : #-> Dict[str, Any]:
+        '''
+        '''
+                
+        dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_ALLOW
+
+        metadata:dict = body.get(ApiParameterDefine.META_DATA)
+                
+        msgs: List[Dict[str, Any]] = body.get(ApiParameterDefine.MESSAGES, [])
+        query_text = None
+        last_role = None
+        
+        if isinstance(msgs, list) and msgs:
+            for m in reversed(msgs):
+                if isinstance(m, dict) and m.get("role") == "user":
+                    query_text = m.get("content")
+                    last_role = "user"
+                    break
+
+        
+        if last_role != "user" or not query_text:
+            raise Exception(f"invalid role, not exist user role, id = {self.id}, query_text = {query_text}")
+
+        message_id:str = metadata.get(ApiParameterDefine.MESSAGE_ID)
+        user_role:str = self.valves.default_user_role
+        
+        user_id:str = ""        
+        user_email:str = ""
+        ai_service_type:int = AI_SERVICE_DEFINE.SERVICE_UNDEFINE
+        uuid:str = ""
+        client_host:str = ""
+        
+        nClientHostCIDR:int = 0
+        
+        if 0 < len(client_host):        
+            nClientHostCIDR = int(ipaddress.ip_address(client_host.strip()))
+        
+        (user_id, user_email, ai_service_type, uuid, client_host) = self.__filterCustomUtil.GetUserData(__user__)
+
+        dictOpensearchDoc = {
+            "@timestamp": ts_isoz(),
+            "message_id" : message_id,
+            "user": {"id": user_id, "role": user_role, "email": user_email, "uuid" : uuid},
+            "client_host" : client_host,
+            "client_host_cidr" : nClientHostCIDR,
+            
+            "ai_service" : AI_SERVICE_NAME_MAP.get(ai_service_type, ""),
+            "prompt" : query_text
+        }
+        
+        dictLogBuffer.update(dictOpensearchDoc)
+
+        return ERR_OK
+
+    

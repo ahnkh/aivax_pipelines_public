@@ -1,0 +1,57 @@
+{
+    "category" : "rdb",
+    "connection_id" : "mariadb_connector",
+
+    "desc" : [        
+        
+    ],
+
+    "query_map":
+    [
+
+        {
+            "desc" : "AI 서비스 - 사용자 계정 조회",
+            "key": "rdb_select_ai_user_account",
+	        "action" : "query_for_list",
+            "query" : "SELECT CONCAT(email, '_', ai_service_id) AS user_key, id, email, user_group_id, ai_service_id, created_at, updated_at FROM app.users {where}"
+        },
+
+        {
+            "desc" : "정책 패턴 조회, 모든 유효한 정책의 조회",
+            "key": "rdb_select_policy_rule",
+	        "action" : "query_for_list",
+            "query" : "select id, name, 'dummy' as targets, type_mask, operator, rule, regex_flag, regex_group, regex_group_val, action, status, category from app.policy_rules where status = 'deployed' order by action desc"
+        },
+
+        {
+            "desc" : "정책 패턴 그룹 조회, filter 목록 조회",
+            "key": "rdb_select_policy_filters",
+	        "action" : "query_for_list",
+            "query" : "select id from app.filters"
+        },
+
+        {
+            "desc" : "정책 패턴 그룹 조회, policy rule filter 조회",
+            "key": "rdb_select_policy_rule_filters",
+	        "action" : "query_for_list",
+            "query" : "select id, filter_id, scope, policy_rule_id, subject_id from app.policy_rule_filters where filter_id = '{filter_id}'"
+        },
+
+        {
+            "desc" : "파일 사이즈, 이름 제한 정보 조회, key, value 이름 주의",
+            "key": "rdb_select_file_name_block_policy",
+	        "action" : "query_for_list",
+            "query" : "select `key` as skey, `value` as svalue from app.settings where category = 'file-control'"
+        },
+
+        {
+            "desc" : "ai service 정보 조회",
+            "key": "rdb_select_ai_service",
+	        "action" : "query_for_list",
+            "query" : "select DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS date, id, name, status, type from app.ai_services where type = 1 order by id"
+        }
+
+        
+    ]
+}
+

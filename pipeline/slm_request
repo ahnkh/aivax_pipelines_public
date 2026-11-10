@@ -1,0 +1,26 @@
+
+curl -X POST "http://127.0.0.1:1200/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  --max-time 60 \
+  -d @- <<EOF
+{
+  "model": "cipherguard01",
+  "messages": [
+    {
+      "role": "user",
+      "content": "참석자: 홍길동(2021001), 김철수(2022005), 최선임 (팀장)
+일시 및 장소: 2025-11-10 10:00, 3층 회의실 A
+안건 1: 프로젝트 알파 신규 고객 (C-12345) VOC 건
+A.I: 김인턴(intern@company.com)이 테스트 환경 (10.1.2.3) 접근하여 재현
+결정: 박수석이 VIP-9876 고객사(contact@partner.com)에 직접 연락
+안건 2: Project Shield 도입 관련 보안팀 (192.168.1.10) 검토 결과 공유
+다음 회의 담당자: 이책임(2019003)
+고객(ID: 778899) 불만 사항 (CS12345) 관련 2차 논의
+core_engine 모듈 1차 검토 완료 (담당자: S2025001)
+A-12345 고객의 요금 과다 청구 (민원번호 98765) 건은 환불 처리하기로 함."
+    }
+  ],
+  "temperature": 0.0,
+  "max_tokens": 2048
+}
+EOF

@@ -1,0 +1,1 @@
+{"pipelines": ["*"], "priority": 3, "enabled": true, "os_enabled": true, "os_url": "https://vax-opensearch:9200", "os_index": "output_filter", "os_user": "admin", "os_pass": "Sniper123!@#", "os_insecure": true, "os_timeout": 3, "store_response_text": true, "response_max_bytes": 200000, "hash_only": false, "include_filters_meta": true, "include_usage": true}

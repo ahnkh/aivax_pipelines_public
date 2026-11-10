@@ -1,0 +1,218 @@
+{
+    "global_env":
+    {
+        "db_api_server":
+        {
+            "default_server_ip" : "127.0.0.1",
+            "default_server_port" : 4000,
+            "default_schema" : "https",
+
+            "db_poll_cycle_second" : 60
+        }
+    },
+
+    "log_write_module":
+    {
+        "string_buffer_config_list": 
+        [
+            {
+                "queue_id" : "input_filter",
+
+                "collection_prefix" : "input_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            },
+            
+            {
+                "queue_id" : "output_filter",
+
+                "collection_prefix" : "output_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            },
+            
+            {
+                "queue_id" : "regex_filter",
+
+                "collection_prefix" : "regex_filter",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            },
+
+            {
+                "queue_id" : "aivax_log",
+
+                "collection_prefix" : "aivax_log",
+                "temp_file_path" : ".TEMP/PIPELINE_LOG/",
+                "bulk_file_path" : "/home1/aivax/pipeline/bulk_logs/",
+                "max_limit" : 10000,
+
+                "flush_finish_script" : ""
+            }                
+        ]
+    },
+
+    "log_merge_queue":
+    {
+
+    },
+
+    "db_connector":
+    {
+        "db_connection_list" : [
+            "local_resource/db_resource/db_custom_wins.json"
+        ]
+    },
+
+    "sql_query_map":
+    {
+
+        "querymap_list":
+        [
+            {
+                
+                "category" : "rdb",
+
+                "json_query": [                    
+                    "local_resource/db_resource/sql_query_map/rdb_query/json/rdb_wins_select_query.json",
+                    "local_resource/db_resource/sql_query_map/rdb_query/json/rdb_wins_insert_query.json"
+                ],
+                "xml_query": []                
+            },
+
+            {
+                "category": "sqlite",
+
+                "json_query": [],
+                "xml_query": []
+            }
+        ]
+    },
+
+    "user_account_data_module":
+    {
+        "thread_handler":
+        {
+            "sleep" : 15
+        }
+    },
+
+    "ipc_pipeline_server":
+    {
+        "socket_path" : "/tmp/pipeline.sock",
+        "use" : 0
+    },
+
+    "regex_pipeliline_filter_module":
+    {
+        "prompt_size_limit" : 1048576
+    },
+
+    "slm_pipeline_filter_module":
+    {
+        "use_skip" : 0,
+        "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
+        "request_timeout" : 60,
+        "model_version" : 3
+    },
+
+    "file_block_filter_module":
+    {
+        "use_file_block_bypass_mode" : false,
+        "attach_file_base_dir" : "/home1/aivax/data_resource/attach_file",
+        "file_read_timeout" : 60,
+
+        "file_allow_ext" : ["txt", "doc","docx","hwp","hwpx","pdf", "ppt", "pptx", "xls", "xlsx", "bmp", "jpeg", "jpg", "png", "avif"],
+        "file_max_size" : 10000000,
+
+        "content_chunk_size" : 0,
+        "detail_reason_temp_dir" : "/home1/aivax/data_resource/.tmp_detail_dir",
+
+        "file_block_temp_backup_dir" : "/home1/aivax/data_resource/.file_block_temp_backup",
+        "file_block_backup_dir" : "/data/backup/attach_file_backup",
+
+        "office_watermark_filter":
+        {
+            "desc":[
+                "DRMONE[\\s\\x00]+.{0,256}Fasoo[\\s\\x00]+DRM flag:18 (IGNORE + ALL)"
+            ],
+            "use_regex_base_drm" : false,
+            "use_ocr_base_watermark" : false,
+
+            "drm_detect_pattern" : "DRMONE\\s+This\\s+Document\\s+is\\s+encrypted\\s+and\\s+protected\\s+by\\s+Fasoo\\s+DRM",
+            "drm_pattern_flag" : 18,
+            "drm_file_header_limit" : 8096,
+
+            "ocr_pattern_list" : [
+                "(미\\s*공\\s*개)",
+                "(특\\s*허)",
+                "(외\\s*부)",
+                "(반\\s*출)",
+                "(외부|사외).{0,20}(반출|배포)"
+            ],
+            "ocr_pattern_flag" : 18,
+            "ocr_max_hitcount" : 2,
+            "ocr_page_list" : [0]
+        }
+    },
+
+    "pipe_filter_custom_config":
+    {
+        "filter_output_config":
+        {            
+            "desc" : "0: allow, 1: block, 2: masking, 3: block+masking",
+            "ssl_proxy_bypass_bitmask" : 0
+        },
+
+        "regex_full_scan_flag" : true,
+
+        "next_detect_after_block" : false
+
+    },
+
+    "event_alarm_handler":
+    {
+        "event_forward_cycle" : 15,
+
+        "pipe_filter_event":
+        {
+            "desc" : "pipeline filter, level 0:all, 0x001:block, 0x010:masking, 0x100:allow, 0x011: block+masking, 0x111:block+masking+allow",
+            "event_max_limit" : 100,            
+            "alarm_level_mask" : 0
+        },
+
+        "audit_event":
+        {
+        },
+
+        "user_event":
+        {            
+        },
+
+        "ui_alarm_event":
+        {
+            "url" : "http://127.0.0.1:3001/api/v1/notification/event",
+            "timeout" : 10
+        }
+
+    },
+
+    "sslproxy_policy_signal_handler": 
+    {
+        "export_dir" : "/home1/aivax/data_resource/policy_signal",
+        "export_file" : "aivax_policy.json",
+
+        "sslproxy_process" : "sslproxy",
+        "redirect_url" : "https://www.naver.com",
+        "block_html_file" : "/home1/aivax/data_resource/block.html"
+    }
+}
