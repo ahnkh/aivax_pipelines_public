@@ -143,6 +143,11 @@ class EventAlarmHandler:
                 LOG().info(f"send buffer overflow, maxlimit = {nEventMaxLimit}, count = {nQueueCount}")
                 break
             
+            if None == eventAlarmMessage.name or 0 == len(eventAlarmMessage.name):
+                LOG().info(f"no policy skip send event")
+                continue
+            
+            
             #여기는 어쩔수 없다. 이벤트를 만들어서 버린다.
             lstHttpEvent.append({
                 "timestamp" : eventAlarmMessage.time_stamp,

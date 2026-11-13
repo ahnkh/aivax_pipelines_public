@@ -177,6 +177,9 @@ class FileBlockFilterPattern(FilterPatternBase):
             id:str = dictFileInfo.get("id") #TODO: 실제 파일 경로
             # dictFileInfo.get("size") #TODO: 불필요 => 실제 파일 사이즈
             
+            if 0 == len(id) or None == id:
+                continue
+            
             strFileName:str = dictFileInfo.get("name") # File 명
             # dictFileInfo.get("mime_type") #TODO: 불필요
             
