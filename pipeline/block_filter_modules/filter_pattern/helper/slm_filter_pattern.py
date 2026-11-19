@@ -29,6 +29,56 @@ class SLMFilterPattern (FilterPatternBase):
     
     GUARD_RAIL_DEFAULT = "NONE"
     
+    ABUSE_POLICY_NAME = "악성/욕설/유해 문장 탐지"
+    ABUSE_POLICY_CATEGORY = "SLM 분석"
+    POLICY_DISPLAY_NAMES = {
+        "ACCESS_TOKEN": "액세스 토큰 문자열",
+        "ADDRESS": "주소 정보",
+        "API_KEY": "API 키 문자열",
+        "BANK_ACCOUNT": "계좌번호/계좌 식별 문자열",
+        "BUSINESS_REGISTRATION": "사업자등록번호",
+        "CARD_NUMBER": "카드 번호",
+        "CI": "CI",
+        "CVC": "카드 CVC/CVV 보안코드",
+        "DATE_OF_BIRTH": "생년월일",
+        "DEVICE_ID": "디바이스 고유 식별자",
+        "DRIVER_LICENSE": "운전면허 번호/식별값",
+        "EMAIL": "이메일 주소",
+        "EXPIRATION_DATE": "만료일(여권/카드 등)",
+        "FOREIGNER_ID": "외국인등록번호",
+        "HEALTH": "건강/의료 민감정보",
+        "ICCID": "SIM ICCID 식별자",
+        "IP_ADDRESS": "IPv4/IPv6 주소",
+        "LEGAL_ID": "사건번호/법률 관련 식별값",
+        "LOCATION": "위치 좌표/정밀 위치 정보",
+        "MAC": "MAC 주소",
+        "MILITARY_ID": "군 관련 식별번호",
+        "NAME": "개인 이름",
+        "PASSPORT": "여권번호",
+        "PASSWORD": "평문 비밀번호",
+        "PASSWORD_SECRET": "비밀번호 형태 파생값",
+        "PHONE": "전화번호",
+        "PNU_CODE": "토지/필지 식별 코드(PNU)",
+        "REAL_ESTATE_ID": "부동산/등기 식별번호",
+        "RRN": "주민등록번호(한국)",
+        "SESSION_ID": "세션 식별자",
+        "SSH_KEY_CERT": "인증서/공개키/키-인증서 블록",
+        "SSH_PRIVATE_KEY": "개인키 블록",
+        "SSN": "미국 사회보장번호 형식 식별값",
+        "TAX_OBJECT_ID": "과세 대상 식별번호",
+        "UNIQUE_ID": "일반 고유 식별자",
+        "USER_ID": "사용자/학번/사번 등 조직 내 식별자",
+        "ZIP_CODE": "우편번호",
+        "PROMPT_INJECTION": "프롬프트 주입",
+        "SENSITIVE_INFO_EXFILTRATION": "민감정보 유출",
+        "POISONING": "지식 오염",
+        "OUTPUT_HANDLING": "출력 악용",
+        "EXCESSIVE_AGENCY": "과도한 권한",
+        "SYSTEM_PROMPT_EXFILTRATION": "시스템 프롬프트 유출",
+        "HALLUCINATION_TRIGGER": "환각 유도",
+        "JAILBREAK": "정책 탈옥",
+     }
+    
     def __init__(self):
         
         super().__init__()
@@ -42,6 +92,12 @@ class SLMFilterPattern (FilterPatternBase):
         
         # valve 개념, dictionary 정도로..
         self.__dictFilterLocalConfig:dict = None
+        
+        # httpx AsyncClient (process-local connection pool; one per worker)
+        self.__httpxClient = None
+        self.__httpxClientLock = None
+        
+        self.__dictSLMNamePolicy:dict = None
         pass
     
     def Initialize(self, dictJsonLocalConfigRoot:dict):
@@ -62,6 +118,12 @@ class SLMFilterPattern (FilterPatternBase):
         self.__dictFilterLocalConfig:dict = {}
         
         self.__initializeLocalConfig(dictJsonLocalConfigRoot, self.__dictFilterLocalConfig)
+        
+        self.__httpxClient = None
+        import asyncio
+        self.__httpxClientLock = asyncio.Lock()
+        
+        self.__dictSLMNamePolicy = {}
         
         return ERR_OK
     
@@ -155,8 +217,6 @@ class SLMFilterPattern (FilterPatternBase):
                 return ERR_FAIL
             
             self.__parseWinsGPUV4SLMReponse(dictSLMHttpResponse, dictOuputResponse, dictSLMPolicyResult)
-            
-    
         
         return ERR_OK
     
@@ -194,6 +254,20 @@ class SLMFilterPattern (FilterPatternBase):
             self.UpdateBaseDBFilterPolicy(dictPolicyRuleScopeMap)
             
             self.__regexPolicyGenerateHelper.GenerateRegexGroupPolicy(dictPolicyRuleScopeMap, self.__dictDBScopeRegexPattern)
+            
+            # 정책명과 SLM의 매칭
+            # name을 기반으로 map을 생성
+            
+            lstDBSLMFilterPolicy:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+            for dictPolicy in lstDBSLMFilterPolicy:
+                
+                name:str = dictPolicy.get("name")
+                
+                self.__dictSLMNamePolicy[name] = dictPolicy
+                
+                #break
+            
             #pass
             
         else:
@@ -435,7 +509,7 @@ class SLMFilterPattern (FilterPatternBase):
        
         dictChoice:dict = choices[0]
         
-        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE)
+        message:dict = dictChoice.get(PipelineFilterDefine.SLM_RESONSE_MESSAGE, {})
         
         # TOOD: json 타입 문자열
         content:str = message.get(PipelineFilterDefine.SLM_RESONSE_CONTENT)
@@ -443,7 +517,13 @@ class SLMFilterPattern (FilterPatternBase):
         dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
         
         #TOOD: 오류 발생시, 예외처리 구간으로 빠진다. 별도 에외처리 안한다.
-        dictContents:dict = json.loads(content)
+        # dictContents:dict = json.loads(content)
+        
+        dictContents:dict = self.__loadSLMContent(content)
+        
+        if dictContents is None:
+            LOG().info(f"invalid slm json content, skip slm filter (allow); content={None if content is None else str(content)[:120]!r}")
+            return ERR_OK
         
         # 수집원본, 그대로 저장한다.
         
@@ -464,37 +544,69 @@ class SLMFilterPattern (FilterPatternBase):
 
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             
-            lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            if True == is_abuse:
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = SLMFilterPattern.ABUSE_POLICY_NAME
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = SLMFilterPattern.ABUSE_POLICY_CATEGORY
+                
+            lstEvidence:list = dictContents.get("items")
             
-            # evidence는 항상 추가
-            # evidence 추가, 응답 메시지에 출력
-            # items:list = dictContents.get("items")
-            dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
+            dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = lstEvidence
             
-            if 0 < len(lstDBPattern):
+            dictDBPattern:dict = {}
+            
+            # CC인증, Action은 항상 차단. 완전히 구현전까지는 기능 유지.
+            dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            if 0 < len(lstEvidence):
                 
-                # 정책이 존재하면, 첫번째 정책으로 업데이트.
-                dictDBPattern:dict = lstDBPattern[0]
+                dictEvidence:dict = lstEvidence[0]
+                            
+                strDetectType:str = dictEvidence.get("type")
                 
-                # 전부 불필요
-                # id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
-                # name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
-                # targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
-                # category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+                dictDBPattern:dict = self.__dictSLMNamePolicy.get(strDetectType)
+                
+                if None != dictDBPattern:
+                    
+                    action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                    
+                    dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action   
+                    
+                    dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+                    dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
+                    #pass
+                    
+            else:
+            
+                lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
+            
+                if 0 < len(lstDBPattern):
+                    
+                    # 정책이 존재하면, 첫번째 정책으로 업데이트.
+                    # 여기서 매칭이 되어야 한다.
+                    
+                    dictDBPattern:dict = lstDBPattern[0]
+                    
+                    # 전부 불필요
+                    # id:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ID)
+                    # name:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_NAME)
+                    # targets:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_TARGET)
+                    # category:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_CATEGORY)
 
-                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+                    action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
 
-                # db정책, 불필요                
-                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
-                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
-                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
-                # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+                    # db정책, 불필요                
+                    # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ID] = id
+                    # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = name
+                    # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_TARGET] = targets
+                    # dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = category
+                    
+                    dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+                    
+                else: #정책이 없으면, 무조건 차단
+                    
+                    dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+                    
                 
-                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
-                
-            else: #정책이 없으면, 무조건 차단
-                
-                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
                 
         
         return ERR_OK
@@ -534,7 +646,13 @@ class SLMFilterPattern (FilterPatternBase):
         dictOuputResponse[ApiParameterDefine.OUT_SLM_CONTENT] = content
         
         #TOOD: 오류 발생시, 예외처리 구간으로 빠진다. 별도 에외처리 안한다.
-        dictContents:dict = json.loads(content)
+        # dictContents:dict = json.loads(content)
+        
+        dictContents = self.__loadSLMContent(content)
+
+        if dictContents is None:
+            LOG().info(f"invalid slm json content, skip slm filter (allow); content={None if content is None else str(content)[:120]!r}")
+            return ERR_OK
         
         # 수집원본, 그대로 저장한다.
         
@@ -552,6 +670,26 @@ class SLMFilterPattern (FilterPatternBase):
             #pii, 악성/욕설/유해, guardrail 이면 차단
             dictOuputResponse[ApiParameterDefine.OUT_ACTION] = PipelineFilterDefine.ACTION_BLOCK
             
+            
+            # evidence는 slm 출력에 없음
+            lstPiiItem:list = dictContents.get("items")
+
+            if True == is_abuse:
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = self.ABUSE_POLICY_NAME
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = self.ABUSE_POLICY_CATEGORY
+
+
+            if True == has_pii:
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = SLMFilterPattern.POLICY_DISPLAY_NAMES.get(lstPiiItem[0]['type'], "")
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = self.ABUSE_POLICY_CATEGORY
+            
+            
+            if None != guardrail and self.GUARD_RAIL_DEFAULT != guardrail and 0 < len(guardrail):
+                # guard rail 일때, evidence를 맞춰 준다.
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_NAME] = SLMFilterPattern.POLICY_DISPLAY_NAMES.get(guardrail, "")
+                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_CATEGORY] = self.ABUSE_POLICY_CATEGORY
+            
+            
             lstDBPattern:list = self.__dictDBScopeRegexPattern.get(DBDefine.POLICY_FILTER_SCOPE_DEFAULT)
             
             # evidence는 항상 추가
@@ -560,22 +698,22 @@ class SLMFilterPattern (FilterPatternBase):
             
             lstPiiItem:list = dictContents.get("items")
             
-            if 0 < len (lstPiiItem):
+            # if 0 < len (lstPiiItem):
             
-                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
+            #     dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = dictContents.get("items")
                 
-            elif None != guardrail and 0 < len(guardrail):
+            # elif None != guardrail and 0 < len(guardrail):
                 
-                # guard rail 일때, evidence를 맞춰 준다.
-                dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = [
-                    {
-                        "type" : guardrail,
-                        "value" : "" 
-                    }
-                ]
+            #     # guard rail 일때, evidence를 맞춰 준다.
+            #     dictSLMPolicyResult[SLMDetectDefine.SLM_EVIDENCE] = [
+            #         {
+            #             "type" : guardrail,
+            #             "value" : "" 
+            #         }
+            #     ]
             
-            # else:
-            #     # 없을수 있다.
+            # # else:
+            # #     # 없을수 있다.
             
             if 0 < len(lstDBPattern):
                 
@@ -626,6 +764,43 @@ class SLMFilterPattern (FilterPatternBase):
             LOG().error(traceback.format_exc())
                         
         return None
+    
+    def __loadSLMContent(self, content) -> dict | None:
+        """Parse SLM assistant content into a dict.
+
+        Empty / non-JSON content must not raise — otherwise multiple_filter
+        returns 500 before AddToLogQueue and the management UI never sees the
+        prompt (Envoy still logs the decision).
+        """
+        
+        if content is None:
+            return None
+        
+        if isinstance(content, dict):
+            return content
+        
+        text = str(content).strip()
+        if not text:
+            return None
+        try:
+            obj = json.loads(text)
+            return obj if isinstance(obj, dict) else None
+        
+        except (TypeError, ValueError, json.JSONDecodeError) as e:
+            LOG().error(f"json load exception {e}")
+            pass
+        
+        start = text.find("{")
+        end = text.rfind("}")
+        
+        if start < 0 or end <= start:
+            return None
+        try:
+            obj = json.loads(text[start : end + 1])
+            return obj if isinstance(obj, dict) else None
+        except (TypeError, ValueError, json.JSONDecodeError):
+            LOG().error(f"json load exception {e}")
+            return None
         
         
         
