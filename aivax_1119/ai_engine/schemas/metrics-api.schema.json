@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aivax.local/schemas/metrics-api.schema.json",
+  "title": "AIVAX Mirror Metrics API",
+  "description": "Read-only Mirror UI metrics (aivax-engine-metrics :9108). See docs/METRICS_API.md.",
+  "$defs": {
+    "portMetrics": {
+      "type": "object",
+      "required": ["valid", "source", "packets_total", "bytes_total", "pps", "bps", "mbps"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "source": {
+          "type": "string",
+          "enum": ["dpdk_telemetry", "nic_sysfs_accepted", "unknown"]
+        },
+        "packets_total": { "type": "number" },
+        "bytes_total": { "type": "number" },
+        "pps": { "type": "number" },
+        "bps": { "type": "number" },
+        "mbps": { "type": "number" },
+        "window_seconds": { "type": "number" },
+        "window_packets": { "type": "number" },
+        "window_bytes": { "type": "number" },
+        "window_dropped": { "type": "number" },
+        "interfaces": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "dropsHeadline": {
+      "type": "object",
+      "required": ["metric_valid", "formula_id", "drop_scope", "accepted_source", "drop_source"],
+      "properties": {
+        "metric_valid": { "type": "boolean" },
+        "drop_rate": { "type": ["number", "null"] },
+        "capture_drop_packets_total": { "type": "number" },
+        "capture_drop_source": { "type": "string" },
+        "formula_id": { "type": "string" },
+        "drop_scope": { "type": "string", "enum": ["pmd_rx", "nic_ingress"] },
+        "accepted_source": { "type": "string" },
+        "drop_source": { "type": "string" },
+        "counter_overlap_validated": { "type": "boolean" }
+      }
+    },
+    "dropsMetrics": {
+      "type": "object",
+      "required": ["headline"],
+      "properties": {
+        "pmd_imissed_total": { "type": ["number", "null"] },
+        "pmd_rx_nombuf_total": { "type": ["number", "null"] },
+        "pmd_imissed_rate": { "type": ["number", "null"] },
+        "pmd_imissed_rate_valid": { "type": "boolean" },
+        "window_imissed": { "type": ["number", "null"] },
+        "nic_ingress_drop_packets_total": { "type": ["number", "null"] },
+        "nic_ingress_drop_rate": { "type": ["number", "null"] },
+        "nic_ingress_drop_rate_valid": { "type": "boolean" },
+        "suricata_capture_drop_total": { "type": ["number", "null"] },
+        "export_queue_drop_total": { "type": "number" },
+        "file_aborted_total": { "type": "number" },
+        "metadata_only_total": { "type": "number" },
+        "headline": { "$ref": "#/$defs/dropsHeadline" }
+      }
+    },
+    "pipelineMetrics": {
+      "type": "object",
+      "required": ["valid", "ai_service", "http_version", "service_gate"],
+      "properties": {
+        "sampled_at": { "type": "string" },
+        "sensor_boot_id": { "type": "string" },
+        "valid": { "type": "boolean" },
+        "path": { "type": "string" },
+        "age_s": { "type": ["number", "null"] },
+        "processed": { "type": ["number", "null"] },
+        "eps_instant": { "type": ["number", "null"] },
+        "eps_avg": { "type": ["number", "null"] },
+        "workers": { "type": ["number", "null"] },
+        "n_rings": { "type": ["number", "null"] },
+        "ring_processed": {
+          "type": ["array", "null"],
+          "items": { "type": "number" }
+        },
+        "ring_errors": {
+          "type": ["array", "null"],
+          "items": { "type": "number" }
+        },
+        "worker_processed": {
+          "type": ["array", "null"],
+          "items": { "type": "number" }
+        },
+        "http_version": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "ai_service": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "service_gate": { "type": "object" },
+        "export_valid": { "type": "boolean" },
+        "export_path": { "type": "string" },
+        "export": { "type": "object" },
+        "consumer": { "type": "object" }
+      }
+    },
+    "currentResponse": {
+      "type": "object",
+      "required": [
+        "sampled_at",
+        "sensor_boot_id",
+        "port",
+        "drops",
+        "pipeline",
+        "counter_support"
+      ],
+      "properties": {
+        "sampled_at": { "type": "string" },
+        "sampled_at_unix": { "type": "number" },
+        "sensor_boot_id": { "type": "string" },
+        "port": { "$ref": "#/$defs/portMetrics" },
+        "drops": { "$ref": "#/$defs/dropsMetrics" },
+        "pipeline": { "$ref": "#/$defs/pipelineMetrics" },
+        "ai_classified_flow": { "type": "object" },
+        "counter_support": {
+          "type": "object",
+          "properties": {
+            "nic_sysfs": { "type": "boolean" },
+            "dpdk_imissed": { "type": "boolean" },
+            "dpdk_rx_nombuf": { "type": "boolean" },
+            "suricata_capture_drop": { "type": "boolean" },
+            "shm_consumer_stats": { "type": "boolean" }
+          }
+        },
+        "flow_cardinality": { "type": "number" }
+      }
+    },
+    "healthResponse": {
+      "type": "object",
+      "required": ["ok", "sensor_boot_id", "counter_support"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "sensor_boot_id": { "type": "string" },
+        "collector_fresh": { "type": "boolean" },
+        "last_sample": { "type": ["string", "null"] },
+        "dpdk_telemetry": { "type": ["string", "null"] },
+        "pipeline_stats_path": { "type": "string" },
+        "pipeline_stats_valid": { "type": "boolean" },
+        "counter_support": { "type": "object" },
+        "build": { "type": "object" }
+      }
+    },
+    "historyResponse": {
+      "type": "object",
+      "required": ["points", "window", "step", "count"],
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sampled_at", "port", "drops"],
+            "properties": {
+              "sampled_at": { "type": "string" },
+              "port": { "$ref": "#/$defs/portMetrics" },
+              "drops": { "$ref": "#/$defs/dropsMetrics" }
+            }
+          }
+        },
+        "window": { "type": "number" },
+        "step": { "type": "number" },
+        "count": { "type": "number" }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/currentResponse" },
+    { "$ref": "#/$defs/pipelineMetrics" },
+    { "$ref": "#/$defs/healthResponse" },
+    { "$ref": "#/$defs/historyResponse" }
+  ]
+}

@@ -1,0 +1,46 @@
+[Unit]
+Description=AIVAX AI Engine Inline (ChatGate UDS)
+Documentation=file://@AIVAX_ENGINE_ROOT@/docs/DEPLOY_INLINE_1G.md
+After=network.target aivax-pipeline.service
+Wants=aivax-pipeline.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+# systemd has no ${VAR:-default} expansion, so the defaults must be real
+# Environment= lines. They precede EnvironmentFile= so the env file still wins.
+Environment=AIVAX_POLICY_API_MAX_INFLIGHT=384
+Environment=AIVAX_POLICY_API_POOL_LIMIT=384
+EnvironmentFile=-/etc/aivax/ai_engine.env
+Environment=PYTHONPATH=@AIVAX_ENGINE_ROOT@:@AIVAX_ENGINE_ROOT@/core:@AIVAX_ENGINE_ROOT@/mirror
+WorkingDirectory=@AIVAX_ENGINE_ROOT@
+# Host shared/default Python (resolved at install). No ai_engine-private venv.
+# UDS path stays /run/aivax/policy.sock (Envoy ChatGate contract).
+ExecStart=@AIVAX_PYTHON@ -u @AIVAX_ENGINE_ROOT@/core/ai_policy_engine.py \
+  --socket /run/aivax/policy.sock \
+  --socket-mode 660 \
+  --log-level INFO \
+  --server-url http://127.0.0.1 \
+  --port 9099 \
+  --policy-api-timeout-ms 60000 \
+  --policy-api-acquire-timeout-ms 200 \
+  --policy-api-max-inflight ${AIVAX_POLICY_API_MAX_INFLIGHT} \
+  --policy-api-pool-limit ${AIVAX_POLICY_API_POOL_LIMIT} \
+  --policy-api-failure-policy open \
+  --log-payload \
+  --payload-preview-bytes 512
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+RuntimeDirectory=aivax
+RuntimeDirectoryMode=0755
+# Keep registry.sock / attachments across engine restarts (do not wipe /run/aivax).
+RuntimeDirectoryPreserve=yes
+CPUAffinity=16
+AllowedCPUs=16
+StandardOutput=append:@AIVAX_ENGINE_LOG@
+StandardError=append:@AIVAX_ENGINE_LOG@
+
+[Install]
+WantedBy=multi-user.target

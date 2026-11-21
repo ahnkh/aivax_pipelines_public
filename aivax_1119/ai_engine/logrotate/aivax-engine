@@ -1,0 +1,18 @@
+# AIVAX ai_engine — log rotation
+# Installed by deploy/inline/install.sh and deploy/mirror/install.sh
+# (also: sudo bash logrotate/install.sh).
+#
+# systemd StandardOutput=append: keeps this inode open. Rename-only rotation
+# would leave python writing the old file. copytruncate is required.
+
+@AIVAX_ENGINE_LOG@
+@AIVAX_ENGINE_SHM_LOG@ {
+    daily
+    maxsize 1G
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

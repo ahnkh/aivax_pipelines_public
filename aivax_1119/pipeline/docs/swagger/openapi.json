@@ -1,0 +1,1916 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AIVAX Pipeline API",
+    "description": "현재 Pipeline API 계약. INPUT/OUTPUT은 같은 message_id로 연결한다.\n\n요청의 추가 키는 기본적으로 무시된다. 기본값·null 허용과 실행 결과를 구분한다.\ndevelop의 과거 allow 계약은 별도 [develop Swagger](/docs/develop)에서 확인한다.\n",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/filter/multiple_filter": {
+      "post": {
+        "tags": [
+          "Pipeline INPUT/OUTPUT"
+        ],
+        "summary": "INPUT: 프롬프트·첨부파일 검사",
+        "description": "**상세 명세:** [multiple_filter 요청·응답·필드 설명](./details/multiple-filter.html)\n\n프롬프트와 첨부파일을 검사한다. 요청 본문은 `application/json`이다.\n\n- Inline: CSO 선행 검사 후 **정규식 → 첨부파일 → SLM → SecuXper** 순서.\n  요청한 필터 중 전역 활성화된 필터만 실행하며 중복은 제거한다.\n  `input_filter`는 입력 로그 저장 요청이다. 알 수 없는 이름은 검사 전 HTTP 404.\n- 최종 우선순위: **block > masking > failed > accept > 빈 문자열**.\n  block이면 뒤 검사를 중단한다. SSL 우회 설정에 따라 최종 판정이 달라질 수 있다.\n- `user_consent` 활성화: 원본 ID로 재전송. Inline은 CSO 통과 후 일반 검사 없이\n  `accept/0`. CSO 차단은 `block/1`. `filter_list=[]`로 CSO를 끌 수 없다.\n- Mirror: 빈 action/0으로 즉시 접수하며 백그라운드에서 검사한다.\n  `debug=true`여도 디버그 필드는 생략하며 즉시 응답은 검사 완료를 뜻하지 않는다.\n- `debug=true`인 Inline에서만 `filter_result`, `log_evidence`를 추가한다.\n  로그가 없으면 `log_evidence={}`. 로그 근거는 최종 저장 완료 증명이 아니다.\n\n**HTTP 200 / success는 검사 성공이나 허용을 보장하지 않는다.**\n`failed/0`도 있으므로 `final_decision.action`을 함께 확인한다.\nINPUT은 최상위 `final_decision`을 사용한다. OUTPUT의 `out_result`와 구조가 다르다.\nINPUT 응답의 `message_id`를 OUTPUT·동의 재전송에도 사용한다.",
+        "operationId": "filter_prompt_from_engine_v1_filter_multiple_filter_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantFilterForm"
+              },
+              "examples": {
+                "normal": {
+                  "summary": "일반 입력",
+                  "value": {
+                    "message_id": "msg-001",
+                    "prompt": "회의 내용을 요약해 주세요.",
+                    "filter_list": [
+                      "input_filter",
+                      "secret_filter",
+                      "slm_filter"
+                    ],
+                    "ai_service": 1,
+                    "debug": false
+                  }
+                },
+                "attachment": {
+                  "summary": "첨부파일 + Inline 디버그",
+                  "value": {
+                    "message_id": "msg-001",
+                    "prompt": "첨부 문서를 요약해 주세요.",
+                    "filter_list": [
+                      "input_filter",
+                      "secret_filter",
+                      "file_block_filter"
+                    ],
+                    "attachments": [
+                      {
+                        "id": "/backup/file.pdf",
+                        "size": 12345,
+                        "name": "file.pdf",
+                        "mime_type": "application/pdf"
+                      }
+                    ],
+                    "email": "user@example.com",
+                    "ai_service": 1,
+                    "client_host": "127.0.0.1",
+                    "event_time": "2026-10-19T12:00:00+09:00",
+                    "debug": true
+                  }
+                },
+                "consent": {
+                  "summary": "원본 ID로 사용자 동의 재전송",
+                  "value": {
+                    "message_id": "msg-001",
+                    "prompt": "원본 프롬프트",
+                    "user_consent": "on",
+                    "debug": true
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "검사 결과 또는 Mirror 접수. action을 반드시 확인한다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InputAnalysisResponse"
+                },
+                "examples": {
+                  "undetected": {
+                    "summary": "미탐지 또는 Mirror 접수",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "",
+                        "action_code": 0,
+                        "masked_contents": "",
+                        "block_message": "",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01"
+                    }
+                  },
+                  "accept": {
+                    "summary": "명시적 허용",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "accept",
+                        "action_code": 0,
+                        "masked_contents": "",
+                        "block_message": "",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01"
+                    }
+                  },
+                  "block": {
+                    "summary": "차단 (CSO 포함)",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "block",
+                        "action_code": 1,
+                        "masked_contents": "",
+                        "block_message": "보안 정책에 따라 차단되었습니다.",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01"
+                    }
+                  },
+                  "masking": {
+                    "summary": "마스킹",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "masking",
+                        "action_code": 2,
+                        "masked_contents": "[AIVAX MASKING]",
+                        "block_message": "",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01"
+                    }
+                  },
+                  "failed": {
+                    "summary": "검사 실패, HTTP 200",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "failed",
+                        "action_code": 0,
+                        "masked_contents": "",
+                        "block_message": "",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01"
+                    }
+                  },
+                  "debug": {
+                    "summary": "Inline debug",
+                    "value": {
+                      "api_code": 200,
+                      "api_message_code": "success",
+                      "api_command": "pipeline multiple filter",
+                      "final_decision": {
+                        "action": "masking",
+                        "action_code": 2,
+                        "masked_contents": "[AIVAX MASKING]",
+                        "block_message": "",
+                        "message_id": "msg-001"
+                      },
+                      "completed_date": "2026-10-19T12:00:01",
+                      "filter_result": {
+                        "secret_filter": {
+                          "action": "masking",
+                          "action_code": 2,
+                          "masked_contents": "[AIVAX MASKING]",
+                          "block_message": "",
+                          "policy_id": "policy-001",
+                          "policy_name": "Credential policy",
+                          "target": "prompt",
+                          "category": "credential",
+                          "scope": "default"
+                        }
+                      },
+                      "log_evidence": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "알 수 없는 필터 또는 필요한 처리기 사용 불가.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceNotFoundResponse"
+                },
+                "example": {
+                  "detail": {
+                    "api_code": 404,
+                    "api_message_code": "Resource Not Found Error",
+                    "api_command": "pipeline multiple filter",
+                    "out_result": "invalid pipeline, not exist pipeline, id = output_filter",
+                    "completed_date": "2026-10-19T12:00:01"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConsentLogNotFoundError가 전파된 경우. 일반 동의 입력은 원본 로그가 없다는 이유만으로 409를 반환하지 않는다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "DTO 타입 오류 또는 동의 요청의 빈 message_id. detail은 검증 오류 배열이며 모델 전체 검증의 loc는 [body]일 수 있다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "detail": [
+                    {
+                      "type": "string_type",
+                      "loc": [
+                        "body",
+                        "message_id"
+                      ],
+                      "msg": "Input should be a valid string"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "재시도 가능한 로그 전달·동의 저장 실패.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailErrorResponse"
+                },
+                "example": {
+                  "detail": "동의 입력 로그 병합 저장에 실패했습니다."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "처리되지 않은 서버 예외. 공통 JSON envelope를 보장하지 않는다.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/filter/output_filter": {
+      "post": {
+        "tags": [
+          "Pipeline INPUT/OUTPUT"
+        ],
+        "summary": "OUTPUT: AI 응답 로그 병합",
+        "description": "**상세 명세:** [output_filter 요청·응답·필드 설명](./details/output-filter.html)\n\n실제 AI 응답을 같은 `message_id`의 INPUT 로그와 병합하도록 전달한다.\nOUTPUT이 먼저 도착해도 병합 저장소에서 INPUT을 기다릴 수 있다.\n\n- 현재 `out_result`는 항상 `{}`. `debug=true`여도 판정·디버그 필드를 추가하지 않는다.\n- 성공은 OpenSearch 최종 반영 완료를 보장하지 않는다.\n- 일반 출력의 저장 실패 반환값은 HTTP 실패로 바꾸지 않지만,\n  명시적 동의 OUTPUT의 저장 실패 반환값은 HTTP 503이다.\n- 출력 저장은 실행 설정에 따르며 기본 한도는 UTF-8 200,000바이트다.",
+        "operationId": "write_ouput_response_v1_filter_output_filter_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutputFilterItem"
+              },
+              "examples": {
+                "normal": {
+                  "summary": "실제 AI 출력",
+                  "value": {
+                    "message_id": "msg-001",
+                    "llm_output": "회의 요약입니다.",
+                    "ai_service": 1
+                  }
+                },
+                "consent": {
+                  "summary": "동의 출력",
+                  "value": {
+                    "message_id": "msg-001",
+                    "llm_output": "회의 요약입니다.",
+                    "user_consent": true
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "출력 로그 처리 접수. 최종 저장 완료를 보장하지 않는다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputAnalysisResponse"
+                },
+                "example": {
+                  "api_code": 200,
+                  "api_message_code": "success",
+                  "api_command": "output api router",
+                  "out_result": {},
+                  "completed_date": "2026-10-19T12:00:01"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "알 수 없는 필터 또는 필요한 처리기 사용 불가.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceNotFoundResponse"
+                },
+                "example": {
+                  "detail": {
+                    "api_code": 404,
+                    "api_message_code": "Resource Not Found Error",
+                    "api_command": "output api router",
+                    "out_result": "invalid pipeline, not exist pipeline, id = output_filter",
+                    "completed_date": "2026-10-19T12:00:01"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConsentLogNotFoundError가 전파된 경우. 일반 동의 입력은 원본 로그가 없다는 이유만으로 409를 반환하지 않는다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "DTO 타입 오류 또는 동의 요청의 빈 message_id. detail은 검증 오류 배열이며 모델 전체 검증의 loc는 [body]일 수 있다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                },
+                "example": {
+                  "detail": [
+                    {
+                      "type": "string_type",
+                      "loc": [
+                        "body",
+                        "message_id"
+                      ],
+                      "msg": "Input should be a valid string"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "재시도 가능한 로그 전달·동의 저장 실패.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailErrorResponse"
+                },
+                "example": {
+                  "detail": "동의 입력 로그 병합 저장에 실패했습니다."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "처리되지 않은 서버 예외. 공통 JSON envelope를 보장하지 않는다.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CsoFile": {
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "title": "File Name",
+            "description": "첨부파일 이름."
+          },
+          "file_path": {
+            "type": "string",
+            "title": "File Path",
+            "description": "파일 조회에 사용한 경로. 파일 보관 처리 후 보관 경로로 치환될 수 있다."
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade",
+            "description": "CSO 태깅 등급. 1=C, 2=S, 3=O이며 3만 허용. 미태깅·조회 오류는 null."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "tagged",
+              "untagged",
+              "error"
+            ],
+            "title": "Status",
+            "description": "파일별 조회 상태. tagged=등급 확인, untagged=미태깅, error=조회 오류."
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_name",
+          "file_path",
+          "grade",
+          "status"
+        ],
+        "title": "CsoFile"
+      },
+      "CsoResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "blocked",
+              "error"
+            ],
+            "title": "Status",
+            "description": "CSO 전체 상태. open=모두 tagged O(3), blocked=그 외 비오류 차단, error=조회 오류가 하나 이상."
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/CsoFile"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "첨부파일별 CSO 조회 결과. CSO가 실행되지 않으면 상위 cso 필드 자체를 생략한다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "files"
+        ],
+        "title": "CsoResult"
+      },
+      "DebugFilterResults": {
+        "properties": {
+          "secret_filter": {
+            "$ref": "#/components/schemas/InspectionResult",
+            "description": "정규식 검사 결과. 요청 제외·전역 비활성화 시 생략한다."
+          },
+          "file_block_filter": {
+            "$ref": "#/components/schemas/InspectionResult",
+            "description": "첨부파일 검사 결과. 요청 제외·전역 비활성화 시 생략한다."
+          },
+          "slm_filter": {
+            "$ref": "#/components/schemas/InspectionResult",
+            "description": "SLM 검사 결과. 요청 제외·전역 비활성화 시 생략한다."
+          },
+          "secuxper_filter": {
+            "$ref": "#/components/schemas/InspectionResult",
+            "description": "SecuXper 검사 결과. 요청 제외·전역 비활성화 시 생략한다."
+          }
+        },
+        "type": "object",
+        "title": "DebugFilterResults",
+        "description": "Inline debug 전용. 요청 제외·전역 비활성화 필터는 생략한다."
+      },
+      "DetailErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "HTTP 409·503의 오류 설명 문자열. 오류 envelope 없이 이 문자열만 반환한다. 문구는 실패 경로마다 달라진다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "DetailErrorResponse"
+      },
+      "ErrorEnvelope": {
+        "properties": {
+          "api_code": {
+            "type": "integer",
+            "const": 404,
+            "title": "Api Code",
+            "description": "404. 알 수 없는 필터 또는 필요한 처리기 사용 불가."
+          },
+          "api_message_code": {
+            "type": "string",
+            "const": "Resource Not Found Error",
+            "title": "Api Message Code",
+            "description": "성공은 success, 404 오류는 Resource Not Found Error. 판정 action과 별도로 읽는다."
+          },
+          "api_command": {
+            "type": "string",
+            "enum": [
+              "pipeline multiple filter",
+              "output api router"
+            ],
+            "title": "Api Command",
+            "description": "처리 명령 식별자. INPUT은 pipeline multiple filter, OUTPUT은 output api router."
+          },
+          "out_result": {
+            "type": "string",
+            "title": "Out Result",
+            "description": "예외 설명 문자열. 성공 OUTPUT의 out_result 객체와 타입이 다르다."
+          },
+          "completed_date": {
+            "type": "string",
+            "title": "Completed Date",
+            "description": "서버 로컬 시각 YYYY-MM-DDTHH:mm:ss. UTC 오프셋 없음."
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_code",
+          "api_message_code",
+          "api_command",
+          "out_result",
+          "completed_date"
+        ],
+        "title": "ErrorEnvelope"
+      },
+      "FileAttachItem": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Pipeline에서 읽을 파일 경로. null은 빈 문자열.",
+            "default": ""
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size",
+            "description": "파일 크기(바이트). null은 0.",
+            "default": 0
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "파일 이름. null은 빈 문자열.",
+            "default": ""
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime Type",
+            "description": "호출자 제공 MIME 타입. null은 빈 문자열.",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "FileAttachItem"
+      },
+      "FileDetailReason": {
+        "properties": {
+          "policy_detail": {
+            "$ref": "#/components/schemas/FilePolicyDetail",
+            "description": "상세 분석에 사용한 정책 표현식. 정책에 표현식이 있을 때 detail_reason을 생성한다."
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/FileEvidence"
+            },
+            "type": "array",
+            "title": "Evidence",
+            "description": "파일 내용에서 확인한 순번·페이지·줄·문맥·매칭 문자열 목록."
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy_detail",
+          "evidence"
+        ],
+        "title": "FileDetailReason"
+      },
+      "FileEvidence": {
+        "properties": {
+          "no": {
+            "type": "integer",
+            "title": "No",
+            "description": "탐지 근거의 순번."
+          },
+          "page_no": {
+            "type": "integer",
+            "title": "Page No",
+            "description": "탐지된 페이지 번호."
+          },
+          "line_no": {
+            "type": "integer",
+            "title": "Line No",
+            "description": "탐지된 줄 번호."
+          },
+          "context": {
+            "type": "string",
+            "title": "Context",
+            "description": "탐지 지점의 문맥 또는 주변 텍스트."
+          },
+          "regex_match": {
+            "type": "string",
+            "title": "Regex Match",
+            "description": "정규식에 매칭된 문자열."
+          }
+        },
+        "type": "object",
+        "required": [
+          "no",
+          "page_no",
+          "line_no",
+          "context",
+          "regex_match"
+        ],
+        "title": "FileEvidence"
+      },
+      "FileInfo": {
+        "properties": {
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type",
+            "description": "파일의 MIME 타입. 파일 처리 단계에서 확인한 값."
+          },
+          "file_ext": {
+            "type": "string",
+            "title": "File Ext",
+            "description": "파일 확장자."
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size",
+            "description": "파일 크기(바이트)."
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash",
+            "description": "콘텐츠를 검사한 파일의 해시. 검사·파일 처리 결과에 따라 생략된다."
+          },
+          "chunk": {
+            "type": "string",
+            "title": "Chunk",
+            "description": "파일에서 추출한 콘텐츠 조각. 실행 설정·검사 결과에 따라 생략된다."
+          },
+          "inspection_status": {
+            "type": "string",
+            "title": "Inspection Status",
+            "description": "검사 상태 문자열. 예: skipped. 모든 파일 요약에 존재하는 필드는 아니다."
+          },
+          "skip_reason": {
+            "type": "string",
+            "title": "Skip Reason",
+            "description": "검사 생략 이유. CSO 선행 차단은 cso_blocked. 그 외 값은 파일 처리 결과에 따른다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "mime_type",
+          "file_ext",
+          "size"
+        ],
+        "title": "FileInfo"
+      },
+      "FilePolicyDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "상세 분석 정책 이름."
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule",
+            "description": "정책의 정규식 표현식."
+          },
+          "regex_flag": {
+            "type": "integer",
+            "title": "Regex Flag",
+            "description": "정책 정규식에 적용한 플래그 정수."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "rule",
+          "regex_flag"
+        ],
+        "title": "FilePolicyDetail"
+      },
+      "FileSummary": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "파일별 분석 판정. CSO 선행 차단의 보관 요약에서는 빈 문자열일 수 있다."
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name",
+            "description": "첨부파일 이름."
+          },
+          "file_backup_path": {
+            "type": "string",
+            "title": "File Backup Path",
+            "description": "첨부파일 보관 목적지. 보관되지 않았으면 빈 문자열."
+          },
+          "file_info": {
+            "$ref": "#/components/schemas/FileInfo",
+            "description": "MIME·확장자·크기와 조건부 검사 메타데이터."
+          },
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "description": "정책 식별자. 대표 정책이 없으면 빈 문자열."
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "description": "정책 이름. 대표 정책이 없으면 빈 문자열."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "파일 탐지 정책 이름. CSO 전용 보관 요약에서는 생략될 수 있다."
+          },
+          "targets": {
+            "type": "string",
+            "title": "Targets",
+            "description": "파일 정책의 검사 대상. target과 별개의 기존 복수형 필드명."
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "정책 분류 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "정책 적용 범위 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "regex_pattern": {
+            "type": "string",
+            "title": "Regex Pattern",
+            "description": "정책에 실제로 매칭한 문자열. 정책의 전체 정규식 표현식과 다르며 미탐지는 빈 문자열."
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "탐지 정책이 있을 때 추가하는 정책 ID 별칭."
+          },
+          "detail_reason": {
+            "$ref": "#/components/schemas/FileDetailReason",
+            "description": "정책에 표현식이 있을 때 추가하는 상세 분석 정책과 근거."
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "file_name",
+          "file_backup_path",
+          "file_info"
+        ],
+        "title": "FileSummary",
+        "description": "정책 필드는 CSO 전용 파일 보관 요약에서 생략될 수 있다."
+      },
+      "FilterDetection": {
+        "properties": {
+          "filter": {
+            "type": "string",
+            "enum": [
+              "regex",
+              "file block",
+              "slm",
+              "secuxper"
+            ],
+            "title": "Filter",
+            "description": "로그 필터명. regex=정규식, file block=첨부파일, slm=SLM, secuxper=SecuXper. 요청의 필터 이름과 다르다."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "block",
+              "masking",
+              ""
+            ],
+            "title": "Mode",
+            "description": "검사 실패도 로그에서는 빈 문자열."
+          },
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "description": "정책 식별자. 대표 정책이 없으면 빈 문자열."
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "description": "정책 이름. 대표 정책이 없으면 빈 문자열."
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "정책 검사 대상. 예: prompt, file. 정책 문자열이며 고정 enum이 아니다."
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "정책 분류 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "정책 적용 범위 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "masked_contents": {
+            "type": "string",
+            "title": "Masked Contents",
+            "description": "마스킹된 콘텐츠 또는 공급자 대체 콘텐츠. 이 위치에서 값이 없으면 빈 문자열."
+          },
+          "evidence": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Evidence",
+            "description": "Regex: policy_id, policy_name, action, target, category, scope, match, start(포함), end(제외). id/name 별칭도 보완. SLM은 공급자별 type/value 등 가변 키. 파일은 기본 빈 배열."
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At",
+            "description": "실제 검사 시작 시각. UTC ISO 형식 ...Z. 미실행 기본 항목에서는 생략."
+          },
+          "completed_at": {
+            "type": "string",
+            "title": "Completed At",
+            "description": "실제 검사 완료 시각. UTC ISO 형식 ...Z. 미실행 기본 항목에서는 생략."
+          },
+          "duration_ms": {
+            "type": "number",
+            "title": "Duration Ms",
+            "description": "실제 검사 소요 시간(밀리초). 미실행 기본 항목에서는 생략."
+          },
+          "error": {
+            "$ref": "#/components/schemas/InspectionError",
+            "description": "검사 오류가 있을 때만 포함하는 오류 상세. HTTP 200의 검사 실패와 API 자체 HTTP 오류를 구분한다."
+          },
+          "block_message": {
+            "type": "string",
+            "title": "Block Message",
+            "description": "전역 동의 옵션을 켠 일반 차단 등에서 포함할 수 있는 필터별 안내문."
+          },
+          "block_bypassed": {
+            "type": "boolean",
+            "title": "Block Bypassed",
+            "description": "해당 필터의 block 판정이 SSL 우회 대상으로 처리되었으면 true."
+          },
+          "file_summary": {
+            "items": {
+              "$ref": "#/components/schemas/FileSummary"
+            },
+            "type": "array",
+            "title": "File Summary",
+            "description": "첨부파일 검사·보관 결과 목록. 실패·미실행 기본 결과는 빈 배열일 수 있다."
+          },
+          "slm_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slm Content",
+            "description": "SLM 모델 원본 콘텐츠. 공급자에 따라 null 가능. 실패·미실행 기본 항목은 빈 문자열."
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "SecuXper 정책 실행 공급자. 현재는 secuxperai."
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version",
+            "description": "SecuXper 검사에 사용한 정책 스냅샷 버전."
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped",
+            "description": "적용할 SecuXper 정책을 선택하지 못했으면 true."
+          },
+          "policy_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Policy Codes",
+            "description": "선택한 SecuXper 정책 코드 목록. block 뒤 미실행 정책도 선택 목록에 남을 수 있다."
+          },
+          "policy_results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Policy Results",
+            "description": "실제 정책별 결과. policy_code와 공급자별 가변 메타데이터를 포함한다."
+          },
+          "failed_policies": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Failed Policies",
+            "description": "실패 정책의 policy_id, policy_name, category, scope, target, mode와 선택적 error. 이 중첩 목록의 mode는 failed일 수 있다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "filter",
+          "mode",
+          "policy_id",
+          "policy_name",
+          "target",
+          "category",
+          "scope",
+          "masked_contents",
+          "evidence"
+        ],
+        "title": "FilterDetection"
+      },
+      "FinalDecision": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "block",
+              "masking",
+              "failed",
+              ""
+            ],
+            "title": "Action",
+            "description": "accept=명시적 허용, block=차단, masking=마스킹, failed=검사 실패, 빈 문자열=미탐지·검사 없음·Mirror 접수."
+          },
+          "action_code": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "title": "Action Code",
+            "description": "block=1, masking=2, accept/failed/빈 문자열=0. 0만으로 검사 성공을 판단하지 않는다."
+          },
+          "masked_contents": {
+            "type": "string",
+            "title": "Masked Contents",
+            "description": "마스킹 결과. 없으면 빈 문자열."
+          },
+          "block_message": {
+            "type": "string",
+            "title": "Block Message",
+            "description": "차단·안내 문구 또는 빈 문자열."
+          },
+          "message_id": {
+            "type": "string",
+            "title": "Message Id",
+            "description": "OUTPUT과 동의 재전송에 사용할 ID."
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "action_code",
+          "masked_contents",
+          "block_message",
+          "message_id"
+        ],
+        "title": "FinalDecision"
+      },
+      "InputAnalysisResponse": {
+        "properties": {
+          "api_code": {
+            "type": "integer",
+            "const": 200,
+            "title": "Api Code",
+            "description": "API envelope의 HTTP 상태 코드. 200은 보안 허용이나 전체 검사 성공을 뜻하지 않는다."
+          },
+          "api_message_code": {
+            "type": "string",
+            "const": "success",
+            "title": "Api Message Code",
+            "description": "성공은 success, 404 오류는 Resource Not Found Error. 판정 action과 별도로 읽는다."
+          },
+          "api_command": {
+            "type": "string",
+            "const": "pipeline multiple filter",
+            "title": "Api Command",
+            "description": "처리 명령 식별자. INPUT은 pipeline multiple filter, OUTPUT은 output api router."
+          },
+          "final_decision": {
+            "$ref": "#/components/schemas/FinalDecision",
+            "description": "호출자가 사용할 최종 보안 판정. 로그 mode나 개별 필터 결과로 대체하지 않는다."
+          },
+          "completed_date": {
+            "type": "string",
+            "title": "Completed Date",
+            "description": "서버 로컬 시각 YYYY-MM-DDTHH:mm:ss. UTC 오프셋 없음."
+          },
+          "filter_result": {
+            "$ref": "#/components/schemas/DebugFilterResults",
+            "description": "debug=true인 Inline에서만 추가한다. 요청 제외·전역 비활성화 필터는 생략하며 block 뒤 미실행 필터는 빈 기본 결과로 포함될 수 있다. input_filter 항목은 없다."
+          },
+          "log_evidence": {
+            "$ref": "#/components/schemas/LogEvidence",
+            "description": "debug=true인 Inline에서만 추가한다. 생성된 입력 로그가 없으면 {}. Mirror에서는 debug=true여도 필드 자체를 생략한다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_code",
+          "api_message_code",
+          "api_command",
+          "final_decision",
+          "completed_date"
+        ],
+        "title": "InputAnalysisResponse"
+      },
+      "InspectionError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "공급자별 오류 코드. 고정 enum이 아님."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "검사 오류 설명."
+          },
+          "http_status": {
+            "type": "integer",
+            "title": "Http Status",
+            "description": "외부 검사 서비스의 HTTP 상태. multiple_filter API 자체의 HTTP 상태와 다르며 없으면 생략한다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "InspectionError"
+      },
+      "InspectionResult": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "block",
+              "masking",
+              "failed",
+              ""
+            ],
+            "title": "Action",
+            "description": "개별 필터의 accept, block, masking, failed 또는 빈 문자열. 후속 미실행 기본 항목은 빈 문자열일 수 있다."
+          },
+          "action_code": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "title": "Action Code",
+            "description": "개별 필터 판정 코드. block=1, masking=2, accept/failed/빈 문자열=0. action과 함께 읽는다."
+          },
+          "masked_contents": {
+            "type": "string",
+            "title": "Masked Contents",
+            "description": "마스킹된 콘텐츠 또는 공급자 대체 콘텐츠. 이 위치에서 값이 없으면 빈 문자열."
+          },
+          "block_message": {
+            "type": "string",
+            "title": "Block Message",
+            "description": "차단 또는 안내 문구. 없으면 빈 문자열. 문자열 존재 여부만으로 차단을 판단하지 않는다."
+          },
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "description": "정책 식별자. 대표 정책이 없으면 빈 문자열."
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "description": "정책 이름. 대표 정책이 없으면 빈 문자열."
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "정책 검사 대상. 예: prompt, file. 정책 문자열이며 고정 enum이 아니다."
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "정책 분류 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "정책 적용 범위 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "action_code",
+          "masked_contents",
+          "block_message",
+          "policy_id",
+          "policy_name",
+          "target",
+          "category",
+          "scope"
+        ],
+        "title": "InspectionResult"
+      },
+      "LogEvidence": {
+        "properties": {
+          "@timestamp": {
+            "type": "string",
+            "title": "@Timestamp",
+            "description": "입력 로그 시각. UTC ISO 형식 ...Z. 동의 요청은 확보한 원본 문서 시각을 유지할 수 있다."
+          },
+          "message_id": {
+            "type": "string",
+            "title": "Message Id",
+            "description": "INPUT/OUTPUT 로그 연결 키. 두 API와 동의 재전송에 같은 값을 사용한다."
+          },
+          "user": {
+            "$ref": "#/components/schemas/LogUser",
+            "description": "입력 요청의 사용자 정보. role은 현재 항상 null."
+          },
+          "client_host": {
+            "type": "string",
+            "title": "Client Host",
+            "description": "공백 제거·표준화한 IPv4/IPv6. 잘못된 주소·빈 값·null은 빈 문자열."
+          },
+          "client_host_cidr": {
+            "type": "integer",
+            "title": "Client Host Cidr",
+            "description": "IP의 정수 표현. CIDR 접두 길이가 아님."
+          },
+          "ai_service_id": {
+            "type": "integer",
+            "title": "Ai Service Id",
+            "description": "입력 요청의 숫자 AI 서비스 ID 원본. null 입력은 0으로 정리한다."
+          },
+          "ai_service": {
+            "type": "string",
+            "title": "Ai Service",
+            "description": "서비스 표시명. 0=unknown, 1=GPT, 2=Gemini, 3=Claude 등. 매핑에 없는 ID는 빈 문자열."
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "description": "마스킹 전 원래 입력 프롬프트."
+          },
+          "request_date": {
+            "type": "string",
+            "title": "Request Date",
+            "description": "제공한 event_time을 사용하거나 현재 UTC 시각으로 생성. 날짜·시간 사이 공백은 T로 변환한다."
+          },
+          "event_time": {
+            "type": "string",
+            "title": "Event Time",
+            "description": "앞뒤 공백을 제거한 호출자 이벤트 시각. 빈 값은 로그 생성 UTC 시각. 요청 단계에서 날짜 형식을 검증하지 않는다."
+          },
+          "filter_detect": {
+            "items": {
+              "$ref": "#/components/schemas/FilterDetection"
+            },
+            "type": "array",
+            "title": "Filter Detect",
+            "description": "검사별 탐지 상세. 실행이 없으면 빈 배열. SecuXper 실패는 여러 항목으로 펼칠 수 있어 필터명당 한 건을 보장하지 않는다."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "block",
+              "masking",
+              ""
+            ],
+            "title": "Mode",
+            "description": "입력 분석 로그의 accept, block, masking 또는 빈 문자열. failed는 빈 문자열로 기록. SSL 우회 등의 최종 HTTP 판정과 다를 수 있다."
+          },
+          "masked_contents": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Contents",
+            "description": "최종 분석 마스킹 콘텐츠. 없으면 null이며 HTTP final_decision의 빈 문자열과 다르다."
+          },
+          "policy": {
+            "$ref": "#/components/schemas/LogPolicy",
+            "description": "최종 분석의 대표 정책 정보. 정책이 없으면 하위 문자열은 빈 문자열."
+          },
+          "cso": {
+            "$ref": "#/components/schemas/CsoResult",
+            "description": "CSO 선행 조회 결과가 있을 때만 포함. CSO 통과 후에도 일반 필터가 요청을 차단할 수 있다."
+          },
+          "user_consent": {
+            "type": "string",
+            "const": "on",
+            "title": "User Consent",
+            "description": "허용된 동의 입력 로그에서 on. 일반 요청에서는 생략한다."
+          },
+          "_consent_log_timestamp": {
+            "type": "string",
+            "title": "Consent Log Timestamp",
+            "description": "동의 입력에서 원본 시각을 확보했을 때의 내부 상관 필드. 최종 OpenSearch 본문에는 기록하지 않는다."
+          }
+        },
+        "type": "object",
+        "title": "LogEvidence",
+        "description": "응답 시점의 입력 로그 근거. 입력 로그가 생성되지 않으면 {}. 최종 저장 문서가 아니며 모든 필드가 항상 존재하는 것은 아니다."
+      },
+      "LogPolicy": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "title": "Policy Id",
+            "description": "정책 식별자. 대표 정책이 없으면 빈 문자열."
+          },
+          "policy_name": {
+            "type": "string",
+            "title": "Policy Name",
+            "description": "정책 이름. 대표 정책이 없으면 빈 문자열."
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "정책 분류 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "정책 적용 범위 문자열. 정책 데이터의 값이며 고정 enum이 아니다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy_id",
+          "policy_name",
+          "category",
+          "scope"
+        ],
+        "title": "LogPolicy"
+      },
+      "LogUser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "입력 사용자 ID. null 요청은 빈 문자열로 보정."
+          },
+          "role": {
+            "type": "null",
+            "title": "Role",
+            "description": "현재 입력 로그 빌더는 항상 null로 생성."
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "입력 사용자 이메일. 빈 문자열은 익명이며 null 요청도 빈 문자열로 보정."
+          },
+          "uuid": {
+            "type": "string",
+            "title": "Uuid",
+            "description": "내부 사용자 UUID. 현재 입력 mapper의 기본값은 빈 문자열."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "email",
+          "uuid"
+        ],
+        "title": "LogUser"
+      },
+      "OutputAnalysisResponse": {
+        "properties": {
+          "api_code": {
+            "type": "integer",
+            "const": 200,
+            "title": "Api Code",
+            "description": "API envelope의 HTTP 상태 코드. 200은 보안 허용이나 전체 검사 성공을 뜻하지 않는다."
+          },
+          "api_message_code": {
+            "type": "string",
+            "const": "success",
+            "title": "Api Message Code",
+            "description": "성공은 success, 404 오류는 Resource Not Found Error. 판정 action과 별도로 읽는다."
+          },
+          "api_command": {
+            "type": "string",
+            "const": "output api router",
+            "title": "Api Command",
+            "description": "처리 명령 식별자. INPUT은 pipeline multiple filter, OUTPUT은 output api router."
+          },
+          "out_result": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Out Result",
+            "description": "현재 구현은 항상 빈 객체 {}."
+          },
+          "completed_date": {
+            "type": "string",
+            "title": "Completed Date",
+            "description": "서버 로컬 시각 YYYY-MM-DDTHH:mm:ss. UTC 오프셋 없음."
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_code",
+          "api_message_code",
+          "api_command",
+          "out_result",
+          "completed_date"
+        ],
+        "title": "OutputAnalysisResponse"
+      },
+      "OutputFilterItem": {
+        "properties": {
+          "llm_output": {
+            "type": "string",
+            "title": "Llm Output",
+            "description": "실제 AI 응답. 빈 문자열 허용. 출력 저장 옵션·길이 제한 적용.",
+            "default": "",
+            "examples": [
+              "회의 요약입니다."
+            ]
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "출력 로그 사용자 ID. null 유지.",
+            "default": ""
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "출력 로그 이메일. null 유지.",
+            "default": ""
+          },
+          "ai_service": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Service",
+            "description": "Management가 Valkey pipeline:ai-service:catalog:v1에 배포한 AI 서비스 ID. 로그 표시명은 카탈로그에서 조회한다. 미등록 ID도 정수로 허용하며 표시명은 빈 문자열. null 유지, 표시명은 빈 문자열.",
+            "default": 0,
+            "examples": [
+              1
+            ]
+          },
+          "client_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Host",
+            "description": "출력 로그 IP. INPUT과 달리 정규화하지 않으며 null 유지.",
+            "default": ""
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "내부 모델에 전달. 기본 출력 로그 빌더는 저장하지 않음.",
+            "default": ""
+          },
+          "message_id": {
+            "type": "string",
+            "title": "Message Id",
+            "description": "INPUT 응답과 동일한 ID. 앞뒤 공백 제거. 자동 생성 없음. 일반 출력은 빈 ID 허용, 동의 출력은 빈 ID가 HTTP 422.",
+            "default": "",
+            "examples": [
+              "msg-001"
+            ]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "어댑터가 본 모델 표시명. 없으면 빈 문자열",
+            "default": ""
+          },
+          "user_consent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Consent",
+            "description": "사용자 동의. true 또는 앞뒤 공백·대소문자를 무시한 on/1/true/yes/enable/enabled 문자열이면 활성화한다. 그 외는 비활성화. 활성화할 때는 원본 message_id가 필요하며 빈 ID는 HTTP 422. 동의 출력의 저장 실패 반환값은 HTTP 503.",
+            "default": "",
+            "examples": [
+              true
+            ]
+          },
+          "debug": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debug",
+            "description": "현재 OUTPUT 처리·응답에서 사용하지 않음.",
+            "default": false
+          },
+          "generated_only": {
+            "default": false,
+            "description": "이미 저장된 분석 로그에 생성 파일만 추가",
+            "title": "Generated Only",
+            "type": "boolean"
+          },
+          "output_revision": {
+            "default": false,
+            "description": "같은 메시지의 응답이 길어져 저장된 본문을 교체",
+            "title": "Output Revision",
+            "type": "boolean"
+          },
+          "logged_at": {
+            "default": "",
+            "description": "처음 저장된 분석 로그의 UTC 시각. 본문 교체 때 이 시각을 유지한다",
+            "title": "Logged At",
+            "type": "string"
+          },
+          "generated_files": {
+            "description": "이번 턴에서 생성된 이미지",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedFileItem"
+            },
+            "title": "Generated Files",
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "title": "OutputFilterItem"
+      },
+      "ResourceNotFoundResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ErrorEnvelope",
+            "description": "HTTP 404의 오류 envelope 객체. HTTP 422의 배열 detail과 구분한다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ResourceNotFoundResponse"
+      },
+      "ValidationErrorResponse": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            },
+            "type": "array",
+            "title": "Detail",
+            "description": "DTO 검증 오류 배열. 항목별 loc와 msg를 확인한다. 오류 문구와 추가 키는 검증 버전에 따라 달라질 수 있다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ValidationErrorResponse"
+      },
+      "ValidationIssue": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Loc",
+            "description": "오류 위치. 본문은 body로 시작하며 배열 인덱스는 정수. 모델 전체 동의 ID 검증은 [body]일 수 있다."
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg",
+            "description": "검증 오류 설명."
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "검증 오류 종류. 예: string_type, int_parsing, value_error."
+          },
+          "input": {
+            "title": "Input",
+            "description": "검증 대상 원래 값. 오류 종류에 따라 생략될 수 있다."
+          },
+          "ctx": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ctx",
+            "description": "추가 검증 문맥. 오류 종류에 따라 생략될 수 있다."
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationIssue"
+      },
+      "VariantFilterForm": {
+        "properties": {
+          "filter_list": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter List",
+            "description": "검사 대상 필터. input_filter는 로그 저장 요청. 정규식→첨부파일→SLM→SecuXper 순서로 전역 활성화된 대상만 실행. 빈 배열/null은 일반 검사 없음(CSO는 독립). 알 수 없는 이름은 HTTP 404.\n\ninput_filter=입력 로그 저장, secret_filter=정규식, file_block_filter=첨부파일, slm_filter=SLM, secuxper_filter=SecuXper. 요청 배열 순서와 무관하게 고정 순서로 실행하며 중복은 한 번만 실행한다.",
+            "default": [
+              "input_filter",
+              "secret_filter",
+              "file_block_filter",
+              "slm_filter",
+              "secuxper_filter"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "description": "검사할 원문. 빈 문자열 허용. 생략하면 예제 문자열이 사용되므로 직접 전달 권장.",
+            "default": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+            "examples": [
+              "회의 내용을 요약해 주세요."
+            ]
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding",
+            "description": "레거시 필드. 현재 사용하지 않으며 Base64 해독하지 않음.",
+            "default": false
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "레거시 사용자 ID. null은 빈 문자열.",
+            "default": ""
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "",
+            "description": "사용자 이름",
+            "title": "User Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "사용자 이메일. 빈 문자열은 익명. null은 빈 문자열.",
+            "default": "",
+            "examples": [
+              "user@example.com"
+            ]
+          },
+          "ai_service": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Service",
+            "description": "Management가 Valkey pipeline:ai-service:catalog:v1에 배포한 AI 서비스 ID. 로그 표시명은 카탈로그에서 조회한다. 미등록 ID도 정수로 허용하며 표시명은 빈 문자열. null은 0으로 변환.\n\n숫자 원본은 로그의 ai_service_id에 보존한다. enum 제한은 없다.",
+            "default": 0,
+            "examples": [
+              1
+            ]
+          },
+          "client_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Host",
+            "description": "IPv4/IPv6. 공백 제거·표준화. 잘못된 IP/null은 빈 문자열.",
+            "default": "",
+            "examples": [
+              "127.0.0.1"
+            ]
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "레거시 세션 ID. INPUT/OUTPUT 병합 키는 message_id.",
+            "default": ""
+          },
+          "attachments": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FileAttachItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachments",
+            "description": "첨부파일 목록. null은 빈 목록. 일반 파일 분석에는 file_block_filter 필요. 생략 기본값은 []."
+          },
+          "message_id": {
+            "type": "string",
+            "title": "Message Id",
+            "description": "INPUT/OUTPUT·동의 연결 키. 앞뒤 공백 제거. 일반 입력에서 비면 32자리 hex ID 생성. 동의 요청에서 비면 HTTP 422.",
+            "default": "",
+            "examples": [
+              "msg-001"
+            ]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "어댑터가 본 모델 표시명. 없으면 빈 문자열",
+            "default": ""
+          },
+          "event_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Time",
+            "description": "호출자 이벤트 시각. ISO 권장. 날짜 형식 검증 없음. 빈 값/null은 로그 생성 시각.",
+            "default": "",
+            "examples": [
+              "2026-10-19T12:00:00+09:00"
+            ]
+          },
+          "user_consent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Consent",
+            "description": "사용자 동의. true 또는 앞뒤 공백·대소문자를 무시한 on/1/true/yes/enable/enabled 문자열이면 활성화한다. 그 외는 비활성화. 활성화할 때는 원본 message_id가 필요하며 빈 ID는 HTTP 422. Inline은 CSO 통과 후 일반 필터 생략. Mirror에는 적용하지 않음.",
+            "default": "",
+            "examples": [
+              "on"
+            ]
+          },
+          "debug": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debug",
+            "description": "Inline에서 filter_result/log_evidence 추가. false/null 또는 Mirror에서는 두 필드를 생략.",
+            "default": false,
+            "examples": [
+              true
+            ]
+          }
+        },
+        "type": "object",
+        "title": "VariantFilterForm",
+        "description": "V1 multiple_filter의 공개 요청 계약.\n\nfilter_list : 차단 필터 리스트\n\n- secret_filter : 정규표현식 기반 필터\n- file_block_filter : 파일 분석 필터\n- input_filter : 프롬프트 로그 저장\n- slm_filter : SLM 필터\n- secuxper_filter : SecuXper 필터 (전역 enabled 설정 필요)"
+      },
+      "GeneratedFileItem": {
+        "description": "세션 다운로드로 확보한 생성 이미지. 관리 화면은 업로드와 같은 첨부 목록으로 본다.",
+        "properties": {
+          "file_name": {
+            "default": "",
+            "description": "저장된 파일 이름",
+            "title": "File Name",
+            "type": "string"
+          },
+          "file_backup_path": {
+            "default": "",
+            "description": "백업 경로",
+            "title": "File Backup Path",
+            "type": "string"
+          },
+          "mime_type": {
+            "default": "",
+            "description": "MIME",
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "size": {
+            "default": 0,
+            "description": "바이트 크기",
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "title": "GeneratedFileItem",
+        "type": "object"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Pipeline INPUT/OUTPUT",
+      "description": "프롬프트 검사 및 AI 출력 로그 병합"
+    }
+  ]
+}

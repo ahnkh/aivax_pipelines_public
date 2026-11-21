@@ -1,0 +1,34 @@
+[Unit]
+Description=AIVAX AI Engine Mirror (SHM ring consumer)
+Documentation=file://@AIVAX_ENGINE_ROOT@/docs/DEPLOY_MIRROR_SHM_1G.md
+After=network-online.target aivax-mirror.service
+Wants=network-online.target
+# Plugin creates the POSIX shm ring; consumer must restart with Suricata (new epoch).
+Requires=aivax-mirror.service
+BindsTo=aivax-mirror.service
+PartOf=aivax-mirror.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/aivax/ai_engine.env
+Environment=PYTHONPATH=@AIVAX_ENGINE_ROOT@:@AIVAX_ENGINE_ROOT@/core:@AIVAX_ENGINE_ROOT@/mirror
+Environment=AIVAX_ENGINE_ROOT=@AIVAX_ENGINE_ROOT@
+Environment=AIVAX_PYTHON=@AIVAX_PYTHON@
+WorkingDirectory=@AIVAX_ENGINE_ROOT@
+# Host shared/default Python (resolved at install). No ai_engine-private venv.
+# ExecStart is a wrapper script — do NOT inline bash ${var%%:*} here.
+# systemd turns %% into % in unit files and breaks argv (unrecognized arguments).
+ExecStartPre=/bin/bash -c 'for i in $(seq 1 90); do [[ -f "${AIVAX_SHM_META:-/tmp/aivax_eve_ring.meta.json}" ]] && exit 0; sleep 0.5; done; echo "SHM meta missing — is aivax-mirror up?" >&2; exit 1'
+ExecStart=@AIVAX_ENGINE_ROOT@/scripts/run_shm_consumer.sh
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65536
+CPUAffinity=38
+AllowedCPUs=38
+StandardOutput=append:@AIVAX_ENGINE_SHM_LOG@
+StandardError=append:@AIVAX_ENGINE_SHM_LOG@
+
+[Install]
+WantedBy=multi-user.target

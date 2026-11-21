@@ -1,0 +1,11 @@
+data: {"type":"message_field_delta","field_name":"thinking","delta":"내부 추론은 답변이 아니다"}
+
+data: {"type":"tool_call","name":"search","delta":"도구 호출"}
+
+data: {"type":"message_field_delta","field_name":"content","delta":""}
+
+data: {"type": "message_field_delta", "field_name": "content", "delta": "Hello! 👋 I'm Genspark AI, your assistant for research, content creation, data analysis, media generation, and much more.\n\nHere are some things I can help you with:\n\n- 🔍 **Research & Search** — find information, deep-dive into topics, fact-check claims\n- 📄 **Documents & Reports** — create docs, spreadsheets, slid"}
+
+data: {"type": "message_field_delta", "field_name": "content", "delta": "es, and PDFs\n- 🎨 **Media Creation** — generate images, videos, audio, and infographics\n- 📊 **Data Analysis** — process files, build charts, analyze trends\n- 🤖 **Automation** — set up scheduled workflows and reminders\n- 🌐 **Web Tasks** — crawl pages, download media, monitor content\n\nWhat can I help you with today?"}
+
+data: {"type":"message_done"}

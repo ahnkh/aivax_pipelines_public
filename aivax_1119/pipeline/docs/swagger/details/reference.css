@@ -1,0 +1,36 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #172b3a; background: #f5f7fa; }
+* { box-sizing: border-box; }
+body { max-width: 1160px; margin: auto; padding: 32px 24px 64px; line-height: 1.75; }
+header, main { background: white; padding: 32px; border: 1px solid #dfe5ec; }
+header { border-radius: 12px 12px 0 0; }
+main { border-top: 0; border-radius: 0 0 12px 12px; }
+nav { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.detail-navigation { gap: 8px; margin-bottom: 24px; }
+.detail-navigation a { border-radius: 6px; padding: 6px 12px; text-decoration: none; }
+.detail-navigation a:hover { background: #edf3f8; }
+.detail-navigation a[aria-current="page"] { background: #dceaff; color: #083f82; font-weight: 700; }
+.detail-navigation a:focus-visible { outline: 2px solid #075bbb; outline-offset: 2px; }
+a { color: #075bbb; text-underline-offset: 3px; }
+h1 { font-size: 2.3rem; margin: 8px 0; overflow-wrap: anywhere; }
+h2 { margin-top: 0; font-size: 1.5rem; }
+h3 { font-size: 1.1rem; margin-top: 28px; }
+.eyebrow, .source { color: #546576; font-size: .9rem; }
+.endpoint strong { color: #11633c; margin-right: 12px; }
+.endpoint { font-family: monospace; overflow-wrap: anywhere; }
+.notice { background: #fff6da; border-left: 4px solid #bf8a15; padding: 18px; }
+.contents { padding: 24px 0; }
+section { scroll-margin-top: 20px; border-top: 1px solid #dfe5ec; padding-top: 28px; margin-top: 28px; }
+code { background: #eef2f6; border-radius: 4px; padding: 2px 5px; overflow-wrap: anywhere; }
+pre { background: #152536; color: #e4edf7; overflow: auto; padding: 18px; border-radius: 8px; line-height: 1.5; }
+pre code { background: transparent; color: inherit; padding: 0; }
+.table-scroll { overflow-x: auto; margin: 18px 0; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 12px; border: 1px solid #dfe5ec; }
+th { background: #edf3f8; white-space: nowrap; }
+td:last-child { min-width: 300px; white-space: pre-line; }
+td:first-child { overflow-wrap: anywhere; min-width: 130px; }
+details { border: 1px solid #dfe5ec; border-radius: 8px; padding: 14px; margin: 14px 0; }
+summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.error { color: #b42318; font-weight: 600; }
+[data-load-status]:empty { display: none; }
+@media (max-width: 640px) { body { padding: 12px; } header, main { padding: 20px 16px; } h1 { font-size: 1.8rem; } }

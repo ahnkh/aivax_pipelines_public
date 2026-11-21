@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.venv/
+.venv*/
+*.egg-info/
+.pytest_cache/
+test-artifacts/
+.mypy_cache/
+.ruff_cache/
+offline-wheel/
+trace-log/
+local_resource/management_event_spool/
+.TEMP/
+*.old
+/dist/
+
+# Portable Valkey runtime data (binaries stay tracked)
+
+.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.runtime

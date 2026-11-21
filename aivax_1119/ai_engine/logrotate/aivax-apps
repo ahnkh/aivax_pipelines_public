@@ -1,0 +1,28 @@
+# AIVAX apps — stderr / vhost (not payload dumps)
+# Installed with ai_engine/logrotate/install.sh
+# stdout of pipeline/toolkit goes to journal (hybrid).
+
+/home1/aivax/pipeline/pipeline-stderr.log
+/home1/aivax/toolkit/toolkit-stderr.log {
+    daily
+    maxsize 200M
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}
+
+/var/log/aivax-vhost-deep-bridge.log
+/var/log/aivax-vhost-deep-seg0.log
+/var/log/aivax-vhost-deep-seg1.log {
+    daily
+    maxsize 200M
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

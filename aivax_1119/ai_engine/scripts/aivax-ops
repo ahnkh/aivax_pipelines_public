@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# AIVAX shell ops monitor wrapper for TS.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PY="${AIVAX_PYTHON:-/home1/aivax/aivax-venv/bin/python3}"
+if [[ ! -x "$PY" ]]; then
+  PY="$(command -v python3)"
+fi
+export PYTHONPATH="${ROOT}/mirror:${ROOT}/core:${ROOT}${PYTHONPATH:+:${PYTHONPATH}}"
+exec "$PY" -u "${ROOT}/scripts/aivax_ops_monitor.py" "$@"

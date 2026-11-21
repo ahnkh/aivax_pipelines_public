@@ -1,0 +1,6 @@
+# Python runtime deps for ai_engine.
+# Install into the host shared/default env (e.g. /home1/aivax/aivax-venv),
+# not into a new ai_engine-private venv.
+aiohttp>=3.8
+brotli>=1.0
+zstandard>=0.21

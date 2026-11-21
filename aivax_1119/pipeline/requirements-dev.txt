@@ -1,0 +1,4 @@
+# Development and test dependencies.  Runtime dependencies are installed first.
+pip==25.2
+pytest==8.4.2
+ruff==0.12.7

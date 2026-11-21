@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>output_filter API 상세 명세 · AIVAX Pipeline</title>
+  <link rel="stylesheet" href="./reference.css">
+  <script src="./reference.js" defer></script>
+</head>
+<body data-api-path="/v1/filter/output_filter">
+  <header>
+    <nav class="detail-navigation" aria-label="상세 페이지 목록">
+      <a href="../index.html">Swagger</a>
+      <a href="./multiple-filter.html">multiple_filter 명세</a>
+      <a href="./output-filter.html" aria-current="page">output_filter 명세</a>
+      <a href="./mode-config.html">mode.json 설정</a>
+    </nav>
+    <p class="eyebrow">AIVAX Pipeline · 현재 API</p>
+    <h1>output_filter</h1>
+    <p class="endpoint"><strong>POST</strong> /v1/filter/output_filter</p>
+    <p>실제 AI 응답을 INPUT과 같은 연결 키로 전달해 분석 로그를 병합한다.</p>
+  </header>
+  <main>
+    <aside class="notice"><strong>성공 응답은 최종 OpenSearch 반영 완료를 뜻하지 않는다.</strong>
+      현재 <code>out_result</code>는 항상 빈 객체다.</aside>
+    <nav class="contents" aria-label="목차">
+      <a href="#flow">처리 흐름</a><a href="#request">요청 필드</a><a href="#response">응답 필드</a>
+      <a href="#examples">JSON 예제</a><a href="#errors">오류</a>
+    </nav>
+    <section id="flow">
+      <h2>처리 흐름과 연결 키</h2>
+      <ol>
+        <li><a href="./multiple-filter.html">multiple_filter</a> 응답의 <code>message_id</code>를 보존한다.</li>
+        <li>실제 AI 응답을 <code>llm_output</code>에 넣어 <code>Content-Type: application/json</code>으로 요청한다.</li>
+        <li>Pipeline은 같은 <code>message_id</code>의 INPUT과 OUTPUT을 병합한다.
+          OUTPUT이 먼저 도착해도 병합 저장소에서 INPUT을 기다릴 수 있다.</li>
+        <li>최종 문서는 로그 전달 경로를 거쳐 OpenSearch에 반영된다. 이 API의 성공만으로 최종 반영 완료를 판단하지 않는다.</li>
+      </ol>
+      <h3>입력 API와 다른 처리</h3>
+      <p>OUTPUT은 ID 앞뒤 공백을 제거하지만 빈 ID를 자동 생성하지 않는다.
+        일반 요청은 DTO가 빈 ID를 허용하더라도 INPUT과 연결하려면 실제 ID를 전달해야 한다.</p>
+      <p><code>user_id</code>, <code>email</code>, <code>ai_service</code>, <code>client_host</code>의 null을 유지한다.
+        입력과 달리 IP를 정규화하지 않으며, <code>ai_service=null</code>의 로그 표시명은 빈 문자열이다.
+        세션 ID는 내부 모델에 전달하지만 기본 출력 로그 빌더는 저장하지 않는다.</p>
+      <h3>저장 옵션</h3>
+      <p><code>llm_output</code>은 빈 문자열을 허용한다. 출력 저장 설정에 따라 전문 저장을 생략하거나 길이를 제한할 수 있으며,
+        기본 한도는 UTF-8 200,000바이트다. 기본 출력 로그의 모델·지연시간·토큰 사용량은 계산하지 않는다.</p>
+      <h3>사용자 동의와 저장 실패</h3>
+      <p><code>true</code> 또는 문자열 <code>on/1/true/yes/enable/enabled</code>는 명시적 동의 출력이다.
+        문자열은 앞뒤 공백과 대소문자를 무시한다. 동의 출력의 빈 ID는 HTTP 422다.</p>
+      <p>일반 출력의 저장 실패 반환값은 HTTP 실패로 바꾸지 않지만,
+        명시적 동의 OUTPUT의 비성공 저장 반환값은 HTTP 503으로 처리한다.
+        별도 예외가 전파되는 경우는 HTTP 오류 명세를 따른다.
+        동의 INPUT이 있으면 OUTPUT에 동의 플래그를 다시 보낼 필요는 없다.</p>
+    </section>
+    <section id="request">
+      <h2>요청 필드</h2>
+      <p>모든 필드에 기본값이 있다. 정의되지 않은 추가 키는 기본적으로 무시한다.
+        서비스 ID는 고정 enum으로 제한하지 않는다.</p>
+      <div data-request-fields></div><div data-request-details></div>
+    </section>
+    <section id="response">
+      <h2>성공 응답과 필드</h2>
+      <p>OUTPUT은 <code>out_result</code> 래퍼를 유지하며 현재 값은 <code>{}</code>다.
+        <code>debug=true</code> 또는 동의 출력에서도 동일하다.
+        <code>final_decision</code>, <code>filter_result</code>, <code>log_evidence</code>를 추가하지 않는다.</p>
+      <div data-response-fields></div><div data-response-details></div>
+    </section>
+    <section id="examples"><h2>JSON 예제</h2><div data-request-examples></div><div data-response-examples></div></section>
+    <section id="errors"><h2>HTTP 오류</h2><div data-errors></div></section>
+    <p class="source">필드·기본값·예제의 원본: <a href="../openapi.json">openapi.json</a>.
+      INPUT의 최상위 final_decision 구조와 OUTPUT의 out_result 구조를 구분한다.</p>
+    <p data-load-status role="status">명세를 불러오는 중입니다.</p>
+  </main>
+</body>
+</html>

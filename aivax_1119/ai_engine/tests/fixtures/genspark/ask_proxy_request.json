@@ -1,0 +1,37 @@
+{
+  "models": [
+    "gpt-4.1"
+  ],
+  "run_with_another_model": false,
+  "request_web_knowledge": false,
+  "speed_mode": false,
+  "use_webpage_capture_screen": true,
+  "use_python_workspace": false,
+  "dataframe_enhanced": false,
+  "custom_tools": [],
+  "unselected_custom_tools": [],
+  "installed_custom_tools": [],
+  "writingContent": null,
+  "sas_ask_origin": "typed",
+  "tier_source": "stored",
+  "type": "super_agent",
+  "project_id": "72ceffc2-4f3a-4153-9a58-d73aab6fb5da",
+  "messages": [
+    {
+      "role": "user",
+      "id": "ef039d1c-110e-462e-807a-dd692c4b17c3",
+      "content": "Hello Genspak AI!",
+      "pending": true,
+      "sendStatus": "sending",
+      "_deepDiveStateNegContent": "Hello Genspak AI!",
+      "thinking": false
+    }
+  ],
+  "user_s_input": "Hello Genspak AI!",
+  "client_message_id": "ef039d1c-110e-462e-807a-dd692c4b17c3",
+  "g_recaptcha_token": "",
+  "is_private": true,
+  "push_token": "",
+  "last_seen_event_index": -1,
+  "chat_session_id": null
+}

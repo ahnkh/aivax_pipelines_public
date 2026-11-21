@@ -1,0 +1,1319 @@
+{
+  "baseline": "b05a06becb5e6430b603d0d4396e2e3afa4bdf9a",
+  "current_head": "019de12741aa174aaac64eb1bb260eef342b2f4f",
+  "method": "Original develop DTO/helper class ASTs executed without import/bootstrap side effects; current DTO/mapper/resolver imported unchanged. Validation routes use installed FastAPI/Pydantic, not historical deployment versions. No full legacy server or external provider execution.",
+  "versions": {
+    "pydantic": "2.12.5",
+    "python": "3.13.9",
+    "fastapi": "0.123.0"
+  },
+  "schemas": {
+    "VariantFilterForm": {
+      "added": [
+        "event_time",
+        "user_consent"
+      ],
+      "removed": [],
+      "changed": {
+        "filter_list": {
+          "develop": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": [
+              "input_filter",
+              "secret_filter",
+              "file_block_filter",
+              "slm_filter"
+            ],
+            "title": "Filter List"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": [
+              "input_filter",
+              "secret_filter",
+              "file_block_filter",
+              "slm_filter",
+              "secuxper_filter"
+            ],
+            "title": "Filter List"
+          }
+        }
+      },
+      "required_develop": [],
+      "required_current": []
+    },
+    "OutputFilterItem": {
+      "added": [
+        "user_consent"
+      ],
+      "removed": [],
+      "changed": {},
+      "required_develop": [],
+      "required_current": []
+    },
+    "FileAttachItem": {
+      "added": [],
+      "removed": [],
+      "changed": {},
+      "required_develop": [],
+      "required_current": []
+    }
+  },
+  "validation": [
+    {
+      "api": "multiple",
+      "case": "minimal",
+      "request": {},
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "null_message_id",
+      "request": {
+        "message_id": null
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "numeric_message_id",
+      "request": {
+        "message_id": 123
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": 123
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": 123
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "consent_without_id",
+      "request": {
+        "user_consent": "on"
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "value_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "Value error, user_consent requires the original message_id",
+              "input": {
+                "user_consent": "on"
+              },
+              "ctx": {
+                "error": {}
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "consent_with_whitespace_id",
+      "request": {
+        "user_consent": true,
+        "message_id": "  "
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "  ",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "value_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "Value error, user_consent requires the original message_id",
+              "input": {
+                "user_consent": true,
+                "message_id": "  "
+              },
+              "ctx": {
+                "error": {}
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "extra_field",
+      "request": {
+        "unknown": "value"
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "debug_null",
+      "request": {
+        "debug": null
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": null
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": null
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "null_filters",
+      "request": {
+        "filter_list": null
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": null,
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": null,
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "null_attachments",
+      "request": {
+        "attachments": null
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": null,
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": null,
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "string_file_size",
+      "request": {
+        "attachments": [
+          {
+            "size": "42"
+          }
+        ]
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [
+            {
+              "id": "",
+              "size": 42,
+              "name": "",
+              "mime_type": ""
+            }
+          ],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [
+            {
+              "id": "",
+              "size": 42,
+              "name": "",
+              "mime_type": ""
+            }
+          ],
+          "message_id": "",
+          "event_time": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "invalid_file_size",
+      "request": {
+        "attachments": [
+          {
+            "size": "abc"
+          }
+        ]
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "body",
+                "attachments",
+                0,
+                "size"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "abc"
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "body",
+                "attachments",
+                0,
+                "size"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "abc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "multiple",
+      "case": "event_time",
+      "request": {
+        "event_time": "2026-10-19T12:00:00+09:00"
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "filter_list": [
+            "input_filter",
+            "secret_filter",
+            "file_block_filter",
+            "slm_filter",
+            "secuxper_filter"
+          ],
+          "prompt": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요",
+          "encoding": false,
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "attachments": [],
+          "message_id": "",
+          "event_time": "2026-10-19T12:00:00+09:00",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "minimal",
+      "request": {},
+      "develop": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "null_message_id",
+      "request": {
+        "message_id": null
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "numeric_message_id",
+      "request": {
+        "message_id": 123
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": 123
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "message_id"
+              ],
+              "msg": "Input should be a valid string",
+              "input": 123
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "consent_without_id",
+      "request": {
+        "user_consent": "on"
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "value_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "Value error, user_consent requires the original message_id",
+              "input": {
+                "user_consent": "on"
+              },
+              "ctx": {
+                "error": {}
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "consent_with_whitespace_id",
+      "request": {
+        "user_consent": true,
+        "message_id": "  "
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "  ",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "value_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "Value error, user_consent requires the original message_id",
+              "input": {
+                "user_consent": true,
+                "message_id": "  "
+              },
+              "ctx": {
+                "error": {}
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "extra_field",
+      "request": {
+        "unknown": "value"
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "debug": false
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "user_consent": "",
+          "debug": false
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "debug_null",
+      "request": {
+        "debug": null
+      },
+      "develop": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "debug": null
+        }
+      },
+      "current": {
+        "status": 200,
+        "body": {
+          "llm_output": "",
+          "user_id": "",
+          "email": "",
+          "ai_service": 0,
+          "client_host": "",
+          "session_id": "",
+          "message_id": "",
+          "user_consent": "",
+          "debug": null
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "null_llm_output",
+      "request": {
+        "llm_output": null
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "llm_output"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "llm_output"
+              ],
+              "msg": "Input should be a valid string",
+              "input": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "api": "output",
+      "case": "list_llm_output",
+      "request": {
+        "llm_output": []
+      },
+      "develop": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "llm_output"
+              ],
+              "msg": "Input should be a valid string",
+              "input": []
+            }
+          ]
+        }
+      },
+      "current": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "llm_output"
+              ],
+              "msg": "Input should be a valid string",
+              "input": []
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "mapping": [
+    {
+      "api": "multiple",
+      "message_id": "",
+      "develop_route_id": "<generated-32-hex>",
+      "current_mapped_id": "<generated-32-hex>"
+    },
+    {
+      "api": "multiple",
+      "message_id": "  ",
+      "develop_route_id": "  ",
+      "current_mapped_id": "<generated-32-hex>"
+    },
+    {
+      "api": "multiple",
+      "message_id": " msg-1 ",
+      "develop_route_id": " msg-1 ",
+      "current_mapped_id": "msg-1"
+    },
+    {
+      "api": "output",
+      "message_id": "",
+      "develop_route_id": "",
+      "current_mapped_id": ""
+    },
+    {
+      "api": "output",
+      "message_id": "  ",
+      "develop_route_id": "  ",
+      "current_mapped_id": ""
+    },
+    {
+      "api": "output",
+      "message_id": " msg-1 ",
+      "develop_route_id": " msg-1 ",
+      "current_mapped_id": "msg-1"
+    }
+  ],
+  "decisions": [
+    {
+      "case": "no_filters",
+      "bypass": 0,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "undetected",
+      "bypass": 0,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "accept_policy",
+      "bypass": 0,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "accept",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "block",
+      "bypass": 0,
+      "develop": {
+        "action": "block",
+        "action_code": 1,
+        "masked_contents": "",
+        "block_message": "blocked",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "block",
+        "action_code": 1,
+        "masked_contents": "",
+        "block_message": "blocked",
+        "message_id": "msg-1"
+      },
+      "equal": true
+    },
+    {
+      "case": "masking",
+      "bypass": 0,
+      "develop": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega token",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega token",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": true
+    },
+    {
+      "case": "two_maskings",
+      "bypass": 0,
+      "develop": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega token",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega [AIVAX MASKING]",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "masking_then_block",
+      "bypass": 0,
+      "develop": {
+        "action": "block",
+        "action_code": 1,
+        "masked_contents": "",
+        "block_message": "blocked",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "block",
+        "action_code": 1,
+        "masked_contents": "",
+        "block_message": "blocked",
+        "message_id": "msg-1"
+      },
+      "equal": true
+    },
+    {
+      "case": "bypass_block",
+      "bypass": 1,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "bypass_masking",
+      "bypass": 2,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    },
+    {
+      "case": "bypass_block_after_masking",
+      "bypass": 1,
+      "develop": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega token",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "masking",
+        "action_code": 2,
+        "masked_contents": "alpha [AIVAX MASKING] omega token",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": true
+    },
+    {
+      "case": "bypass_masking_before_block",
+      "bypass": 2,
+      "develop": {
+        "action": "allow",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "current": {
+        "action": "",
+        "action_code": 0,
+        "masked_contents": "",
+        "block_message": "",
+        "message_id": "msg-1"
+      },
+      "equal": false
+    }
+  ],
+  "null_attachments": {
+    "None": {
+      "develop": {
+        "exception": "TypeError",
+        "message": "'NoneType' object is not iterable"
+      },
+      "current_attachment_count": 0
+    },
+    "[]": {
+      "develop": {
+        "body": {
+          "metadata": {
+            "session_id": "",
+            "message_id": ""
+          },
+          "messages": [
+            {
+              "role": "user",
+              "content": "내 API key는 API_key=sk-1234567-0000-abdcdef 인데 이걸로 어떻게 OpenAI 로 KEY를 전달하는지 예제를 알려주세요"
+            }
+          ],
+          "attach_file": []
+        }
+      },
+      "current_attachment_count": 0
+    }
+  },
+  "comparison_date": "2026-10-19",
+  "evidence_scope": {
+    "schemas": "Original DTO class definitions evaluated with the same installed Pydantic version; title/description ignored for schema comparison.",
+    "validation": "HTTP requests to temporary DTO-only FastAPI routes; 200 means validation accepted, not successful execution of actual API.",
+    "mapping": "Current mappers executed; develop_route_id is derived from original route conditionals, not execution of the legacy route.",
+    "decisions": "Original GenerateOutputFinalDecision and current resolver executed with equivalent deterministic per-filter result fixtures. These are not complete HTTP responses.",
+    "null_attachments": "Original GenerateInletBodyParameter and current mapper executed."
+  },
+  "summary": {
+    "validation_cases": 21,
+    "validation_status_differences": 4,
+    "decision_cases": 11,
+    "decision_differences": 7,
+    "repeat_run_equal": true
+  },
+  "develop_source_sha256": {
+    "pipeline/api_modules/models/schemas.py": "3c464d3ddbcd1811f523e67d2bbf0474c24e8e3b740c89fdbc9e36340d17ae42",
+    "pipeline/api_modules/helper/router_custom_helper.py": "0fc00406aee33a5ca8ec59c9d47eb9e3b3b5d9ddb537b498fff59d1f51fad0cd",
+    "pipeline/api_modules/local_define/local_etc_define.py": "f4305fbec474922d8d0b1a69d62b32f8bcf89e76957e8c932824eead5a9bfab8",
+    "pipeline/local_common/pipeline_filter/local_define/local_define.py": "4515aaa4f8e5bef34c60a86ddfe2b9fc58c272099372846723afc5ab1a0ca782",
+    "pipeline/lib_include.py": "67ed8e3926730460779c2f02f445464f9234053f8ffd7ba3e57b442391e7aee1"
+  },
+  "current_source_sha256": {
+    "src/controllers/input_analysis/dto.py": "d02e3b3eed8c3101fb14daa213b826e8c4002b94afe55bb4f7450c16769afbae",
+    "src/controllers/input_analysis/mapper.py": "95eac189ba9d5d468d4997b47936c2556e214b189c384a3ba9ff72128a81ab42",
+    "src/controllers/output_analysis/dto.py": "9fda11b3ba765db28e59ca777130da1dbe1694ef6ce573171dda823465c39616",
+    "src/controllers/output_analysis/mapper.py": "4dd252f21c1e6a3eb52fe9f4ae2dee70bac508457ea8b3c1e26a28d85e572c02",
+    "src/domain/inspection_input/services/final_decision_resolver.py": "a7475a405caa6521b929a196def03a8c3f34267d4be43a856b73cfe4173968f3"
+  }
+}

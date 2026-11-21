@@ -1,0 +1,27 @@
+[Unit]
+Description=AIVAX AI Engine Metrics REST API (Mirror UI :9108)
+Documentation=file://@AIVAX_ENGINE_ROOT@/docs/METRICS_API.md
+Documentation=file://@AIVAX_ENGINE_ROOT@/docs/DEPLOY_MIRROR_SHM_1G.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/aivax/ai_engine.env
+Environment=PYTHONPATH=@AIVAX_ENGINE_ROOT@:@AIVAX_ENGINE_ROOT@/core:@AIVAX_ENGINE_ROOT@/mirror
+Environment=AIVAX_METRICS_BIND=127.0.0.1
+Environment=AIVAX_METRICS_PORT=9108
+WorkingDirectory=@AIVAX_ENGINE_ROOT@
+ExecStart=@AIVAX_PYTHON@ -u @AIVAX_ENGINE_ROOT@/core/metrics_api.py \
+  --bind ${AIVAX_METRICS_BIND} \
+  --port ${AIVAX_METRICS_PORT}
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65536
+StandardOutput=append:@AIVAX_ENGINE_SHM_LOG@
+StandardError=append:@AIVAX_ENGINE_SHM_LOG@
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,26 @@
+[Unit]
+Description=AIVAX AI Engine Attachment Lifecycle Manager (Mirror)
+Documentation=file://@AIVAX_ENGINE_ROOT@/docs/DEPLOY_MIRROR_SHM_1G.md
+After=network-online.target
+Wants=network-online.target
+RequiresMountsFor=/run/aivax/attachments
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/aivax/aivax.env
+EnvironmentFile=-/etc/aivax/ai_engine.env
+Environment=PYTHONPATH=@AIVAX_ENGINE_ROOT@:@AIVAX_ENGINE_ROOT@/core:@AIVAX_ENGINE_ROOT@/mirror
+WorkingDirectory=@AIVAX_ENGINE_ROOT@
+ExecStartPre=@AIVAX_ENGINE_ROOT@/scripts/mount_attach_tmpfs.sh
+ExecStart=@AIVAX_PYTHON@ -u @AIVAX_ENGINE_ROOT@/core/attachment_lifecycle.py
+Restart=on-failure
+RestartSec=3
+LimitCORE=0
+NoNewPrivileges=true
+StandardOutput=append:@AIVAX_ENGINE_SHM_LOG@
+StandardError=append:@AIVAX_ENGINE_SHM_LOG@
+
+[Install]
+WantedBy=multi-user.target

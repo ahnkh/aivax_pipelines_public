@@ -1,0 +1,9 @@
+[Unit]
+Description=Rotate AIVAX ai_engine logs
+Documentation=file:///home1/aivax/ai_engine/logrotate/README.md
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/home1/aivax/ai_engine/logrotate/run-hourly.sh

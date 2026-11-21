@@ -1,0 +1,27 @@
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Pack output
+/dist/
+
+# Local runtime / logs / dumps (do not commit)
+*.log
+*.pcap
+empty_*/
+/tmp/

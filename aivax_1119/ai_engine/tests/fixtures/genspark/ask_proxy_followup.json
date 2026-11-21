@@ -1,0 +1,92 @@
+{
+  "models": [
+    "gpt-4.1"
+  ],
+  "run_with_another_model": false,
+  "request_web_knowledge": false,
+  "speed_mode": false,
+  "use_webpage_capture_screen": true,
+  "use_python_workspace": false,
+  "dataframe_enhanced": false,
+  "custom_tools": [],
+  "unselected_custom_tools": [],
+  "installed_custom_tools": [],
+  "writingContent": null,
+  "sas_ask_origin": "typed",
+  "tier_source": "stored",
+  "type": "super_agent",
+  "project_id": "72ceffc2-4f3a-4153-9a58-d73aab6fb5da",
+  "messages": [
+    {
+      "role": "user",
+      "id": "ef039d1c-110e-462e-807a-dd692c4b17c3",
+      "content": "Hello Genspak AI!",
+      "pending": true,
+      "sendStatus": "sending",
+      "_deepDiveStateNegContent": "Hello Genspak AI!",
+      "thinking": false
+    },
+    {
+      "id": "da9a3278-d761-431d-8a4a-c656f375b959",
+      "ask_id": "2640e424-6361-4802-81b1-2f8cb16b6aca",
+      "role": "assistant",
+      "thinking": false,
+      "content": "Hello! 👋 I'm Genspark AI, your assistant for research, content creation, data analysis, media generation, and much more.\n\nHere are some things I can help you with:\n\n- 🔍 **Research & Search** — find information, deep-dive into topics, fact-check claims\n- 📄 **Documents & Reports** — create docs, spreadsheets, slides, and PDFs\n- 🎨 **Media Creation** — generate images, videos, audio, and infographics\n- 📊 **Data Analysis** — process files, build charts, analyze trends\n- 🤖 **Automation** — set up scheduled workflows and reminders\n- 🌐 **Web Tasks** — crawl pages, download media, monitor content\n\nWhat can I help you with today?",
+      "project_id": "72ceffc2-4f3a-4153-9a58-d73aab6fb5da",
+      "_deepDiveStateNegContent": "Hello! 👋 I'm Genspark AI, your assistant for research, content creation, data analysis, media generation, and much more.\n\nHere are some things I can help you with:\n\n- 🔍 **Research & Search** — find information, deep-dive into topics, fact-check claims\n- 📄 **Documents & Reports** — create docs, spreadsheets, slides, and PDFs\n- 🎨 **Media Creation** — generate images, videos, audio, and infographics\n- 📊 **Data Analysis** — process files, build charts, analyze trends\n- 🤖 **Automation** — set up scheduled workflows and reminders\n- 🌐 **Web Tasks** — crawl pages, download media, monitor content\n\nWhat can I help you with today?",
+      "action": null,
+      "recommend_actions": null,
+      "is_prompt": false,
+      "render_template": null,
+      "session_state": {
+        "_llm_usage": {
+          "completion_tokens": 172,
+          "prompt_tokens": 44891,
+          "total_tokens": 45063,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 110,
+            "audio_tokens": 0,
+            "reasoning_tokens": 8,
+            "rejected_prediction_tokens": 76
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 22016
+          }
+        },
+        "_llm_model": "glm-5p3-flash-baseten",
+        "_finish_reason": "stop"
+      },
+      "system_reminder": null,
+      "message_type": null,
+      "tool_calls": null,
+      "tool_call_id": null,
+      "parent_ask_id": "",
+      "thinking_blocks": null,
+      "response_id": null,
+      "reasoning_id": null,
+      "reasoning_encrypted_content": null,
+      "reasoning_content": null,
+      "hide_reasoning_from_client": null,
+      "reasoning_seconds": null,
+      "speech": null,
+      "cogen_id": null,
+      "ctime": null
+    },
+    {
+      "role": "user",
+      "id": "2a5ec5cb-1e0c-40bb-b0a1-6bfecf687480",
+      "content": "What is genspark?",
+      "pending": true,
+      "sendStatus": "sending",
+      "_deepDiveStateNegContent": "What is genspark?"
+    }
+  ],
+  "user_s_input": "What is genspark?",
+  "client_message_id": "2a5ec5cb-1e0c-40bb-b0a1-6bfecf687480",
+  "g_recaptcha_token": "",
+  "is_private": true,
+  "push_token": "",
+  "last_seen_event_index": -1,
+  "chat_session_id": null
+}

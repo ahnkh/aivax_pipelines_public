@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly rotation check for AIVAX ai_engine logs
+Documentation=file:///home1/aivax/ai_engine/logrotate/README.md
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

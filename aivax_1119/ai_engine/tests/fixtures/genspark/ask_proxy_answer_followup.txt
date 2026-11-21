@@ -1,0 +1,30 @@
+# What is Genspark?
+
+**Genspark** is an all-in-one **AI workspace** founded in 2023 and based in Palo Alto, California. Its mission is to put "busywork on autopilot" for knowledge workers — instead of just answering questions like a chatbot, its AI agents actually *do the work* and produce finished outputs: slides, docs, sheets, images, videos, code, and designs, all in one place. [Genspark](https://www.genspark.ai/) [LinkedIn](https://www.linkedin.com/company/gensparkai)
+
+## Key facts
+
+| | |
+|---|---|
+| **Founded** | 2023, Palo Alto, CA |
+| **Founders** | Eric Jing (CEO, ex-Microsoft), Kay Zhu, Wen Sang, and others [StartupIntros](https://startupintros.com/orgs/genspark) |
+| **Origin** | Started as an AI search engine that synthesized information; evolved into a full agentic workspace [OpenAI](https://openai.com/index/genspark/) |
+| **Traction** | Reached ~$155M ARR in its first 10 months, reportedly over $250M ARR since [LinkedIn](https://www.linkedin.com/posts/acremades_he-went-from-zero-to-155m-in-revenue-in-activity-7429968215830769664-yZKH) |
+| **Funding** | Raised $460M+ total, including $200M+ Series B in Nov 2025 backed by LG Group's investment arm and SBI, making it a **unicorn (>$1B valuation)** [Bloomberg](https://www.bloomberg.com/news/articles/2025-11-11/genspark-becomes-newest-ai-unicorn-after-winning-lg-sbi-funding) [Forbes](https://www.forbes.com/sites/annatong/2025/11/20/genspark-joins-the-unicorn-club-with-latest-funding-round/) |
+| **Team size** | Remarkably lean — ~30 people [YouTube](https://www.youtube.com/watch?v=OpKMBHFEnuo) |
+
+## Core capabilities
+
+- 🤖 **Super Agent** — an autonomous AI assistant that thinks, plans, and acts end-to-end: it can make phone calls on your behalf, design slides, generate videos and images, analyze spreadsheets, and route your request to the right specialized agent automatically [Genspark Help Center](https://www.genspark.ai/helpcenter/super-agent)
+- 📄 **Full workspace** — slides, docs, sheets, code, and design tools all in one place [Genspark](https://www.genspark.ai/)
+- 📞 **No-code personal agents** — you can build custom agents that handle real tasks like saving résumés to AI Drive and drafting personalized replies [OpenAI](https://openai.com/index/genspark/)
+
+## That's me! 👋
+
+Fun fact: **you're talking to Genspark AI right now.** Some things you could try next:
+
+1. **Create a presentation** — "Make me a 10-slide deck about the history of coffee"
+2. **Do deep research** — "Research the EV market in Southeast Asia and give me a report"
+3. **Generate media** — "Create a poster image for my bakery's grand opening" or "Make a short video clip of a surfer at sunset"
+
+What would you like to try? 🚀
