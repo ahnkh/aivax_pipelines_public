@@ -122,7 +122,7 @@
         "use_skip" : 0,
         "slm_url" : "http://127.0.0.1:1200/v1/chat/completions",
         "request_timeout" : 60,
-        "model_version" : 3
+        "model_version" : 4
     },
 
     "file_block_filter_module":

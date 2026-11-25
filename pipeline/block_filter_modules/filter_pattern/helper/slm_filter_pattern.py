@@ -715,19 +715,22 @@ class SLMFilterPattern (FilterPatternBase):
             # # else:
             # #     # 없을수 있다.
             
-            if 0 < len(lstDBPattern):
+            # CC인증, Action은 항상 차단. 완전히 구현전까지는 기능 유지.
+            dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            
+            # if 0 < len(lstDBPattern):
                 
-                # 정책이 존재하면, 첫번째 정책으로 업데이트.
-                dictDBPattern:dict = lstDBPattern[0]
+            #     # 정책이 존재하면, 첫번째 정책으로 업데이트.
+            #     dictDBPattern:dict = lstDBPattern[0]
 
-                action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
+            #     action:str = dictDBPattern.get(DBDefine.DB_FIELD_RULE_ACTION)
                 
-                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
+            #     dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = action            
                 
-            else: #정책이 없으면, 무조건 차단
+            # else: #정책이 없으면, 무조건 차단
                 
-                dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
-                # pass
+            #     dictSLMPolicyResult[DBDefine.DB_FIELD_RULE_ACTION] = PipelineFilterDefine.ACTION_BLOCK
+            #     # pass
         
         return ERR_OK
     
